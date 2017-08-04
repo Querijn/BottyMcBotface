@@ -1,2 +1,3 @@
 # BottyMcBotface
-The Riot Games API Bot
+
+The Riot Games API Discord Bot
