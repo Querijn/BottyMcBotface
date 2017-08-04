@@ -42,14 +42,14 @@ class ForumReader
     {
         console.log("ForumReader extension loaded.");
 
-        if (this.m_Settings.Last["question"] == 0) 
-            this.m_Settings.Last["question"] = new Date().getTime();
+        if (this.m_Data.Last["question"] == 0) 
+            this.m_Data.Last["question"] = new Date().getTime();
 
-        if (this.m_Settings.Last["answer"] == 0) 
-            this.m_Settings.Last["answer"] = new Date().getTime();
+        if (this.m_Data.Last["answer"] == 0) 
+            this.m_Data.Last["answer"] = new Date().getTime();
 
-        if (this.m_Settings.Last["comment"] == 0) 
-            this.m_Settings.Last["comment"] = new Date().getTime();
+        if (this.m_Data.Last["comment"] == 0) 
+            this.m_Data.Last["comment"] = new Date().getTime();
 
         this.SaveData();
         this.FetchForumData();
@@ -176,7 +176,7 @@ class ForumReader
             for (let i = t_JSON.list.length - 1; i >= 0; i--)
             {
                 let t_Activity = t_JSON.list[i];
-                if (t_Activity.creationDate <= this.m_Settings.Last[t_Activity.type])
+                if (t_Activity.creationDate <= this.m_Data.Last[t_Activity.type])
                     continue;
 
                 let t_UsernameIndex = t_Activity.author.username.indexOf('(');
@@ -236,7 +236,7 @@ class ForumReader
                 let t_Message = await t_Channel.send("", { embed: t_Embed });
                 if(t_RequiresQuestion) this.AddQuestionRequest(t_Activity, t_Message);
 
-                this.m_Settings.Last[t_Activity.type] = t_Activity.creationDate;
+                this.m_Data.Last[t_Activity.type] = t_Activity.creationDate;
                 this.SaveData();
             }
         }

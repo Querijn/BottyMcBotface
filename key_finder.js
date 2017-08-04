@@ -1,4 +1,4 @@
-var Answerhub = require("./answerhub/api.js");
+var Answerhub = require("./answerhub.js");
 const FileSystem = require('fs');
 const Discord = require('discord.js');
 var request = require('request');
