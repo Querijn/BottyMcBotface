@@ -8,12 +8,11 @@ class Uptime
 
         var t_Data = FileSystem.readFileSync(a_SettingsFile, 'utf8');
         this.m_Settings = JSON.parse(t_Data);
-        this.m_SettingsFile = a_SettingsFile;
         console.log("Successfully loaded uptime settings file.");
 
-        t_Data = FileSystem.readFileSync(a_DataFile, 'utf8');
+		t_Data = FileSystem.readFileSync(a_DataFile, 'utf8');
         this.m_Data = JSON.parse(t_Data);
-        this.m_Data = a_DataFile;
+        this.m_DataFile = a_DataFile;
         console.log("Successfully loaded uptime data file.");
 
         this.m_Bot = a_Bot;
@@ -42,30 +41,30 @@ class Uptime
 
     OnUpdate()
     {
-        let t_TimeDifference = (new Date()).getTime() - this.m_Settings.LastUptime;
+        let t_TimeDifference = (new Date()).getTime() - this.m_Data.LastUptime;
 
         // To restart, basically set either of these values to 0
-        if (this.m_Settings.LastUptime == 0 || this.m_Settings.UptimeStart == 0)
+        if (this.m_Data.LastUptime == 0 || this.m_Data.UptimeStart == 0)
         {
-            this.m_Settings.UptimeStart = (new Date()).getTime();
-            this.m_Settings.TotalDowntime = 0;
+            this.m_Data.UptimeStart = (new Date()).getTime();
+            this.m_Data.TotalDowntime = 0;
             t_TimeDifference = 0;
         }
 
         if(t_TimeDifference > this.m_Settings.CheckInterval + 1000) // Give it some error
         {
-            this.m_Settings.TotalDowntime += t_TimeDifference;
+            this.m_Data.TotalDowntime += t_TimeDifference;
             console.log("Noticed a downtime of " + (t_TimeDifference * 0.001) + " seconds.");
         }
 
-        this.m_Settings.LastUptime = (new Date()).getTime();
+        this.m_Data.LastUptime = (new Date()).getTime();
         this.SaveData();
     }
 
     get UptimePercentage() 
     {
-        let t_Timespan = (new Date()).getTime() - this.m_Settings.UptimeStart;
-        let t_UptimePercentage = 1.0 - (this.m_Settings.TotalDowntime / t_Timespan);
+        let t_Timespan = (new Date()).getTime() - this.m_Data.UptimeStart;
+        let t_UptimePercentage = 1.0 - (this.m_Data.TotalDowntime / t_Timespan);
         // return Math.round(t_UptimePercentage * 100.0 * 10000.0) * 0.00001;
         return +(t_UptimePercentage * 100.0).toFixed(3);
     }
@@ -86,7 +85,7 @@ class Uptime
         var t_WeekLength = t_DayLength * 7;
         var t_YearLength = t_WeekLength * 52;
         
-        var t_Seconds = Math.floor((new Date() - this.m_Settings.UptimeStart) / 1000);
+        var t_Seconds = Math.floor((new Date() - this.m_Data.UptimeStart) / 1000);
 
         // Count years
         var t_Interval = Math.floor(t_Seconds / t_YearLength);
