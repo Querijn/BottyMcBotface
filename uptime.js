@@ -77,73 +77,42 @@ class Uptime
     get Uptime() 
     {
         var t_Message = "";
-        var t_HasMessage = false;
+        /* How long each unit of time is, listed in ascending order. For each sub-array, first element is the name of the singular unit of time,
+        and the second elements is how many units of the previous time time (milliseconds for the first entry) are in it. */
+        let t_TimeUnits = [
+            ["second", 1000],
+            ["minute", 60],
+            ["hour", 60],
+            ["day", 24],
+            ["week", 7],
+            ["year", 52]
+        ];
 
-        var t_MinuteLength = 60;
-        var t_HourLength = t_MinuteLength * 60;
-        var t_DayLength = t_HourLength * 24;
-        var t_WeekLength = t_DayLength * 7;
-        var t_YearLength = t_WeekLength * 52;
-        
-        var t_Seconds = Math.floor((new Date() - this.m_Data.UptimeStart) / 1000);
-
-        // Count years
-        var t_Interval = Math.floor(t_Seconds / t_YearLength);
-        if (t_Interval >= 1)
+        let t_Millis = Date.now() - this.m_Data.UptimeStart;
+        let t_MillisInUnit = 1;
+        // Determine how many milliseconds are in the largest unit of time
+        for (let i = 0; i < t_TimeUnits.length; i++)
         {
-            t_Message += t_Interval + " year" + this.AddS(t_Interval);
-            t_HasMessage = true;
-
-            t_Seconds -= t_Interval * t_YearLength;
+            t_MillisInUnit *= t_TimeUnits[i][1];
         }
 
-        // Count weeks
-        t_Interval = Math.floor(t_Seconds / t_WeekLength);
-        if (t_Interval >= 1)
+        for (let i = t_TimeUnits.length - 1; i >= 0; i--)
         {
-            if (t_HasMessage) t_Message += ", ";
-            t_Message += t_Interval + " week" + this.AddS(t_Interval);
-            t_HasMessage = true;
-
-            t_Seconds -= t_Interval * t_WeekLength;
+            let t_TimeUnit = t_TimeUnits[i];
+            /** How many of the unit are in the time */
+            let t_Interval = Math.floor(t_Millis / t_MillisInUnit);
+            if (t_Interval >= 1)
+            {
+                if (t_Message)
+                {
+                    t_Message += ", "
+                    if (i === 0) t_Message += "and "
+                };
+                t_Message += `${t_Interval} ${t_TimeUnit[0]}${t_Interval === 1 ? "" : "s"}`
+                t_Millis -= t_Interval * t_MillisInUnit;
+            }
+            t_MillisInUnit /= t_TimeUnit[1];
         }
-
-        // Count days
-        t_Interval = Math.floor(t_Seconds / t_DayLength);
-        if (t_Interval >= 1)
-        {
-            if (t_HasMessage) t_Message += ", ";
-            t_Message += t_Interval + " day" + this.AddS(t_Interval);
-            t_HasMessage = true;
-
-            t_Seconds -= t_Interval * t_DayLength;
-        }
-
-        // Count hours
-        t_Interval = Math.floor(t_Seconds / t_HourLength);
-        if (t_Interval >= 1)
-        {
-            if (t_HasMessage) t_Message += ", ";
-            t_Message += t_Interval + " hour" + this.AddS(t_Interval);
-            t_HasMessage = true;
-
-            t_Seconds -= t_Interval * t_HourLength;
-        }
-
-        // Count minutes
-        t_Interval = Math.floor(t_Seconds / t_MinuteLength);
-        if (t_Interval >= 1)
-        {
-            if (t_HasMessage) t_Message += ", ";
-            t_Message += t_Interval + " minute" + this.AddS(t_Interval);
-            t_HasMessage = true;
-
-            t_Seconds -= t_Interval * t_MinuteLength;
-        }
-        
-        if (t_HasMessage) t_Message += " and ";
-        t_Message += t_Seconds + " second" + this.AddS(t_Seconds);
-        
         return t_Message;
     }
 }
