@@ -1,8 +1,5 @@
 const request = require("request");
-
-String.prototype.replaceAll = function(search, replacement) {
-    return this.replace(new RegExp(search, "g"), replacement);
-};
+const toMarkdown = require("to-markdown");
 
 class API
 {
@@ -31,37 +28,11 @@ class API
         return request.post(t_Options, a_Callback);
     }
 
-    FormatBody(a_Body)
-    {
-        let t_Body = a_Body.substr(0, Math.min(1021, a_Body.length));
-        if (t_Body.length === 1021) t_Body += "...";
-        
-        t_Body = t_Body.replaceAll("<p></p>", " ");
-        t_Body = t_Body.replaceAll("<p>", " ");
+    FormatBody(a_Body) {
+        const t_Markdown = toMarkdown(a_Body, { gfm: true });
+        const t_Clamped = t_Markdown.substr(0, Math.min(1021, t_Markdown.length));
 
-        t_Body = t_Body.replaceAll("</p>", "\n\n ");
-        t_Body = t_Body.replaceAll("<br>", "\n ");
-
-        t_Body = t_Body.replaceAll("<em>", "*");
-        t_Body = t_Body.replaceAll("</em>", "*");
-        t_Body = t_Body.replaceAll("<strong>", "**");
-        t_Body = t_Body.replaceAll("</strong>", "**");
-
-        t_Body = t_Body.replaceAll("<ol>", "");
-        t_Body = t_Body.replaceAll("</ol>", "");
-        t_Body = t_Body.replaceAll("<li>", " - ");
-        t_Body = t_Body.replaceAll("</li>", "\n");
-
-        t_Body = t_Body.replaceAll("<code>", "`");
-        t_Body = t_Body.replaceAll("</code>", "`");
-
-        t_Body = t_Body.replaceAll("<pre>", "```");
-        t_Body = t_Body.replaceAll("</pre>", "```");
-        
-        //t_Body = t_Body.replace("/<a(.*?)href=\"(.*?)\"(.*?)>(.*?)</a>/i", (match, p1, p2, p3, p4, offset, string) => { return p2; });
-        //t_Body = t_Body.replace("/<img(.*?)src=\"(.*?)\"(.*?)>/i", (match, p1, p2, p3, offset, string) => { return p2; });
-
-        return t_Body;
+        return t_Clamped + (t_Clamped.length === 1021 ? "..." : "");
     }
 
     get BaseURL()

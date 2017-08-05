@@ -1,6 +1,6 @@
 const Answerhub = require("./answerhub.js");
-const FileSystem = require("fs");
 const Discord = require("discord.js");
+const util = require("./util");
 
 class ForumReader
 {
@@ -8,25 +8,21 @@ class ForumReader
     {
         console.log("Requested ForumReader extension..");
 
-        const t_SettingsData = FileSystem.readFileSync(a_SettingsFile, "utf8");
-        this.m_Settings = JSON.parse(t_SettingsData);
-        this.m_SettingsFile = a_SettingsFile;
+        this.m_Settings = util.fileBackedObject(a_SettingsFile);
         console.log("Successfully loaded ForumReader settings file.");
 
-        const t_Data = FileSystem.readFileSync(a_DataFile, "utf8");
-        this.m_Data = JSON.parse(t_Data);
-        this.m_DataFile = a_DataFile;
+        this.m_Data = util.fileBackedObject(a_DataFile);
         console.log("Successfully loaded ForumReader data file.");
 
         this.m_Bot = a_Bot;
         this.m_KeyFinder = a_KeyFinder;
         this.m_Answerhub = new Answerhub.API(this.m_Settings.URL, this.m_Settings.Username, this.m_Settings.Password);
 
-        this.m_Needs = {};
+        this.m_Needs = new Map();
         this.m_Questions = {};
-        this.m_UnresolvedQuestions = {};
+        this.m_UnresolvedQuestions = new Map();
 
-        this.m_Bot.on("ready", this.OnBot.bind(this));
+        this.m_Bot.on("ready", () => this.OnBot());
         
         // TODO: Something less of a hack. I want to "cache" these questions in case more answers come along,
         // but the memory needs to be freed. The issue is with the fact there might be a process running.
@@ -37,42 +33,31 @@ class ForumReader
     {
         console.log("ForumReader extension loaded.");
 
-        if (this.m_Data.Last["question"] === 0) 
-            this.m_Data.Last["question"] = Date.now();
+        if (this.m_Data.Last.question === 0)
+            this.m_Data.Last.question = Date.now();
 
-        if (this.m_Data.Last["answer"] === 0) 
-            this.m_Data.Last["answer"] = Date.now();
+        if (this.m_Data.Last.answer === 0)
+            this.m_Data.Last.answer = Date.now();
 
-        if (this.m_Data.Last["comment"] === 0) 
-            this.m_Data.Last["comment"] = Date.now();
+        if (this.m_Data.Last.comment === 0)
+            this.m_Data.Last.comment = Date.now();
 
-        this.SaveData();
         this.FetchForumData();
-    }
-
-    SaveData()
-    {
-        FileSystem.writeFileSync(this.m_DataFile, JSON.stringify(this.m_Data));
     }
 
     RetryFailedQuestions()
     {
-        for (const t_Key in this.m_UnresolvedQuestions) 
+        for (let [t_Key, t_Tries] of this.m_UnresolvedQuestions)
         {
-            if (this.m_UnresolvedQuestions.hasOwnProperty(t_Key) === false)
-                continue;
+            t_Tries++;
+            this.m_UnresolvedQuestions.set(t_Key, t_Tries);
 
-            if (this.m_Questions[t_Key] !== undefined && this.m_Questions[t_Key] !== null)
-                continue;
-
-            this.m_UnresolvedQuestions[t_Key]++;
-
-            if (this.m_UnresolvedQuestions[t_Key] < 5)
+            if (t_Tries < 5)
             {
                 this.m_Answerhub.GetArticle(this.AddQuestion.bind(this), t_Key);
-            }    
+            }
             else console.error("Ran out of tries trying to get question " + t_Key);
-        }   
+        }
     }
 
     AddQuestion(a_Error, a_Response, a_Body)
@@ -93,16 +78,13 @@ class ForumReader
 
         let t_Question = JSON.parse(a_Body);
         this.m_Questions[t_Question.id] = t_Question;
-        
-        if (this.m_UnresolvedQuestions[t_Question.id] !== undefined)
-            delete this.m_UnresolvedQuestions[t_Question.id];
 
-        for (let t_Key in this.m_Needs) 
+        if (this.m_UnresolvedQuestions.has(t_Question.id))
+            this.m_UnresolvedQuestions.delete(t_Question.id);
+
+        for (const [t_Key, t_Value] of this.m_Needs)
         {
-            if (this.m_Needs.hasOwnProperty(t_Key) === false)
-                continue;
-
-            if (this.m_Needs[t_Key].Activity.originalParentId !== t_Question.id)
+            if (t_Value.Activity.originalParentId !== t_Question.id)
                 continue;
 
             this.FulfillNeed(t_Key);
@@ -111,14 +93,13 @@ class ForumReader
 
     AddQuestionRequest(a_Activity, a_Message)
     {
-        this.m_Needs[a_Activity.id] = 
-        { 
+        this.m_Needs.set(a_Activity.id, {
             Activity: a_Activity, 
             QuestionID: a_Activity.originalParentId,
             Message: a_Message
-        };
+        });
 
-        this.m_UnresolvedQuestions[a_Activity.originalParentId] = 0;
+        this.m_UnresolvedQuestions.set(a_Activity.originalParentId, 0);
         this.m_Answerhub.GetQuestion(this.AddQuestion.bind(this), a_Activity.originalParentId);
     }
 
@@ -129,12 +110,12 @@ class ForumReader
 
     GetAvatar(a_Activity)
     {
-        let t_UsernameIndex = a_Activity.author.username.indexOf("(");
-        let t_RegionEndIndex = a_Activity.author.username.indexOf(")");
-        let t_Region = t_UsernameIndex === -1 ? "UNKNOWN" : a_Activity.author.username.substr(t_UsernameIndex + 1, t_RegionEndIndex - t_UsernameIndex - 1);
-        let t_Username = t_UsernameIndex === -1 ? a_Activity.author.username : a_Activity.author.username.substr(0, t_UsernameIndex - 1);
+        const t_UsernameIndex = a_Activity.author.username.indexOf("(");
+        const t_RegionEndIndex = a_Activity.author.username.indexOf(")");
+        const t_Region = t_UsernameIndex === -1 ? "UNKNOWN" : a_Activity.author.username.substr(t_UsernameIndex + 1, t_RegionEndIndex - t_UsernameIndex - 1);
+        const t_Username = t_UsernameIndex === -1 ? a_Activity.author.username : a_Activity.author.username.substr(0, t_UsernameIndex - 1);
 
-        return "http://avatar.leagueoflegends.com/" + encodeURIComponent(t_Region) + "/" + encodeURIComponent(t_Username) + ".png?t=" + encodeURIComponent(Math.random().toString());
+        return `http://avatar.leagueoflegends.com/${encodeURIComponent(t_Region)}/${encodeURIComponent(t_Username)}.png?t=${encodeURIComponent(Math.random().toString())}`;
     }
 
     async ReadActivity(a_Error, a_Response, a_Body)
@@ -153,21 +134,21 @@ class ForumReader
                 return;
             }
 
-            let t_Guild = this.m_Bot.guilds.find("name", this.m_Settings.Server);
+            const t_Guild = this.m_Bot.guilds.find("name", this.m_Settings.Server);
             if (typeof t_Guild === "undefined")
             {
                 console.error("Incorrect setting for the server: " + this.m_Settings.Server);
                 return;
             }
 
-            let t_Channel = t_Guild.channels.find("name", this.m_Settings.Channel);
+            const t_Channel = t_Guild.channels.find("name", this.m_Settings.Channel);
             if (typeof t_Channel === "undefined")
             {
                 console.error("Incorrect setting for the channel: " + this.m_Settings.Channel);
                 return;
             }
 
-            let t_JSON = JSON.parse(a_Body);
+            const t_JSON = JSON.parse(a_Body);
             for (let i = t_JSON.list.length - 1; i >= 0; i--)
             {
                 let t_Activity = t_JSON.list[i];
@@ -244,7 +225,7 @@ class ForumReader
     {
         try 
         {
-            let t_Element = this.m_Needs[a_Key];
+            const t_Element = this.m_Needs.get(a_Key);
 
             if (this.m_Questions[t_Element.Activity.originalParentId] === undefined || this.m_Questions[t_Element.Activity.originalParentId] === null)
                 return;
@@ -286,8 +267,7 @@ class ForumReader
 
             t_Element.Message.edit("", { embed: t_NewEmbed });
 
-            //delete this.m_Questions[t_Element.Activity.id];
-            delete this.m_Needs[a_Key];
+            this.m_Needs.delete(a_Key);
         }
         catch (t_Error)
         {

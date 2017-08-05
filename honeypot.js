@@ -1,12 +1,11 @@
 const Discord = require("discord.js");
-const FileSystem = require("fs");
+const util = require("./util");
 
 class Honeypot
 {
     constructor(a_Bot, a_SettingsFile)
     {
-        const t_Data = FileSystem.readFileSync(a_SettingsFile, "utf8");
-        this.m_Settings = JSON.parse(t_Data);
+        this.m_Settings = util.fileBackedObject(a_SettingsFile);
         console.log("Successfully loaded honeypot settings file.");
 
         this.m_JoinTime = Date.now();
@@ -20,14 +19,10 @@ class Honeypot
             .on("error", console.error)
             .on("warn", console.warn)
             //.on("debug", console.log)
-	        .on("disconnect", () => { console.warn("Honeypot disconnected!"); })
-	        .on("reconnecting", () => { console.warn("Honeypot is reconnecting..."); })
-	        .on("connect", () => { console.warn("Honeypot is connected."); });
-
-        this.m_Client.on("ready", () => 
-        {
-            console.log("Honeypot is logged in and ready.");
-        });
+	        .on("disconnect", () => console.warn("Honeypot disconnected!"))
+	        .on("reconnecting", () => console.warn("Honeypot is reconnecting..."))
+	        .on("connect", () => console.warn("Honeypot is connected."))
+            .on("ready", () => console.log("Honeypot is logged in and ready."));
 
         this.m_Master.on("ready", () => 
         {
@@ -38,7 +33,7 @@ class Honeypot
 
     OnJoin(a_Guild)
     {
-        console.error("Joined '" + a_Guild + "'");
+        console.error(`Joined '${a_Guild}'`);
         this.m_JoinTime = Date.now();
     }
 
@@ -56,7 +51,7 @@ class Honeypot
         if (a_Message.channel.type !== "dm")
             return;
 
-        const t_CatchMessage = "Got a direct message " + this.GetJoinedTime + " after joining from " + a_Message.author.toString() + ": ```" + a_Message.content + "```";
+        const t_CatchMessage = `Got a direct message ${this.GetJoinedTime} after joining from ${a_Message.author.toString()}: \`\`\`${a_Message.content}\`\`\``;
         this.ReportHoneypotCatch(t_CatchMessage);
     }
 
@@ -65,7 +60,7 @@ class Honeypot
         if (a_NewMessage.channel.type !== "dm")
             return;
 
-        const t_CatchMessage = "User updated a direct message " + this.GetJoinedTime + " after joining from " + a_NewMessage.author.toString() + ": ```" + a_NewMessage.content + "``` Old message was: ```" + a_OldMessage.content + "```";
+        const t_CatchMessage = `User updated a direct message ${this.GetJoinedTime} after joining from ${a_NewMessage.author.toString()}: \`\`\`${a_NewMessage.content}\`\`\` Old message was: \`\`\`${a_OldMessage.content}\`\`\``;
         this.ReportHoneypotCatch(t_CatchMessage);
     }
 

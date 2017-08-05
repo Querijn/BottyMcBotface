@@ -1,4 +1,4 @@
-const FileSystem = require("fs");
+const util = require("./util");
 
 class Thinking
 {
@@ -7,19 +7,12 @@ class Thinking
         console.log("Requested Thinking extension..");
         this.m_Bot = a_Bot;
 
-        const t_Data = FileSystem.readFileSync(a_UserFile, "utf8");
-        this.m_ThinkingUsers = JSON.parse(t_Data);
-        this.m_UserFile = a_UserFile;
+        this.m_ThinkingUsers = util.fileBackedObject(a_UserFile);
         console.log("Successfully loaded original thinking user file.");
 
         this.m_Bot.on("ready", this.OnBot.bind(this));
 
         this.m_Bot.on("message", this.OnMessage.bind(this));
-    }
-
-    SaveOriginalThinkingUsers()
-    {
-        FileSystem.writeFileSync(this.m_UserFile, JSON.stringify(this.m_ThinkingUsers));
     }
 
     OnBot()
@@ -33,7 +26,6 @@ class Thinking
         if (a_Message.content.startsWith("!original_thinko_reacts_only") && this.m_ThinkingUsers.indexOf(a_Message.author.id) === -1)
         {
             this.m_ThinkingUsers.push(a_Message.author.id);
-            this.SaveOriginalThinkingUsers();
 
             a_Message.reply("I will now discriminate for you. !no_more_original_thinkos to stop.");
             return;
@@ -42,7 +34,6 @@ class Thinking
         {
             const t_Index = this.m_ThinkingUsers.indexOf(a_Message.author.id);
             this.m_ThinkingUsers.splice(t_Index, 1);
-            this.SaveOriginalThinkingUsers();
 
             a_Message.channel.send("REEEEEEEEEEEEEEEEE");
             return;

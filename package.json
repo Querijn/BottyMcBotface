@@ -10,6 +10,16 @@
   "author": "Querijn Heijmans <querijn@irule.at>",
   "license": "MIT",
   "dependencies": {
+    "bufferutil": "^3.0.0",
+    "erlpack": "hammerandchisel/erlpack",
+    "libsodium-wrappers": "^0.5.1",
+    "node-opus": "^0.2.5",
+    "opusscript": "^0.0.3",
+    "sodium": "^2.0.1",
+    "to-markdown": "^3.1.0",
+    "uws": "^0.14.1"
+  },
+  "peerDependencies": {
     "discord.js": "^11.1.0"
   }
 }

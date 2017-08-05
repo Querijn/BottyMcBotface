@@ -1,6 +1,4 @@
-const Answerhub = require("./answerhub.js");
-const FileSystem = require("fs");
-const Discord = require("discord.js");
+const util = require("./util");
 const request = require("request");
 
 // TODO: Get this thing its own nice file
@@ -21,14 +19,10 @@ class KeyFinder
     {
         console.log("Requested KeyFinder extension..");
 
-        let t_Data = FileSystem.readFileSync(a_SettingsFile, "utf8");
-        this.m_Settings = JSON.parse(t_Data);
-        this.m_SettingsFile = a_SettingsFile;
+        this.m_Settings = util.fileBackedObject(a_SettingsFile);
         console.log("Successfully loaded KeyFinder settings file.");
 
-        t_Data = FileSystem.readFileSync(a_KeyFile, "utf8");
-        this.m_Keys = JSON.parse(t_Data);
-        this.m_KeyFile = a_KeyFile;
+        this.m_Keys = util.fileBackedObject(a_KeyFile);
         console.log("Successfully loaded KeyFinder key file.");
 
         this.m_Bot = a_Bot;
@@ -61,7 +55,7 @@ class KeyFinder
                 return;
             }
 
-            let t_Message = "I've found " + this.m_Keys.length + " key" + (this.m_Keys.length === 1 ? "" : "s") + " that " + (this.m_Keys.length === 1 ? "is" : "are") + " still active:\n";
+            let t_Message = `I've found ${this.m_Keys.length} key${this.m_Keys.length === 1 ? "" : "s"} that ${this.m_Keys.length === 1 ? "is" : "are"} still active:\n`;
             for (let i = 0; i < this.m_Keys.length; i++)
                 t_Message += " - " + this.m_Keys[i] + "\n";
 
@@ -104,7 +98,6 @@ class KeyFinder
                 if (a_Works) return;
 
                 this.m_Keys.remove(a_Key);
-                this.SaveKeys();
 
                 let t_Message = "Key `" + a_Key + "` returns 403 Forbidden now, removing it from my database.";
                 
@@ -122,10 +115,6 @@ class KeyFinder
     {
         const t_Matches = a_Message.match(/RGAPI\-[a-fA-F0-9]{8}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{12}/i);
 
-        // It"s unlikely that old keys will show up, as only prod keys can be old keys atm, plus this code matched all UUIDs..
-        // if (t_Matches == null)
-        //     t_Matches = a_Message.match(/[a-fA-F0-9]{8}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{12}/i);
-
         if (t_Matches === null)
             return;
 
@@ -135,7 +124,7 @@ class KeyFinder
         {
             if (a_Works)
             {
-                const t_Message = "Found a working key at " + a_Location + " posted by " + a_User + ": `" + t_Key + "`";
+                const t_Message = `Found a working key at ${a_Location} posted by ${a_User}: \`${t_Key}\``;
                 
                 console.warn(t_Message);
                 const t_Channel = this.Channel;
@@ -145,11 +134,10 @@ class KeyFinder
                 // TODO: do this instead: this.m_Keys.push({ key: t_Key, location: a_Location, user: a_User });
                 // TODO: Check for duplicates.
                 this.m_Keys.push(t_Key);
-                this.SaveKeys();
             }
             else
             {
-                const t_Message = "Found an inactive key at " + a_Location + " posted by " + a_User + ": `" + t_Key + "`";
+                const t_Message = `Found an inactive key at ${a_Location} posted by ${a_User}: \`${t_Key}\``;
                 
                 console.warn(t_Message);
                 const t_Channel = this.Channel;
@@ -157,22 +145,6 @@ class KeyFinder
                     t_Channel.send(t_Message);
             }
         })
-    }
-
-    SaveSettings()
-    {
-        FileSystem.writeFile(this.m_SettingsFile, JSON.stringify(this.m_Settings), (a_Error) => 
-        {
-            if (a_Error) console.error("Error occurred during saving of keyfinder settings: " + a_Error);
-        });
-    }
-
-    SaveKeys()
-    {
-        FileSystem.writeFile(this.m_KeyFile, JSON.stringify(this.m_Keys), (a_Error) => 
-        {
-            if (a_Error) console.error("Error occurred during saving of keys: " + a_Error);
-        });
     }
 
     get Channel()

@@ -1,12 +1,11 @@
 const Discord = require("discord.js");
-const FileSystem = require("fs");
+const util = require("./util.js");
 
 class Botty
 {
     constructor(a_SettingsFile)
     {
-        const t_Data = FileSystem.readFileSync(a_SettingsFile, "utf8");
-        this.m_Settings = JSON.parse(t_Data);
+        this.m_Settings = util.fileBackedObject(a_SettingsFile);
         console.log("Successfully loaded settings file.");
 
         this.m_Client = new Discord.Client();
@@ -15,19 +14,15 @@ class Botty
             .on("error", console.error)
             .on("warn", console.warn)
             //.on("debug", console.log)
-	        .on("disconnect", () => { console.warn("Disconnected!"); })
-	        .on("reconnecting", () => { console.warn("Reconnecting..."); })
-	        .on("connect", () => { console.warn("Connected."); });
-
-        this.m_Client.on("ready", () => 
-        {
-            console.log("Bot is logged in and ready.");
-        });
+	        .on("disconnect", () => console.warn("Disconnected!"))
+	        .on("reconnecting", () => console.warn("Reconnecting..."))
+	        .on("connect", () => console.warn("Connected."))
+            .on("ready", () => console.log("Bot is logged in and ready."));
     }
 
     Start()
     {
-        this.m_Client.login(this.m_Settings.Discord.Key);
+        return this.m_Client.login(this.m_Settings.Discord.Key);
     }
     
     get Client()

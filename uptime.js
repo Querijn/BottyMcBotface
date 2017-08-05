@@ -1,4 +1,4 @@
-const FileSystem = require("fs");
+const util = require("./util");
 
 class Uptime
 {
@@ -6,24 +6,16 @@ class Uptime
     {
         console.log("Requested uptime extension..");
 
-        let t_Data = FileSystem.readFileSync(a_SettingsFile, "utf8");
-        this.m_Settings = JSON.parse(t_Data);
+        this.m_Settings = util.fileBackedObject(a_SettingsFile);
         console.log("Successfully loaded uptime settings file.");
 
-		t_Data = FileSystem.readFileSync(a_DataFile, "utf8");
-        this.m_Data = JSON.parse(t_Data);
-        this.m_DataFile = a_DataFile;
+        this.m_Data = util.fileBackedObject(a_DataFile);
         console.log("Successfully loaded uptime data file.");
 
         this.m_Bot = a_Bot;
         this.m_Bot.on("ready", this.OnBot.bind(this));
         this.m_Bot.on("message", this.OnMessage.bind(this));
         setInterval(this.OnUpdate.bind(this), this.m_Settings.CheckInterval);
-    }
-
-    SaveData()
-    {
-        FileSystem.writeFileSync(this.m_DataFile, JSON.stringify(this.m_Data));
     }
 
     OnBot()
@@ -36,12 +28,12 @@ class Uptime
         if (a_Message.content.startsWith("!uptime") === false)
             return;
         
-        a_Message.reply("the bot has been up for " + this.UptimePercentage + "% of the time. Bot started " + this.Uptime + " ago.");
+        a_Message.reply(`the bot has been up for ${this.UptimePercentage}% of the time. Bot started ${this.Uptime} ago.`);
     }
 
     OnUpdate()
     {
-        let t_TimeDifference = (new Date()).getTime() - this.m_Data.LastUptime;
+        let t_TimeDifference = Date.now() - this.m_Data.LastUptime;
 
         // To restart, basically set either of these values to 0
         if (this.m_Data.LastUptime === 0 || this.m_Data.UptimeStart === 0)
@@ -58,7 +50,6 @@ class Uptime
         }
 
         this.m_Data.LastUptime = (new Date()).getTime();
-        this.SaveData();
     }
 
     get UptimePercentage() 
