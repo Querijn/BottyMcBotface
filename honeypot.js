@@ -1,11 +1,11 @@
-const Discord = require('discord.js');
-const FileSystem = require('fs');
+const Discord = require("discord.js");
+const FileSystem = require("fs");
 
 class Honeypot
 {
     constructor(a_Bot, a_SettingsFile)
     {
-        var t_Data = FileSystem.readFileSync(a_SettingsFile, 'utf8');
+        const t_Data = FileSystem.readFileSync(a_SettingsFile, "utf8");
         this.m_Settings = JSON.parse(t_Data);
         console.log("Successfully loaded honeypot settings file.");
 
@@ -14,22 +14,22 @@ class Honeypot
         this.m_Client = new Discord.Client();
 
         this.m_Client
-        .on('message', this.OnMessage.bind(this))
-        .on('messageUpdate', this.OnMessageUpdate.bind(this))
-        .on('guildCreate', this.OnJoin.bind(this))
-        .on('error', console.error)
-        .on('warn', console.warn)
-        //.on('debug', console.log)
-	    .on('disconnect', () => { console.warn('Honeypot disconnected!'); })
-	    .on('reconnecting', () => { console.warn('Honeypot is reconnecting...'); })
-	    .on('connect', () => { console.warn('Honeypot is connected.'); });
+        .on("message", this.OnMessage.bind(this))
+        .on("messageUpdate", this.OnMessageUpdate.bind(this))
+        .on("guildCreate", this.OnJoin.bind(this))
+        .on("error", console.error)
+        .on("warn", console.warn)
+        //.on("debug", console.log)
+	    .on("disconnect", () => { console.warn("Honeypot disconnected!"); })
+	    .on("reconnecting", () => { console.warn("Honeypot is reconnecting..."); })
+	    .on("connect", () => { console.warn("Honeypot is connected."); });
 
-        this.m_Client.on('ready', (() => 
+        this.m_Client.on("ready", (() => 
         {
             console.log("Honeypot is logged in and ready.");
         }).bind(this));
 
-        this.m_Master.on('ready', (() => 
+        this.m_Master.on("ready", (() => 
         {
             console.log("Honeypot's master is logged in and ready.");
             this.m_Client.login(this.m_Settings.Discord.Token);
@@ -45,7 +45,7 @@ class Honeypot
 
     get GetJoinedTime()
     {
-        let t_TimeDifference = (new Date()).getTime() - this.m_JoinTime;
+        const t_TimeDifference = (new Date()).getTime() - this.m_JoinTime;
         if (t_TimeDifference > 1000)
             return Math.round(t_TimeDifference * 0.001) + " seconds";
 
@@ -54,28 +54,26 @@ class Honeypot
 
     OnMessage(a_Message)
     {
-        if(a_Message.channel.type !== 'dm')
+        if(a_Message.channel.type !== "dm")
             return;
 
-        let t_CatchMessage = "Got a direct message " + this.GetJoinedTime + " after joining from " + a_Message.author.toString() + 
-        ": ```" + a_Message.content + "```";
+        const t_CatchMessage = "Got a direct message " + this.GetJoinedTime + " after joining from " + a_Message.author.toString() + ": ```" + a_Message.content + "```";
         this.ReportHoneypotCatch(t_CatchMessage);
     }
 
     OnMessageUpdate(a_OldMessage, a_NewMessage)
     {
-        if(a_NewMessage.channel.type !== 'dm')
+        if (a_NewMessage.channel.type !== "dm")
             return;
 
-        let t_CatchMessage = "User updated a direct message " + this.GetJoinedTime + " after joining from " + a_NewMessage.author.toString() + 
-        ": ```" + a_NewMessage.content + "``` Old message was: ```" + a_OldMessage.content + "```";
+        const t_CatchMessage = "User updated a direct message " + this.GetJoinedTime + " after joining from " + a_NewMessage.author.toString() + ": ```" + a_NewMessage.content + "``` Old message was: ```" + a_OldMessage.content + "```";
         this.ReportHoneypotCatch(t_CatchMessage);
     }
 
     ReportHoneypotCatch(a_Message)
     {
         console.warn(a_Message);
-        let t_Channel = this.Channel;
+        const t_Channel = this.Channel;
         if (t_Channel === null)
             return;
 
@@ -94,15 +92,15 @@ class Honeypot
 
     get Channel()
     {
-        var t_Guild = this.m_Master.guilds.find("name", this.m_Settings.Server);
-        if (typeof(t_Guild) === 'undefined')
+        const t_Guild = this.m_Master.guilds.find("name", this.m_Settings.Server);
+        if (typeof(t_Guild) === "undefined")
         {
             console.error("Incorrect setting for the server: " + this.m_Settings.Server);
             return null;
         }
 
-        var t_Channel = t_Guild.channels.find("name", this.m_Settings.ReportChannel);
-        if (typeof(t_Channel) === 'undefined')
+        const t_Channel = t_Guild.channels.find("name", this.m_Settings.ReportChannel);
+        if (typeof(t_Channel) === "undefined")
         {
             console.error("Incorrect setting for the channel: " + this.m_Settings.ReportChannel);
             return null;
@@ -113,5 +111,3 @@ class Honeypot
 }
 
 exports.Honeypot = Honeypot;
-
-

@@ -1,4 +1,4 @@
-const FileSystem = require('fs');
+const FileSystem = require("fs");
 
 class Uptime
 {
@@ -6,18 +6,18 @@ class Uptime
     {
         console.log("Requested uptime extension..");
 
-        var t_Data = FileSystem.readFileSync(a_SettingsFile, 'utf8');
+        const t_Data = FileSystem.readFileSync(a_SettingsFile, "utf8");
         this.m_Settings = JSON.parse(t_Data);
         console.log("Successfully loaded uptime settings file.");
 
-		t_Data = FileSystem.readFileSync(a_DataFile, 'utf8');
+		t_Data = FileSystem.readFileSync(a_DataFile, "utf8");
         this.m_Data = JSON.parse(t_Data);
         this.m_DataFile = a_DataFile;
         console.log("Successfully loaded uptime data file.");
 
         this.m_Bot = a_Bot;
-        this.m_Bot.on('ready', this.OnBot.bind(this));
-        this.m_Bot.on('message', this.OnMessage.bind(this));
+        this.m_Bot.on("ready", this.OnBot.bind(this));
+        this.m_Bot.on("message", this.OnMessage.bind(this));
         setInterval(this.OnUpdate.bind(this), this.m_Settings.CheckInterval);
     }
 
@@ -71,15 +71,15 @@ class Uptime
 
     AddS(a_Number)
     {
-        return a_Number == 1 ? "" : "s";
+        return a_Number === 1 ? "" : "s";
     }
 
     get Uptime() 
     {
-        var t_Message = "";
+        let t_Message = "";
         /* How long each unit of time is, listed in ascending order. For each sub-array, first element is the name of the singular unit of time,
         and the second elements is how many units of the previous time time (milliseconds for the first entry) are in it. */
-        let t_TimeUnits = [
+        const t_TimeUnits = [
             ["second", 1000],
             ["minute", 60],
             ["hour", 60],

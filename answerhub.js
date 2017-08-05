@@ -1,19 +1,19 @@
-var request = require('request');
+const request = require("request");
 
 class API
 {
     constructor(a_URL, a_Username, a_Password)
     {
         // Add a trailing / if missing
-        a_URL = a_URL.substr(a_URL.length - 1) === '/' ? a_URL : a_URL + '/';
+        a_URL = a_URL.substr(a_URL.length - 1) === "/" ? a_URL : a_URL + "/";
         this.m_BaseURL = a_URL;
 
-        this.m_Auth = Buffer(a_Username + ":" + a_Password, "binary").toString('base64');
+        this.m_Auth = new Buffer(a_Username + ":" + a_Password, "binary").toString("base64");
     }
 
     MakeRequest(a_URL, a_Callback)
     {
-        var t_Options =
+        const t_Options =
         {
             followAllRedirects: true,
             url: this.m_BaseURL + "services/v2/" + a_URL,
@@ -28,10 +28,9 @@ class API
         return request.post(t_Options, a_Callback);
     }
 
-
     FormatBody(a_Body)
     {
-        var t_Body = a_Body.substr(0, Math.min(1021, a_Body.length));
+        let t_Body = a_Body.substr(0, Math.min(1021, a_Body.length));
         if(t_Body.length == 1021) t_Body += "...";
         
         t_Body = t_Body.replaceAll("<p></p>", " ");
@@ -69,19 +68,19 @@ class API
 
     GetQuestions(a_Callback, a_Page = 1, a_Sort = "active")
     {
-        var t_URL = "question.json?page=" + a_Page + "&sort=" + a_Sort;
+        const t_URL = "question.json?page=" + a_Page + "&sort=" + a_Sort;
         return this.MakeRequest(t_URL, a_Callback);
     }
 
     GetAnswers(a_Callback, a_Page = 1, a_Sort = "active")
     {
-        var t_URL = "answer.json?page=" + a_Page + "&sort=" + a_Sort;
+        const t_URL = "answer.json?page=" + a_Page + "&sort=" + a_Sort;
         return this.MakeRequest(t_URL, a_Callback);
     }
 
     GetComments(a_Callback, a_Page = 1, a_Sort = "active")
     {
-        var t_URL = "comment.json?page=" + a_Page + "&sort=" + a_Sort;
+        const t_URL = "comment.json?page=" + a_Page + "&sort=" + a_Sort;
         return this.MakeRequest(t_URL, a_Callback);
     }
 
