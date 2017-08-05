@@ -1,12 +1,15 @@
 const request = require("request");
 
+String.prototype.replaceAll = function(search, replacement) {
+    return this.replace(new RegExp(search, "g"), replacement);
+};
+
 class API
 {
     constructor(a_URL, a_Username, a_Password)
     {
         // Add a trailing / if missing
-        a_URL = a_URL.substr(a_URL.length - 1) === "/" ? a_URL : a_URL + "/";
-        this.m_BaseURL = a_URL;
+        this.m_BaseURL = a_URL.substr(a_URL.length - 1) === "/" ? a_URL : a_URL + "/";
 
         this.m_Auth = new Buffer(a_Username + ":" + a_Password, "binary").toString("base64");
     }
@@ -31,7 +34,7 @@ class API
     FormatBody(a_Body)
     {
         let t_Body = a_Body.substr(0, Math.min(1021, a_Body.length));
-        if(t_Body.length == 1021) t_Body += "...";
+        if (t_Body.length === 1021) t_Body += "...";
         
         t_Body = t_Body.replaceAll("<p></p>", " ");
         t_Body = t_Body.replaceAll("<p>", " ");

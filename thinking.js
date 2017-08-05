@@ -30,7 +30,7 @@ class Thinking
 
     OnMessage(a_Message)
     {
-        if(a_Message.content.startsWith("!original_thinko_reacts_only") && this.m_ThinkingUsers.indexOf(a_Message.author.id) === -1)
+        if (a_Message.content.startsWith("!original_thinko_reacts_only") && this.m_ThinkingUsers.indexOf(a_Message.author.id) === -1)
         {
             this.m_ThinkingUsers.push(a_Message.author.id);
             this.SaveOriginalThinkingUsers();
@@ -38,7 +38,7 @@ class Thinking
             a_Message.reply("I will now discriminate for you. !no_more_original_thinkos to stop.");
             return;
         }
-        else if(a_Message.content.startsWith("!no_more_original_thinkos") && this.m_ThinkingUsers.indexOf(a_Message.author.id) !== -1)
+        else if (a_Message.content.startsWith("!no_more_original_thinkos") && this.m_ThinkingUsers.indexOf(a_Message.author.id) !== -1)
         {
             const t_Index = this.m_ThinkingUsers.indexOf(a_Message.author.id);
             this.m_ThinkingUsers.splice(t_Index, 1);
@@ -48,7 +48,7 @@ class Thinking
             return;
         }
 
-        if(a_Message.content.includes("🤔") === false)
+        if (a_Message.content.includes("🤔") === false)
             return;
         
         if (this.m_ThinkingUsers.indexOf(a_Message.author.id) !== -1)
@@ -58,7 +58,7 @@ class Thinking
         }
 
         let t_Emoji = null;
-        while(true)
+        while (true)
         {
             t_Emoji = a_Message.guild.emojis.random();
             if (t_Emoji.name.includes("thinking"))

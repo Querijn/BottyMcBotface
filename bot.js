@@ -12,13 +12,12 @@ class Botty
         this.m_Client = new Discord.Client();
 
         this.m_Client
-        .on("error", console.error)
-        .on("warn", console.warn)
-        //.on("debug", console.log)
-	    .on("disconnect", () => { console.warn("Disconnected!"); })
-	    .on("reconnecting", () => { console.warn("Reconnecting..."); })
-	    .on("connect", () => { console.warn("Connected."); })
-        ;
+            .on("error", console.error)
+            .on("warn", console.warn)
+            //.on("debug", console.log)
+	        .on("disconnect", () => { console.warn("Disconnected!"); })
+	        .on("reconnecting", () => { console.warn("Reconnecting..."); })
+	        .on("connect", () => { console.warn("Connected."); });
 
         this.m_Client.on("ready", () => 
         {

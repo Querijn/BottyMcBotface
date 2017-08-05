@@ -46,16 +46,16 @@ class KeyFinder
 
     OnMessage(a_Message)
     {
-        if (a_Message.author.id == this.m_Bot.user.id)
+        if (a_Message.author.id === this.m_Bot.user.id)
             return;
         
         // If we have a reporting channel, we"re posting in that reporting channel, and it"s either activekeys or active_keys
-        let t_AskingForActiveKeys = (a_Message.content.startsWith("!active_keys") || a_Message.content.startsWith("!activekeys"));
-        let t_ReporterChannelExists = !(!this.Channel);
-        let t_InReporterChannel = a_Message.channel.id == this.Channel.id;
+        let t_AskingForActiveKeys = a_Message.content.startsWith("!active_keys") || a_Message.content.startsWith("!activekeys");
+        let t_ReporterChannelExists = !!this.Channel;
+        let t_InReporterChannel = a_Message.channel.id === this.Channel.id;
         if (t_AskingForActiveKeys && t_ReporterChannelExists && t_InReporterChannel)
         {
-            if (this.m_Keys.length == 0) 
+            if (this.m_Keys.length === 0)
             {
                 a_Message.reply("I haven't found any keys.");
                 return;
@@ -110,7 +110,7 @@ class KeyFinder
                 
                 console.warn(t_Message);
                 const t_Channel = this.Channel;
-                if (t_Channel != null)
+                if (t_Channel !== null)
                     t_Channel.send(t_Message);
             });
         }
@@ -126,20 +126,20 @@ class KeyFinder
         // if (t_Matches == null)
         //     t_Matches = a_Message.match(/[a-fA-F0-9]{8}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{12}/i);
 
-        if (t_Matches == null)
+        if (t_Matches === null)
             return;
 
         const t_Key = t_Matches[0];
 
         this.TestKey(t_Key, (a_Works, a_Key) =>
         {
-            if(a_Works)
+            if (a_Works)
             {
                 const t_Message = "Found a working key at " + a_Location + " posted by " + a_User + ": `" + t_Key + "`";
                 
                 console.warn(t_Message);
                 const t_Channel = this.Channel;
-                if (t_Channel != null)
+                if (t_Channel !== null)
                     t_Channel.send(t_Message);
 
                 // TODO: do this instead: this.m_Keys.push({ key: t_Key, location: a_Location, user: a_User });
@@ -153,7 +153,7 @@ class KeyFinder
                 
                 console.warn(t_Message);
                 const t_Channel = this.Channel;
-                if (t_Channel != null)
+                if (t_Channel !== null)
                     t_Channel.send(t_Message);
             }
         })
@@ -178,14 +178,14 @@ class KeyFinder
     get Channel()
     {
         const t_Guild = this.m_Bot.guilds.find("name", this.m_Settings.Server);
-        if (typeof(t_Guild) === "undefined")
+        if (typeof t_Guild === "undefined")
         {
             console.error("Incorrect setting for the server: " + this.m_Settings.Server);
             return null;
         }
 
         const t_Channel = t_Guild.channels.find("name", this.m_Settings.ReportChannel);
-        if (typeof(t_Channel) === "undefined")
+        if (typeof t_Channel === "undefined")
         {
             console.error("Incorrect setting for the channel: " + this.m_Settings.ReportChannel);
             return null;

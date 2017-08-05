@@ -6,7 +6,7 @@ class Uptime
     {
         console.log("Requested uptime extension..");
 
-        const t_Data = FileSystem.readFileSync(a_SettingsFile, "utf8");
+        let t_Data = FileSystem.readFileSync(a_SettingsFile, "utf8");
         this.m_Settings = JSON.parse(t_Data);
         console.log("Successfully loaded uptime settings file.");
 
@@ -33,7 +33,7 @@ class Uptime
 
     OnMessage(a_Message)
     {
-        if(a_Message.content.startsWith("!uptime") === false)
+        if (a_Message.content.startsWith("!uptime") === false)
             return;
         
         a_Message.reply("the bot has been up for " + this.UptimePercentage + "% of the time. Bot started " + this.Uptime + " ago.");
@@ -44,14 +44,14 @@ class Uptime
         let t_TimeDifference = (new Date()).getTime() - this.m_Data.LastUptime;
 
         // To restart, basically set either of these values to 0
-        if (this.m_Data.LastUptime == 0 || this.m_Data.UptimeStart == 0)
+        if (this.m_Data.LastUptime === 0 || this.m_Data.UptimeStart === 0)
         {
-            this.m_Data.UptimeStart = (new Date()).getTime();
+            this.m_Data.UptimeStart = new Date().getTime();
             this.m_Data.TotalDowntime = 0;
             t_TimeDifference = 0;
         }
 
-        if(t_TimeDifference > this.m_Settings.CheckInterval + 1000) // Give it some error
+        if (t_TimeDifference > this.m_Settings.CheckInterval + 1000) // Give it some error
         {
             this.m_Data.TotalDowntime += t_TimeDifference;
             console.log("Noticed a downtime of " + (t_TimeDifference * 0.001) + " seconds.");
@@ -63,8 +63,8 @@ class Uptime
 
     get UptimePercentage() 
     {
-        let t_Timespan = (new Date()).getTime() - this.m_Data.UptimeStart;
-        let t_UptimePercentage = 1.0 - (this.m_Data.TotalDowntime / t_Timespan);
+        const t_Timespan = (new Date()).getTime() - this.m_Data.UptimeStart;
+        const t_UptimePercentage = 1.0 - (this.m_Data.TotalDowntime / t_Timespan);
         // return Math.round(t_UptimePercentage * 100.0 * 10000.0) * 0.00001;
         return +(t_UptimePercentage * 100.0).toFixed(3);
     }
@@ -105,10 +105,10 @@ class Uptime
             {
                 if (t_Message)
                 {
-                    t_Message += ", "
+                    t_Message += ", ";
                     if (i === 0) t_Message += "and "
-                };
-                t_Message += `${t_Interval} ${t_TimeUnit[0]}${t_Interval === 1 ? "" : "s"}`
+                }
+                t_Message += `${t_Interval} ${t_TimeUnit[0]}${t_Interval === 1 ? "" : "s"}`;
                 t_Millis -= t_Interval * t_MillisInUnit;
             }
             t_MillisInUnit /= t_TimeUnit[1];
