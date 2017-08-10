@@ -5,6 +5,7 @@ const ThinkingNamespace = require("./thinking.js");
 const HoneypotNamespace = require("./honeypot.js");
 const ForumNamespace = require("./forum.js");
 const KeyfinderNamespace = require("./key_finder.js");
+const TechblogNamespace = require("./techblog.js");
 
 // Load and initialise settings
 const t_Bot = new BotNamespace.Botty("settings/settings.json");
@@ -15,6 +16,7 @@ const t_KeyFinder = new KeyfinderNamespace.KeyFinder(t_Bot.Client, "settings/rio
 const t_Forum = new ForumNamespace.ForumReader(t_Bot.Client, "settings/forum_settings.json", "data/forum_data.json", t_KeyFinder);
 const t_Thinking = new ThinkingNamespace.Thinking(t_Bot.Client, "data/thinking_data.json");
 const t_Honeypot = new HoneypotNamespace.Honeypot(t_Bot.Client, "settings/honeypot_settings.json");
+const t_Techblog = new TechblogNamespace.Techblog(t_Bot.Client, "settings/techblog_settings.json", "data/techblog_data.json");
 
 // Start bot
 t_Bot.Start();
