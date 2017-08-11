@@ -1,0 +1,6 @@
+{
+    "CheckInterval": 300000,
+    "Server": "RiotAPIDevCommunity",
+    "Channel": "tech-articles",
+    "URL": "https://engineering.riotgames.com/news/feed"
+}

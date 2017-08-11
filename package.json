@@ -12,6 +12,7 @@
   "dependencies": {
     "bufferutil": "^3.0.0",
     "erlpack": "hammerandchisel/erlpack",
+    "feed-read": "^0.0.1",
     "libsodium-wrappers": "^0.5.1",
     "node-opus": "^0.2.5",
     "opusscript": "^0.0.3",
