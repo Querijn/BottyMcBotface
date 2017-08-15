@@ -2,7 +2,7 @@
   "name": "botty-mcbotface",
   "version": "1.0.0",
   "description": "A bot for the Riot Games API Discord.",
-  "main": "bot.js",
+  "main": "js/app.js",
   "repository": {
     "url": "git@github.com:Querijn/BottyMcBotface.git",
     "type": "git"
@@ -20,7 +20,15 @@
     "to-markdown": "^3.1.0",
     "uws": "^0.14.1"
   },
+  "devDependencies": {
+    "@types/node": "^8.0.22",
+    "typescript": "^2.4.2"
+  },
   "peerDependencies": {
     "discord.js": "^11.1.0"
+  },
+  "scripts": {
+    "compile": "tsc",
+    "start": "node js/app.js"
   }
 }

@@ -59,3 +59,6 @@ typings/
 
 # Webstorm
 .idea
+
+# Visual Studio Code
+.vscode
