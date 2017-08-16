@@ -6,6 +6,7 @@ import Honeypot from "./Honeypot";
 import ForumReader from "./ForumReader";
 import KeyFinder from "./KeyFinder";
 import Techblog from "./Techblog";
+import ChannelAccess from "./ChannelAccess";
 
 // Load and initialise settings
 const t_Bot = new Botty("settings/settings.json");
@@ -17,6 +18,7 @@ const t_Forum = new ForumReader(t_Bot.Client, "settings/forum_settings.json", "d
 const t_Thinking = new Thinking(t_Bot.Client, "data/thinking_data.json");
 const t_Honeypot = new Honeypot(t_Bot.Client, "settings/honeypot_settings.json");
 const t_Techblog = new Techblog(t_Bot.Client, "settings/techblog_settings.json", "data/techblog_data.json");
+const t_ChannelAccess = new ChannelAccess(t_Bot.Client, "settings/channel_access_settings.json");
 
 // Start bot
 t_Bot.Start();
