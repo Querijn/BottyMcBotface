@@ -1,15 +1,29 @@
-const util = require("./util");
+import Discord = require("discord.js");
+import { fileBackedObject } from "./util";
 
-class Uptime
-{
-    constructor(a_Bot, a_SettingsFile, a_DataFile)
+export interface UptimeSettings {
+    CheckInterval: number;
+}
+
+export interface UptimeData {
+    LastUptime: number;
+    UptimeStart: number;
+    TotalDowntime: number;
+}
+
+export default class Uptime {
+    private m_Bot: Discord.Client;
+    private m_Settings: UptimeSettings;
+    private m_Data: UptimeData;
+
+    constructor(a_Bot: Discord.Client, a_SettingsFile: string, a_DataFile: string)
     {
         console.log("Requested uptime extension..");
 
-        this.m_Settings = util.fileBackedObject(a_SettingsFile);
+        this.m_Settings = fileBackedObject(a_SettingsFile);
         console.log("Successfully loaded uptime settings file.");
 
-        this.m_Data = util.fileBackedObject(a_DataFile);
+        this.m_Data = fileBackedObject(a_DataFile);
         console.log("Successfully loaded uptime data file.");
 
         this.m_Bot = a_Bot;
@@ -23,8 +37,7 @@ class Uptime
         console.log("Uptime extension loaded.");
     }
 
-    OnMessage(a_Message)
-    {
+    OnMessage(a_Message: Discord.Message) {
         if (a_Message.content.startsWith("!uptime") === false)
             return;
         
@@ -60,7 +73,7 @@ class Uptime
         return +(t_UptimePercentage * 100.0).toFixed(3);
     }
 
-    AddS(a_Number)
+    AddS(a_Number: number)
     {
         return a_Number === 1 ? "" : "s";
     }
@@ -70,7 +83,7 @@ class Uptime
         let t_Message = "";
         /* How long each unit of time is, listed in ascending order. For each sub-array, first element is the name of the singular unit of time,
         and the second elements is how many units of the previous time time (milliseconds for the first entry) are in it. */
-        const t_TimeUnits = [
+        const t_TimeUnits: [string, number][] = [
             ["second", 1000],
             ["minute", 60],
             ["hour", 60],
@@ -107,5 +120,3 @@ class Uptime
         return t_Message;
     }
 }
-
-exports.Uptime = Uptime;
