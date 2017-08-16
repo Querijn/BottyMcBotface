@@ -16,8 +16,7 @@ export default class Uptime {
     private m_Settings: UptimeSettings;
     private m_Data: UptimeData;
 
-    constructor(a_Bot: Discord.Client, a_SettingsFile: string, a_DataFile: string)
-    {
+    constructor(a_Bot: Discord.Client, a_SettingsFile: string, a_DataFile: string) {
         console.log("Requested uptime extension..");
 
         this.m_Settings = fileBackedObject(a_SettingsFile);
@@ -32,85 +31,67 @@ export default class Uptime {
         setInterval(this.OnUpdate.bind(this), this.m_Settings.CheckInterval);
     }
 
-    OnBot()
-    {
+    OnBot() {
         console.log("Uptime extension loaded.");
     }
 
     OnMessage(a_Message: Discord.Message) {
-        if (a_Message.content.startsWith("!uptime") === false)
-            return;
-        
+        if (a_Message.content.startsWith("!uptime") === false) return;
+
         a_Message.reply(`the bot has been up for ${this.UptimePercentage}% of the time. Bot started ${this.Uptime} ago.`);
     }
 
-    OnUpdate()
-    {
+    OnUpdate() {
         let t_TimeDifference = Date.now() - this.m_Data.LastUptime;
 
         // To restart, basically set either of these values to 0
-        if (this.m_Data.LastUptime === 0 || this.m_Data.UptimeStart === 0)
-        {
+        if (this.m_Data.LastUptime === 0 || this.m_Data.UptimeStart === 0) {
             this.m_Data.UptimeStart = new Date().getTime();
             this.m_Data.TotalDowntime = 0;
             t_TimeDifference = 0;
         }
 
-        if (t_TimeDifference > this.m_Settings.CheckInterval + 1000) // Give it some error
-        {
+        if (t_TimeDifference > this.m_Settings.CheckInterval + 1000) {
+            // Give it some error
             this.m_Data.TotalDowntime += t_TimeDifference;
-            console.log("Noticed a downtime of " + (t_TimeDifference * 0.001) + " seconds.");
+            console.log("Noticed a downtime of " + t_TimeDifference * 0.001 + " seconds.");
         }
 
-        this.m_Data.LastUptime = (new Date()).getTime();
+        this.m_Data.LastUptime = new Date().getTime();
     }
 
-    get UptimePercentage() 
-    {
-        const t_Timespan = (new Date()).getTime() - this.m_Data.UptimeStart;
-        const t_UptimePercentage = 1.0 - (this.m_Data.TotalDowntime / t_Timespan);
+    get UptimePercentage() {
+        const t_Timespan = new Date().getTime() - this.m_Data.UptimeStart;
+        const t_UptimePercentage = 1.0 - this.m_Data.TotalDowntime / t_Timespan;
         // return Math.round(t_UptimePercentage * 100.0 * 10000.0) * 0.00001;
         return +(t_UptimePercentage * 100.0).toFixed(3);
     }
 
-    AddS(a_Number: number)
-    {
+    AddS(a_Number: number) {
         return a_Number === 1 ? "" : "s";
     }
 
-    get Uptime() 
-    {
+    get Uptime() {
         let t_Message = "";
         /* How long each unit of time is, listed in ascending order. For each sub-array, first element is the name of the singular unit of time,
         and the second elements is how many units of the previous time time (milliseconds for the first entry) are in it. */
-        const t_TimeUnits: [string, number][] = [
-            ["second", 1000],
-            ["minute", 60],
-            ["hour", 60],
-            ["day", 24],
-            ["week", 7],
-            ["year", 52]
-        ];
+        const t_TimeUnits: [string, number][] = [["second", 1000], ["minute", 60], ["hour", 60], ["day", 24], ["week", 7], ["year", 52]];
 
         let t_Millis = Date.now() - this.m_Data.UptimeStart;
         let t_MillisInUnit = 1;
         // Determine how many milliseconds are in the largest unit of time
-        for (let i = 0; i < t_TimeUnits.length; i++)
-        {
+        for (let i = 0; i < t_TimeUnits.length; i++) {
             t_MillisInUnit *= t_TimeUnits[i][1];
         }
 
-        for (let i = t_TimeUnits.length - 1; i >= 0; i--)
-        {
+        for (let i = t_TimeUnits.length - 1; i >= 0; i--) {
             let t_TimeUnit = t_TimeUnits[i];
             /** How many of the unit are in the time */
             let t_Interval = Math.floor(t_Millis / t_MillisInUnit);
-            if (t_Interval >= 1)
-            {
-                if (t_Message)
-                {
+            if (t_Interval >= 1) {
+                if (t_Message) {
                     t_Message += ", ";
-                    if (i === 0) t_Message += "and "
+                    if (i === 0) t_Message += "and ";
                 }
                 t_Message += `${t_Interval} ${t_TimeUnit[0]}${t_Interval === 1 ? "" : "s"}`;
                 t_Millis -= t_Interval * t_MillisInUnit;
