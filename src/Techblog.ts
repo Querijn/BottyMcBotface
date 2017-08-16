@@ -1,13 +1,28 @@
-const feedReader = require("feed-read");
-const util = require("./util");
+import { fileBackedObject } from "./util";
+import Discord = require("discord.js");
+import feedReader = require("feed-read");
 
-class Techblog
-{
-    constructor(a_Bot, a_SettingsFile, a_DataFile)
-    {
-        this.m_Settings = util.fileBackedObject(a_SettingsFile);
+export interface TechblogSettings {
+    CheckInterval: number;
+    Server: string;
+    Channel: string;
+    URL: string;
+}
 
-        this.m_Data = util.fileBackedObject(a_DataFile);
+export interface TechblogData {
+    Last: number;
+}
+
+export default class Techblog {
+    private m_Bot: Discord.Client;
+    private m_Settings: TechblogSettings;
+    private m_Data: TechblogData;
+    private m_Channel: Discord.TextChannel;
+
+    constructor(a_Bot: Discord.Client, a_SettingsFile: string, a_DataFile: string) {
+        this.m_Settings = fileBackedObject(a_SettingsFile);
+
+        this.m_Data = fileBackedObject(a_DataFile);
         console.log("Successfully loaded TechblogReader data file.");
 
         this.m_Bot = a_Bot;
@@ -24,7 +39,7 @@ class Techblog
                 return;
             }
 
-            this.m_Channel = t_Guild.channels.find("name", this.m_Settings.Channel);
+            this.m_Channel = t_Guild.channels.find("name", this.m_Settings.Channel) as Discord.TextChannel;
             if (!this.m_Channel)
             {
                 console.error("Incorrect setting for the channel: " + this.m_Settings.Channel);
