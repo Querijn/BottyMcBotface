@@ -1,27 +1,28 @@
-const util = require("./util");
+import Discord = require("discord.js");
+import { fileBackedObject } from "./util";
 
-class Thinking
-{
-    constructor(a_Bot, a_UserFile)
+export default class Thinking {
+    private m_Bot: Discord.Client;
+    private m_ThinkingUsers: string[];
+
+    constructor(a_Bot: Discord.Client, a_UserFile: string)
     {
         console.log("Requested Thinking extension..");
         this.m_Bot = a_Bot;
 
-        this.m_ThinkingUsers = util.fileBackedObject(a_UserFile);
+        this.m_ThinkingUsers = fileBackedObject(a_UserFile);
         console.log("Successfully loaded original thinking user file.");
 
         this.m_Bot.on("ready", this.OnBot.bind(this));
-
         this.m_Bot.on("message", this.OnMessage.bind(this));
     }
 
     OnBot()
     {
         console.log("Thinking extension loaded.");
-        this.m_Date = Date.now();
     }
 
-    OnMessage(a_Message)
+    OnMessage(a_Message: Discord.Message)
     {
         if (a_Message.content.startsWith("!original_thinko_reacts_only") && this.m_ThinkingUsers.indexOf(a_Message.author.id) === -1)
         {
@@ -59,5 +60,3 @@ class Thinking
         a_Message.react(t_Emoji.identifier);
     }
 }
-
-exports.Thinking = Thinking;

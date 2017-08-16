@@ -78,5 +78,3 @@ export default class Techblog {
         });
     }
 }
-
-exports.Techblog = Techblog;
