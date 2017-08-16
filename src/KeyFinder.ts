@@ -1,7 +1,6 @@
 import Discord = require("discord.js");
-import {fileBackedObject} from "./util";
+import { fileBackedObject } from "./util";
 import request = require("request");
-
 
 // TODO: Get this thing its own nice file
 declare global {
@@ -9,6 +8,7 @@ declare global {
 		remove(value: any): void;
 	}
 }
+
 Array.prototype.remove = function() {
 	let what, a = arguments, L = a.length, ax;
 	while (L && this.length) {
@@ -20,14 +20,15 @@ Array.prototype.remove = function() {
 	return this;
 };
 
-
+export interface KeyFinderSettings {
+	Server: string;
+	ReportChannel: string;
+}
 
 export default class KeyFinder {
-	// TODO type
-	private m_Settings: any;
+	private m_Settings: KeyFinderSettings;
 	private m_Keys: string[];
 	private m_Bot: Discord.Client;
-	/** The Discord channel to report found keys in ('undefined' if reporting via Discord is not enabled) */
 	private m_Channel?: Discord.TextChannel = undefined;
 
 	constructor(a_Bot: Discord.Client, a_SettingsFile: string, a_KeyFile: string) {
@@ -59,7 +60,6 @@ export default class KeyFinder {
 		});
 		this.m_Bot.on("message", this.OnMessage.bind(this));
 	}
-
 
 	OnMessage(a_Message: Discord.Message) {
 		if (a_Message.author.id === this.m_Bot.user.id)
@@ -94,18 +94,16 @@ export default class KeyFinder {
 	 * @throws {Error} Thrown if the API call cannot be completed or results in a status code other than 200 or 403
 	 */
 	TestKey(a_Key: string): Promise<boolean> {
-		return new Promise<boolean>((resolve: Function, reject: Function) => {
-			const t_Options =
-				{
-					followAllRedirects: true,
-					url: "https://euw1.api.riotgames.com/lol/summoner/v3/summoners/22929336",
-					headers:
-					{
-						"X-Riot-Token": a_Key,
-					}
-				};
+		return new Promise((resolve, reject) => {
+			const t_Options = {
+				followAllRedirects: true,
+				url: "https://euw1.api.riotgames.com/lol/summoner/v3/summoners/22929336",
+				headers: {
+					"X-Riot-Token": a_Key,
+				}
+			};
 
-			request(t_Options, (error, response: request.RequestResponse) => {
+			request(t_Options, (error, response) => {
 				if (error) {
 					reject("Error while testing key: " + error);
 				} else {
@@ -130,10 +128,8 @@ export default class KeyFinder {
 				let t_Message = `Key \`${t_Key}\ returns 403 Forbidden now, removing it from my database.`;
 
 				console.warn(t_Message);
-				if (this.m_Channel !== null)
+				if (this.m_Channel)
 					this.m_Channel.send(t_Message);
-			}, (a_Error) => {
-
 			});
 		}
 
@@ -161,7 +157,7 @@ export default class KeyFinder {
 			const t_Message = `Found a working key at ${a_Location} posted by ${a_User}: \`${t_Key}\``;
 
 			console.warn(t_Message);
-			if (this.m_Channel !== null)
+			if (this.m_Channel)
 				this.m_Channel.send(t_Message);
 
 			// TODO: do this instead: this.m_Keys.push({ key: t_Key, location: a_Location, user: a_User });
@@ -172,7 +168,7 @@ export default class KeyFinder {
 			const t_Message = `Found an inactive key at ${a_Location} posted by ${a_User}: \`${t_Key}\``;
 
 			console.warn(t_Message);
-			if (this.m_Channel !== null)
+			if (this.m_Channel)
 				this.m_Channel.send(t_Message);
 			// true is only returned for working API keys
 			return false;

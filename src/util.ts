@@ -1,7 +1,7 @@
 import fs = require("fs");
 
-export const fileBackedObject = (path: string) => {
-	const contents: string = fs.readFileSync(path, "utf8");
+export function fileBackedObject<T>(path: string): T {
+	const contents = fs.readFileSync(path, "utf8");
 
 	return new Proxy(JSON.parse(contents), {
 		set(object, property, value, receiver) {

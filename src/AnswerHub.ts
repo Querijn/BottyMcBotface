@@ -1,5 +1,5 @@
 import request = require("request");
-const toMarkdown = require("to-markdown");
+import toMarkdown = require("to-markdown");
 
 export class API {
 	/** The base AnswerHub URL (with a trailing slash) */
@@ -20,27 +20,26 @@ export class API {
      * @throws {any} Thrown if an error is received from the API
      * @returns The parsed body of the response from the API
      */
-	private MakeRequest(a_URL: string): Promise<any> {
-		return new Promise((resolve: Function, reject: Function) => {
+	private MakeRequest<T>(a_URL: string): Promise<T> {
+		return new Promise((resolve, reject) => {
 			const t_Options = {
 				followAllRedirects: true,
 				url: `${this.m_BaseURL}services/v2/${a_URL}`,
-				headers:
-				{
+				headers: {
 					"Accept": "application/json",
 					"Content-Type": "application/json",
 					"Authorization": this.m_Auth
 				},
 			};
 
-			request.post(t_Options, (a_Error, a_Response: request.RequestResponse) => {
+			request.post(t_Options, (a_Error, a_Response) => {
 				if (a_Error) {
 					reject(a_Error);
 				} else if (a_Response.statusCode !== 200) {
 					reject("Received status code " + a_Response.statusCode);
 				} else {
 					try {
-						const body: any = JSON.parse(a_Response.body);
+						const body = JSON.parse(a_Response.body);
 						resolve(body);
 					} catch (t_Error) {
 						reject(t_Error);
@@ -51,39 +50,39 @@ export class API {
 	}
 
 	public FormatBody(a_Body: string): string {
-		const t_Markdown = toMarkdown(a_Body, {gfm: true});
+		const t_Markdown = toMarkdown(a_Body, { gfm: true });
 		const t_Clamped = t_Markdown.substr(0, Math.min(1021, t_Markdown.length));
 		// TODO handle relative links
 		// TODO handle code blocks
 		return t_Clamped + (t_Clamped.length === 1021 ? "..." : "");
 	}
 
-	async GetQuestions(a_Page: number = 1, a_Sort = "active"): Promise<NodeList<Question>> {
-		return await this.MakeRequest(`question.json?page=${a_Page}&sort=${a_Sort}`) as NodeList<Question>;
+	GetQuestions(a_Page = 1, a_Sort = "active"): Promise<NodeList<Question>> {
+		return this.MakeRequest(`question.json?page=${a_Page}&sort=${a_Sort}`);
 	}
 
-	async GetAnswers(a_Page: number = 1, a_Sort = "active"): Promise<NodeList<Answer>> {
-		return await this.MakeRequest(`answer.json?page=${a_Page}&sort=${a_Sort}`) as NodeList<Answer>;
+	GetAnswers(a_Page = 1, a_Sort = "active"): Promise<NodeList<Answer>> {
+		return this.MakeRequest(`answer.json?page=${a_Page}&sort=${a_Sort}`);
 	}
 
-	async GetComments(a_Page: number = 1, a_Sort = "active"): Promise<NodeList<Comment>> {
-		return await this.MakeRequest(`comment.json?page=${a_Page}&sort=${a_Sort}`) as NodeList<Comment>;
+	GetComments(a_Page = 1, a_Sort = "active"): Promise<NodeList<Comment>> {
+		return this.MakeRequest(`comment.json?page=${a_Page}&sort=${a_Sort}`);
 	}
 
-	async GetQuestion(a_ID: number): Promise<Question> {
-		return await this.MakeRequest(`question/${a_ID}.json`) as Question;
+	GetQuestion(a_ID: number): Promise<Question> {
+		return this.MakeRequest(`question/${a_ID}.json`);
 	}
 
-	async GetArticle(a_ID: number): Promise<Article> {
-		return await this.MakeRequest(`article/${a_ID}.json`) as Article;
+	GetArticle(a_ID: number): Promise<Article> {
+		return this.MakeRequest(`article/${a_ID}.json`);
 	}
 
-	async GetAnswer(a_ID: number): Promise<Answer> {
-		return await this.MakeRequest(`answer/${a_ID}.json`) as Answer;
+	GetAnswer(a_ID: number): Promise<Answer> {
+		return this.MakeRequest(`answer/${a_ID}.json`);
 	}
 
-	async GetComment(a_ID: number): Promise<Comment> {
-		return await this.MakeRequest(`comment/${a_ID}.json`) as Comment;
+	GetComment(a_ID: number): Promise<Comment> {
+		return this.MakeRequest(`comment/${a_ID}.json`);
 	}
 }
 

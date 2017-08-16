@@ -1,10 +1,16 @@
 import Discord = require("discord.js");
-import {fileBackedObject} from "./util";
+import { fileBackedObject } from "./util";
+
+export interface BottySettings {
+    Discord: {
+        Key: string;
+        Owner: number;
+    };
+}
 
 export default class Botty {
-	private m_Client: Discord.Client = new Discord.Client();
-	// TODO type
-	private m_Settings: any;
+	private m_Client = new Discord.Client();
+	private m_Settings: BottySettings;
 
 	constructor(a_SettingsFile: string) {
 		this.m_Settings = fileBackedObject(a_SettingsFile);

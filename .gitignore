@@ -62,3 +62,6 @@ typings/
 
 # Visual Studio Code
 .vscode
+
+# Compiled typescript sources.
+dist/

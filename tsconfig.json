@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "alwaysStrict": true,
+    "outDir": "dist",
     "module": "commonjs",
-    "noImplicitReturns": true,
-    "noEmitOnError": true,
-    "outDir": "js/"
+    "target": "es6"
   },
-  "include": [
-    "ts/**/*.ts"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
 }
