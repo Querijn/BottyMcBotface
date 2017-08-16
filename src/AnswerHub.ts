@@ -13,6 +13,7 @@ export class API {
 
         this.m_Auth = "Basic " + new Buffer(a_Username + ":" + a_Password, "binary").toString("base64");
     }
+    
     /**
      * Makes a request to the AnswerHub API
      * @param a_URL The URL to make a request to, relative to the base API URL

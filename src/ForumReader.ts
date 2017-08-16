@@ -40,13 +40,10 @@ export default class ForumReader {
 
         this.m_KeyFinder = a_KeyFinder;
         this.m_Answerhub = new AnswerHubAPI(this.m_Settings.URL, this.m_Settings.Username, this.m_Settings.Password);
-
         this.m_CachedNodes = new Map();
 
         if (this.m_Data.Last.question === 0) this.m_Data.Last.question = Date.now();
-
         if (this.m_Data.Last.answer === 0) this.m_Data.Last.answer = Date.now();
-
         if (this.m_Data.Last.comment === 0) this.m_Data.Last.comment = Date.now();
 
         a_Bot.on("ready", () => {
@@ -92,12 +89,13 @@ export default class ForumReader {
     }
 
     async ReadActivity(a_Activity: Node) {
-        let t_UsernameIndex = a_Activity.author.username.indexOf("(");
-        let t_RegionEndIndex = a_Activity.author.username.indexOf(")");
-        let t_Region = t_UsernameIndex === -1 ? "UNKNOWN" : a_Activity.author.username.substr(t_UsernameIndex + 1, t_RegionEndIndex - t_UsernameIndex - 1);
-        let t_Username = t_UsernameIndex === -1 ? a_Activity.author.username : a_Activity.author.username.substr(0, t_UsernameIndex - 1);
-        let t_Avatar = `http://avatar.leagueoflegends.com/${encodeURIComponent(t_Region)}/${encodeURIComponent(t_Username)}.png?t=${encodeURIComponent(Math.random().toString())}`;
+        const t_UsernameIndex = a_Activity.author.username.indexOf("(");
+        const t_RegionEndIndex = a_Activity.author.username.indexOf(")");
+        const t_Region = t_UsernameIndex === -1 ? "UNKNOWN" : a_Activity.author.username.substr(t_UsernameIndex + 1, t_RegionEndIndex - t_UsernameIndex - 1);
+        const t_Username = t_UsernameIndex === -1 ? a_Activity.author.username : a_Activity.author.username.substr(0, t_UsernameIndex - 1);
+        const t_Avatar = `http://avatar.leagueoflegends.com/${encodeURIComponent(t_Region)}/${encodeURIComponent(t_Username)}.png?t=${encodeURIComponent(Math.random().toString())}`;
         let t_Embed = null;
+        
         switch (a_Activity.type) {
             case "question": {
                 t_Embed = new Discord.RichEmbed()
@@ -162,7 +160,7 @@ export default class ForumReader {
 
         try {
             for (let i = t_Activities.list.length - 1; i >= 0; i--) {
-                let t_Activity = t_Activities.list[i];
+                const t_Activity = t_Activities.list[i];
 
                 try {
                     if (t_Activity.creationDate > this.m_Data.Last[t_Activity.type]) await this.ReadActivity(t_Activity);

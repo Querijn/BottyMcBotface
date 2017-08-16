@@ -2,27 +2,6 @@ import Discord = require("discord.js");
 import { fileBackedObject } from "./util";
 import request = require("request");
 
-// TODO: Get this thing its own nice file
-declare global {
-    interface Array<T> {
-        remove(value: any): void;
-    }
-}
-
-Array.prototype.remove = function() {
-    let what,
-        a = arguments,
-        L = a.length,
-        ax;
-    while (L && this.length) {
-        what = a[--L];
-        while ((ax = this.indexOf(what)) !== -1) {
-            this.splice(ax, 1);
-        }
-    }
-    return this;
-};
-
 export interface KeyFinderSettings {
     Server: string;
     ReportChannel: string;
@@ -70,10 +49,10 @@ export default class KeyFinder {
         this.FindKey(a_Message.author.username, a_Message.content, "#" + (a_Message.channel as Discord.TextChannel).name);
 
         // If we have a reporting channel, we're posting in that reporting channel, and it's either activekeys or active_keys
-        let t_AskingForActiveKeys = a_Message.content.startsWith("!active_keys") || a_Message.content.startsWith("!activekeys");
+        const t_AskingForActiveKeys = a_Message.content.startsWith("!active_keys") || a_Message.content.startsWith("!activekeys");
         if (!this.m_Channel) return;
 
-        let t_InReporterChannel = a_Message.channel.id === this.m_Channel.id;
+        const t_InReporterChannel = a_Message.channel.id === this.m_Channel.id;
         if (t_AskingForActiveKeys && t_InReporterChannel) {
             if (this.m_Keys.length === 0) {
                 a_Message.reply("I haven't found any keys.");
@@ -119,13 +98,13 @@ export default class KeyFinder {
 
     TestAllKeys() {
         for (let i = 0; i < this.m_Keys.length; i++) {
-            let t_Key = this.m_Keys[i];
-            // TODO make sure this doesn't cause concurrent modification problems with m_Keys
-            this.TestKey(this.m_Keys[i]).then((a_Works: boolean) => {
-                if (a_Works) return;
-                this.m_Keys.remove(t_Key);
+            const t_Key = this.m_Keys[i];
 
-                let t_Message = `Key \`${t_Key}\ returns 403 Forbidden now, removing it from my database.`;
+            this.TestKey(this.m_Keys[i]).then(a_Works => {
+                if (a_Works) return;
+                this.m_Keys.splice(this.m_Keys.indexOf(t_Key), 1);
+
+                const t_Message = `Key \`${t_Key}\ returns 403 Forbidden now, removing it from my database.`;
 
                 console.warn(t_Message);
                 if (this.m_Channel) this.m_Channel.send(t_Message);
