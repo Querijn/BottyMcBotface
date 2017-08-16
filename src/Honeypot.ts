@@ -1,11 +1,24 @@
-const Discord = require("discord.js");
-const util = require("./util");
+import { fileBackedObject } from "./util";
+import Discord = require("discord.js");
 
-class Honeypot
-{
-    constructor(a_Bot, a_SettingsFile)
+export interface HoneypotSettings {
+    Discord: {
+        Token: string;
+        Owner: string;
+    };
+    Server: string;
+    ReportChannel: string;
+}
+
+export default class Honeypot {
+    private m_Master: Discord.Client;
+    private m_Client: Discord.Client;
+    private m_JoinTime: number;
+    private m_Settings: HoneypotSettings;
+
+    constructor(a_Bot: Discord.Client, a_SettingsFile: string)
     {
-        this.m_Settings = util.fileBackedObject(a_SettingsFile);
+        this.m_Settings = fileBackedObject(a_SettingsFile);
         console.log("Successfully loaded honeypot settings file.");
 
         this.m_JoinTime = Date.now();
@@ -31,7 +44,7 @@ class Honeypot
         });
     }
 
-    OnJoin(a_Guild)
+    OnJoin(a_Guild: Discord.Guild)
     {
         console.error(`Joined '${a_Guild}'`);
         this.m_JoinTime = Date.now();
@@ -46,7 +59,7 @@ class Honeypot
         return t_TimeDifference + " milliseconds";
     }
 
-    OnMessage(a_Message)
+    OnMessage(a_Message: Discord.Message)
     {
         if (a_Message.channel.type !== "dm")
             return;
@@ -55,7 +68,7 @@ class Honeypot
         this.ReportHoneypotCatch(t_CatchMessage);
     }
 
-    OnMessageUpdate(a_OldMessage, a_NewMessage)
+    OnMessageUpdate(a_OldMessage: Discord.Message, a_NewMessage: Discord.Message)
     {
         if (a_NewMessage.channel.type !== "dm")
             return;
@@ -64,7 +77,7 @@ class Honeypot
         this.ReportHoneypotCatch(t_CatchMessage);
     }
 
-    ReportHoneypotCatch(a_Message)
+    ReportHoneypotCatch(a_Message: string)
     {
         console.warn(a_Message);
         const t_Channel = this.Channel;
@@ -84,7 +97,7 @@ class Honeypot
         return this.m_Client;
     }
 
-    get Channel()
+    get Channel(): Discord.TextChannel | null
     {
         const t_Guild = this.m_Master.guilds.find("name", this.m_Settings.Server);
         if (typeof t_Guild === "undefined")
@@ -100,8 +113,6 @@ class Honeypot
             return null;
         }
 
-        return t_Channel;
+        return t_Channel as Discord.TextChannel;
     }
 }
-
-exports.Honeypot = Honeypot;
