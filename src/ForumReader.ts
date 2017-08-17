@@ -95,7 +95,7 @@ export default class ForumReader {
         const t_Username = t_UsernameIndex === -1 ? a_Activity.author.username : a_Activity.author.username.substr(0, t_UsernameIndex - 1);
         const t_Avatar = `http://avatar.leagueoflegends.com/${encodeURIComponent(t_Region)}/${encodeURIComponent(t_Username)}.png?t=${encodeURIComponent(Math.random().toString())}`;
         let t_Embed = null;
-        
+
         switch (a_Activity.type) {
             case "question": {
                 t_Embed = new Discord.RichEmbed()
@@ -104,7 +104,7 @@ export default class ForumReader {
                     .setDescription(this.m_Answerhub.FormatBody(a_Activity.body))
                     .setURL(`${this.m_Answerhub.m_BaseURL}questions/${a_Activity.id}/${a_Activity.slug}.html`);
 
-                this.m_KeyFinder.FindKey(t_Username, a_Activity.title, "the forum (in the title), at " + t_Embed.url);
+                this.m_KeyFinder.findKey(t_Username, a_Activity.title, <string>t_Embed.url, a_Activity.creationDate);
                 break;
             }
 
@@ -139,7 +139,7 @@ export default class ForumReader {
 
         t_Embed.setTimestamp(new Date(a_Activity.creationDate)).setThumbnail(t_Avatar);
 
-        this.m_KeyFinder.FindKey(t_Username, a_Activity.body, "the forum, at " + t_Embed.url);
+        this.m_KeyFinder.findKey(t_Username, a_Activity.body, <string>t_Embed.url, a_Activity.creationDate);
         t_Embed.setTimestamp(new Date(a_Activity.creationDate)).setThumbnail(t_Avatar);
 
         await this.m_Channel.send("", {

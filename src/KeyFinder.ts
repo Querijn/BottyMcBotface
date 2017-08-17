@@ -8,145 +8,169 @@ export interface KeyFinderSettings {
 }
 
 export default class KeyFinder {
-    private m_Settings: KeyFinderSettings;
-    private m_Keys: string[];
-    private m_Bot: Discord.Client;
-    private m_Channel?: Discord.TextChannel = undefined;
+    private settings: KeyFinderSettings;
+    private keys: FoundKeyInfo[];
+    private bot: Discord.Client;
+    private channel?: Discord.TextChannel = undefined;
 
-    constructor(a_Bot: Discord.Client, a_SettingsFile: string, a_KeyFile: string) {
+    constructor(bot: Discord.Client, settingsFile: string, keyFile: string) {
         console.log("Requested KeyFinder extension..");
 
-        this.m_Settings = fileBackedObject(a_SettingsFile);
+        this.settings = fileBackedObject(settingsFile);
         console.log("Successfully loaded KeyFinder settings file.");
 
-        this.m_Keys = fileBackedObject(a_KeyFile);
+        this.keys = fileBackedObject(keyFile);
         console.log("Successfully loaded KeyFinder key file.");
 
-        this.m_Bot = a_Bot;
+        this.bot = bot;
 
-        this.m_Bot.on("ready", () => {
-            const t_Guild = this.m_Bot.guilds.find("name", this.m_Settings.Server);
-            if (t_Guild) {
-                const t_Channel = t_Guild.channels.find("name", this.m_Settings.ReportChannel) as Discord.TextChannel;
-                if (t_Channel) {
-                    this.m_Channel = t_Channel;
+        this.bot.on("ready", () => {
+            const guild = this.bot.guilds.find("name", this.settings.Server);
+            if (guild) {
+                const channel = guild.channels.find("name", this.settings.ReportChannel) as Discord.TextChannel;
+                if (channel) {
+                    this.channel = channel;
                 } else {
-                    console.error("Incorrect setting for the channel: " + this.m_Settings.ReportChannel);
+                    console.error("Incorrect setting for the channel: " + this.settings.ReportChannel);
                 }
             } else {
-                console.error("Incorrect setting for the server: " + this.m_Settings.Server);
+                console.error("Incorrect setting for the server: " + this.settings.Server);
             }
 
             console.log("KeyFinder extension loaded.");
-            this.TestAllKeys();
+            this.testAllKeys();
         });
-        this.m_Bot.on("message", this.OnMessage.bind(this));
+        this.bot.on("message", this.onMessage.bind(this));
     }
 
-    OnMessage(a_Message: Discord.Message) {
-        if (a_Message.author.id === this.m_Bot.user.id) return;
+    onMessage(incomingMessage: Discord.Message) {
+        if (incomingMessage.author.id === this.bot.user.id) return;
 
-        this.FindKey(a_Message.author.username, a_Message.content, "#" + (a_Message.channel as Discord.TextChannel).name);
+        this.findKey(`<@${incomingMessage.author.id}>`, incomingMessage.content, `<#${incomingMessage.channel.id}>`, incomingMessage.createdTimestamp);
 
-        // If we have a reporting channel, we're posting in that reporting channel, and it's either activekeys or active_keys
-        const t_AskingForActiveKeys = a_Message.content.startsWith("!active_keys") || a_Message.content.startsWith("!activekeys");
-        if (!this.m_Channel) return;
+        // Check if the reporting channel is enabled, the message was sent in the reporting channel, and the command to view active keys was used
+        if (!this.channel) return;
+        if (incomingMessage.channel.id !== this.channel.id) return;
+        if (!(incomingMessage.content.startsWith("!active_keys") || incomingMessage.content.startsWith("!activekeys"))) return;
 
-        const t_InReporterChannel = a_Message.channel.id === this.m_Channel.id;
-        if (t_AskingForActiveKeys && t_InReporterChannel) {
-            if (this.m_Keys.length === 0) {
-                a_Message.reply("I haven't found any keys.");
-                return;
-            }
-
-            let t_Message = `I've found ${this.m_Keys.length} key${this.m_Keys.length === 1 ? "" : "s"} that ${this.m_Keys.length === 1 ? "is" : "are"} still active:\n`;
-            for (let i = 0; i < this.m_Keys.length; i++) t_Message += ` - ${this.m_Keys[i]}\n`;
-
-            a_Message.reply(t_Message);
+        if (this.keys.length === 0) {
+            incomingMessage.reply("I haven't found any keys.");
+            return;
         }
+
+        let outgoingMessage = `I've found ${this.keys.length} key${this.keys.length === 1 ? "" : "s"} that ${this.keys.length === 1 ? "is" : "are"} still active:\n`;
+        for (const keyInfo of this.keys) outgoingMessage += `- \`${keyInfo.apiKey}\` (posted by ${keyInfo.user} in ${keyInfo.location} on ${new Date(keyInfo.timestamp)}). Rate limit: \`${keyInfo.rateLimit}\`\n`;
+
+        incomingMessage.reply(outgoingMessage);
     }
     /**
 	 * Checks if an API key is valid
-	 * @param a_Key The API key to test
+	 * @param key The API key to test
 	 * @async
-	 * @returns 'true' if the key yields a non-403 response code, 'false' if the key yields a 403 response code
+	 * @returns The value of the "X-App-Rate-Limit" header if the key yields a non-403 response code, or 'null' if the key yields a 403 response code
 	 * @throws {Error} Thrown if the API call cannot be completed or results in a status code other than 200 or 403
 	 */
-    TestKey(a_Key: string): Promise<boolean> {
+    testKey(key: string): Promise<string | null> {
         return new Promise((resolve, reject) => {
-            const t_Options = {
+            const options = {
                 followAllRedirects: true,
                 url: "https://euw1.api.riotgames.com/lol/summoner/v3/summoners/22929336",
                 headers: {
-                    "X-Riot-Token": a_Key
+                    "X-Riot-Token": key
                 }
             };
 
-            request(t_Options, (error, response) => {
+            request(options, (error, response) => {
                 if (error) {
                     reject("Error while testing key: " + error);
                 } else {
                     if (response.statusCode === 403) {
-                        resolve(false);
+                        resolve(null);
                     } else {
-                        resolve(true);
+                        resolve(<string>response.headers["x-app-rate-limit"]);
                     }
                 }
             });
         });
     }
 
-    TestAllKeys() {
-        for (let i = 0; i < this.m_Keys.length; i++) {
-            const t_Key = this.m_Keys[i];
+    /**
+     * Tests all keys to see if they are still active, removing deactivated keys from the list and logging a message for each one
+     */
+    testAllKeys(): void {
+        for (let i = 0; i < this.keys.length; i++) {
+            const keyInfo = this.keys[i];
+            this.testKey(keyInfo.apiKey).then(keyWorks => {
+                if (keyWorks) return;
 
-            this.TestKey(this.m_Keys[i]).then(a_Works => {
-                if (a_Works) return;
-                this.m_Keys.splice(this.m_Keys.indexOf(t_Key), 1);
+                this.keys.splice(i, 1);
 
-                const t_Message = `Key \`${t_Key}\ returns 403 Forbidden now, removing it from my database.`;
-
-                console.warn(t_Message);
-                if (this.m_Channel) this.m_Channel.send(t_Message);
+                const message = `Key \`${keyInfo.apiKey}\` returns 403 Forbidden now, removing it from my database.`;
+                console.warn(message);
+                if (this.channel) this.channel.send(message);
             });
         }
 
-        setTimeout(this.TestAllKeys.bind(this), 10000);
+        setTimeout(this.testAllKeys.bind(this), 10000);
     }
 
     /**
-	 * Checks if a message contains a working API key
-	 * @param a_User The user who sent the message (used when reporting found keys)
-	 * @param a_Message The message to check for an API key
-	 * @param a_Location Where the message was sent (used when reporting found keys)
+	 * Checks if a message contains a working API key. If a working key is found (that had not already been found), moderators will be alerted and the key will be tracked
+	 * @param user The user who sent the message (used when reporting found keys). If the key was posted on AnswerHub, this should be their username; if the key was posted in Discord, this should be a string to tag them (e.g. "<@178320409303842817>")
+	 * @param message The message to check for an API key. Where the key was posted. If the key was posted on AnswerHub, this should be a link to the post; if the key was posted in Discord, this should be a string to tag the channel (e.g. "<#187652476080488449>")
+	 * @param location Where the message was sent (used when reporting found keys)
+     * @param timestamp When the key was posted (in milliseconds since the Unix epoch)
 	 * @async
 	 * @returns 'true' if a working API key was found in the message, 'false' if one wasn't
 	 */
-    async FindKey(a_User: string, a_Message: string, a_Location: string): Promise<boolean> {
-        const t_Matches = a_Message.match(/RGAPI\-[a-fA-F0-9]{8}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{12}/i);
+    async findKey(user: string, message: string, location: string, timestamp: number): Promise<boolean> {
+        const matches = message.match(/RGAPI\-[a-fA-F0-9]{8}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{12}/i);
 
-        if (t_Matches === null) return false;
-        // TODO check all matches
-        const t_Key = t_Matches[0];
+        if (matches === null) return false;
+        /** If any of the keys in the message were active */
+        let foundWorkingKey = false;
 
-        const t_Works = await this.TestKey(t_Key);
-        if (t_Works) {
-            const t_Message = `Found a working key at ${a_Location} posted by ${a_User}: \`${t_Key}\``;
+        matchesLoop: for (let key of matches) {
+            const rateLimit = await this.testKey(key);
+            // 'rateLimits' will be 'null' if the key is invalid
+            const keyWorks = !!rateLimit;
+            const message = `Found an ${keyWorks ? "active" : "inactive"} key in ${location} posted by ${user}: \`${key}\` Key rate limit: \`${rateLimit}\``;
 
-            console.warn(t_Message);
-            if (this.m_Channel) this.m_Channel.send(t_Message);
+            if (keyWorks) {
+                // Check if key is already being tracked
+                for (let foundKeyInfo of this.keys) {
+                    if (key === foundKeyInfo.apiKey) {
+                        // An active key was found, but it doesn't need to be logged
+                        foundWorkingKey = true;
+                        break matchesLoop;
+                    }
+                }
 
-            // TODO: do this instead: this.m_Keys.push({ key: t_Key, location: a_Location, user: a_User });
-            // TODO: Check for duplicates.
-            this.m_Keys.push(t_Key);
-            return true;
-        } else {
-            const t_Message = `Found an inactive key at ${a_Location} posted by ${a_User}: \`${t_Key}\``;
+                this.keys.push({
+                    apiKey: key,
+                    user: user,
+                    location: location,
+                    timestamp: timestamp,
+                    rateLimit: <string>rateLimit
+                });
+                foundWorkingKey = true;
+            }
 
-            console.warn(t_Message);
-            if (this.m_Channel) this.m_Channel.send(t_Message);
-            // true is only returned for working API keys
-            return false;
+            console.warn(message);
+            if (this.channel) this.channel.send(message);
         }
+        return foundWorkingKey;
     }
+}
+
+interface FoundKeyInfo {
+    apiKey: string;
+    /** The person who posted the key. If the key was posted on AnswerHub, this will be their username; if the key was posted in Discord, this will be a string to tag them (e.g. "<@178320409303842817>") */
+    user: string;
+    /** Where the key was posted. If the key was posted on AnswerHub, this will be a link to the post; if the key was posted in Discord, this will be a string to tag the channel (e.g. "<#187652476080488449>") */
+    location: string;
+    /** When the key was posted (in milliseconds since the Unix epoch)*/
+    timestamp: number;
+    /** The key rate limit (in the same form as the "X-App-Rate-Limit" header) */
+    rateLimit: string;
 }
