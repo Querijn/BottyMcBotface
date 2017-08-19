@@ -212,7 +212,6 @@ class ForumReader
                 if (t_RequiresQuestion) this.AddQuestionRequest(t_Activity, t_Message);
 
                 this.m_Data.Last[t_Activity.type] = t_Activity.creationDate;
-                this.SaveData();
             }
         }
         catch (t_Error)
