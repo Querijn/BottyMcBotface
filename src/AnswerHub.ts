@@ -1,4 +1,4 @@
-import request = require("request");
+import fetch from "node-fetch";
 import toMarkdown = require("to-markdown");
 
 export default class AnswerHubAPI {
@@ -21,33 +21,19 @@ export default class AnswerHubAPI {
      * @throws {any} Thrown if an error is received from the AnswerHubAPI
      * @returns The parsed body of the response from the AnswerHubAPI
      */
-    private makeRequest<T>(url: string): Promise<T> {
-        return new Promise((resolve, reject) => {
-            const options = {
-                followAllRedirects: true,
-                url: `${this.baseURL}services/v2/${url}`,
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                    Authorization: this.auth
-                }
-            };
-
-            request.post(options, (error, response) => {
-                if (error) {
-                    reject(error);
-                } else if (response.statusCode !== 200) {
-                    reject(`Received status code ${response.statusCode}`);
-                } else {
-                    try {
-                        const body = JSON.parse(response.body);
-                        resolve(body);
-                    } catch (error) {
-                        reject(error);
-                    }
-                }
-            });
+    private async makeRequest<T>(url: string): Promise<T> {
+        const resp = await fetch(`${this.baseURL}services/v2/${url}`, {
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                Authorization: this.auth
+            }
         });
+
+        if (resp.status !== 200) throw new Error(`Received status code ${resp.status}`);
+
+        return resp.json();
     }
 
     public static formatQuestionBody(body: string): string {

@@ -1,6 +1,6 @@
 import Discord = require("discord.js");
 import { fileBackedObject } from "./util";
-import request = require("request");
+import fetch from "node-fetch";
 
 export interface KeyFinderSettings {
     Server: string;
@@ -72,28 +72,14 @@ export default class KeyFinder {
 	 * @returns The value of the "X-App-Rate-Limit" header if the key yields a non-403 response code, or 'null' if the key yields a 403 response code
 	 * @throws {Error} Thrown if the AnswerHubAPI call cannot be completed or results in a status code other than 200 or 403
 	 */
-    testKey(key: string): Promise<string | null> {
-        return new Promise((resolve, reject) => {
-            const options = {
-                followAllRedirects: true,
-                url: "https://euw1.api.riotgames.com/lol/summoner/v3/summoners/22929336",
-                headers: {
-                    "X-Riot-Token": key
-                }
-            };
-
-            request(options, (error, response) => {
-                if (error) {
-                    reject(`Error while testing key: ${error}`);
-                } else {
-                    if (response.statusCode === 403) {
-                        resolve(null);
-                    } else {
-                        resolve(<string>response.headers["x-app-rate-limit"]);
-                    }
-                }
-            });
+    async testKey(key: string): Promise<string | null> {
+        const resp = await fetch("https://euw1.api.riotgames.com/lol/summoner/v3/summoners/22929336", {
+            headers: {
+                "X-Riot-Token": key
+            }
         });
+
+        return resp.status === 403 ? null : resp.headers.get("x-app-rate-limit");
     }
 
     /**
