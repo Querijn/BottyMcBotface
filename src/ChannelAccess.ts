@@ -34,8 +34,8 @@ export default class ChannelAccess {
         const split: string[] = message.cleanContent.split(" ");
 
         let action: "join" | "leave" | undefined;
-        if (split[0].toLowerCase() === "!join") action = "join";
-        if (split[0].toLowerCase() === "!leave") action = "leave";
+        if (split[0].match(/^(!|\/)join$/gi)) action = "join";
+        if (split[0].match(/^(!|\/)leave$/gi)) action = "leave";
 
         if (!action) return;
 
