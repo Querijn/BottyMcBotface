@@ -9,16 +9,16 @@ import Techblog from "./Techblog";
 import ChannelAccess from "./ChannelAccess";
 
 // Load and initialise settings
-const t_Bot = new Botty("settings/settings.json");
+const bot = new Botty("settings/settings.json");
 
 // Load extensions
-const t_Uptime = new Uptime(t_Bot.Client, "settings/uptime_settings.json", "data/uptime_data.json");
-const t_KeyFinder = new KeyFinder(t_Bot.Client, "settings/riot_keys_settings.json", "data/riot_keys.json");
-const t_Forum = new ForumReader(t_Bot.Client, "settings/forum_settings.json", "data/forum_data.json", t_KeyFinder);
-const t_Thinking = new Thinking(t_Bot.Client, "data/thinking_data.json");
-const t_Honeypot = new Honeypot(t_Bot.Client, "settings/honeypot_settings.json");
-const t_Techblog = new Techblog(t_Bot.Client, "settings/techblog_settings.json", "data/techblog_data.json");
-const t_ChannelAccess = new ChannelAccess(t_Bot.Client, "settings/channel_access_settings.json");
+const uptime = new Uptime(bot.client, "settings/uptime_settings.json", "data/uptime_data.json");
+const keyFinder = new KeyFinder(bot.client, "settings/riot_keys_settings.json", "data/riot_keys.json");
+const forum = new ForumReader(bot.client, "settings/forum_settings.json", "data/forum_data.json", keyFinder);
+const thinking = new Thinking(bot.client, "data/thinking_data.json");
+const honeypot = new Honeypot(bot.client, "settings/honeypot_settings.json");
+const techblog = new Techblog(bot.client, "settings/techblog_settings.json", "data/techblog_data.json");
+const channelAccess = new ChannelAccess(bot.client, "settings/channel_access_settings.json");
 
-// Start bot
-t_Bot.Start();
+// start bot
+bot.start();

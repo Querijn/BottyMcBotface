@@ -1,4 +1,4 @@
-import { API as AnswerHubAPI, Node, NodeList, Question } from "./AnswerHub";
+import { default as AnswerHubAPI, Node, NodeList, Question } from "./AnswerHub";
 import KeyFinder from "./KeyFinder";
 import Discord = require("discord.js");
 import { fileBackedObject } from "./util";
@@ -21,181 +21,175 @@ export interface ForumReaderData {
 }
 
 export default class ForumReader {
-    private m_Answerhub: AnswerHubAPI;
-    private m_CachedNodes: Map<number, Question> = new Map();
-    private m_ErroredActivities: { activity: Node; attempts: number }[] = [];
-    private m_KeyFinder: KeyFinder;
-    private m_Settings: ForumReaderSettings;
-    private m_Data: ForumReaderData;
-    private m_Channel: Discord.TextChannel;
+    private answerHub: AnswerHubAPI;
+    private cachedNodes: Map<number, Question> = new Map();
+    private erroredActivities: { activity: Node; attempts: number }[] = [];
+    private keyFinder: KeyFinder;
+    private settings: ForumReaderSettings;
+    private data: ForumReaderData;
+    private channel: Discord.TextChannel;
 
-    constructor(a_Bot: Discord.Client, a_SettingsFile: string, a_DataFile: string, a_KeyFinder: KeyFinder) {
+    constructor(bot: Discord.Client, settingsFile: string, dataFile: string, keyFinder: KeyFinder) {
         console.log("Requested ForumReader extension..");
 
-        this.m_Settings = fileBackedObject(a_SettingsFile);
+        this.settings = fileBackedObject(settingsFile);
         console.log("Successfully loaded ForumReader settings file.");
 
-        this.m_Data = fileBackedObject(a_DataFile);
+        this.data = fileBackedObject(dataFile);
         console.log("Successfully loaded ForumReader data file.");
 
-        this.m_KeyFinder = a_KeyFinder;
-        this.m_Answerhub = new AnswerHubAPI(this.m_Settings.URL, this.m_Settings.Username, this.m_Settings.Password);
-        this.m_CachedNodes = new Map();
+        this.keyFinder = keyFinder;
+        this.answerHub = new AnswerHubAPI(this.settings.URL, this.settings.Username, this.settings.Password);
+        this.cachedNodes = new Map();
 
-        if (this.m_Data.Last.question === 0) this.m_Data.Last.question = Date.now();
-        if (this.m_Data.Last.answer === 0) this.m_Data.Last.answer = Date.now();
-        if (this.m_Data.Last.comment === 0) this.m_Data.Last.comment = Date.now();
+        if (this.data.Last.question === 0) this.data.Last.question = Date.now();
+        if (this.data.Last.answer === 0) this.data.Last.answer = Date.now();
+        if (this.data.Last.comment === 0) this.data.Last.comment = Date.now();
 
-        a_Bot.on("ready", () => {
-            const t_Guild = a_Bot.guilds.find("name", this.m_Settings.Server);
-            if (!t_Guild) {
-                console.error("Incorrect setting for the server: " + this.m_Settings.Server);
+        bot.on("ready", () => {
+            const guild = bot.guilds.find("name", this.settings.Server);
+            if (!guild) {
+                console.error(`Incorrect setting for the server: ${this.settings.Server}`);
                 return;
             }
 
-            const t_Channel = t_Guild.channels.find("name", this.m_Settings.Channel);
-            if (!t_Channel || !(t_Channel instanceof Discord.TextChannel)) {
-                console.error("Incorrect setting for the channel: " + this.m_Settings.Channel);
+            const channel = guild.channels.find("name", this.settings.Channel);
+            if (!channel || !(channel instanceof Discord.TextChannel)) {
+                console.error(`Incorrect setting for the channel: ${this.settings.Channel}`);
                 return;
             }
-            this.m_Channel = t_Channel as Discord.TextChannel;
+            this.channel = channel as Discord.TextChannel;
 
-            this.FetchForumData();
+            this.fetchForumData();
             setInterval(() => {
-                this.FetchForumData();
-            }, this.m_Settings.CheckInterval);
+                this.fetchForumData();
+            }, this.settings.CheckInterval);
         });
     }
 
     /**
-	 * Gets the question with the specified ID, first checking the cache, then the API
-	 * @param a_Id The question ID
+	 * Gets the question with the specified ID, first checking the cache, then the AnswerHubAPI
+	 * @param id The question ID
 	 * @async
 	 * @returns The question with the specified ID
-	 * @throws {Error} Thrown if an API error occurs
+	 * @throws {Error} Thrown if an AnswerHubAPI error occurs
 	 */
-    async GetQuestion(a_Id: number): Promise<Question> {
-        if (this.m_CachedNodes.has(a_Id)) {
-            return this.m_CachedNodes.get(a_Id)!;
+    async getQuestion(id: number): Promise<Question> {
+        if (this.cachedNodes.has(id)) {
+            return this.cachedNodes.get(id)!;
         } else {
-            try {
-                const t_Question = await this.m_Answerhub.GetQuestion(a_Id);
-                this.m_CachedNodes.set(a_Id, t_Question);
-                return t_Question;
-            } catch (t_Error) {
-                throw t_Error;
-            }
+            const question = await this.answerHub.getQuestion(id);
+            this.cachedNodes.set(id, question);
+            return question;
         }
     }
 
-    async ReadActivity(a_Activity: Node) {
-        const t_UsernameIndex = a_Activity.author.username.indexOf("(");
-        const t_RegionEndIndex = a_Activity.author.username.indexOf(")");
-        const t_Region = t_UsernameIndex === -1 ? "UNKNOWN" : a_Activity.author.username.substr(t_UsernameIndex + 1, t_RegionEndIndex - t_UsernameIndex - 1);
-        const t_Username = t_UsernameIndex === -1 ? a_Activity.author.username : a_Activity.author.username.substr(0, t_UsernameIndex - 1);
-        const t_Avatar = `http://avatar.leagueoflegends.com/${encodeURIComponent(t_Region)}/${encodeURIComponent(t_Username)}.png?t=${encodeURIComponent(Math.random().toString())}`;
-        let t_Embed = null;
+    async readActivity(activity: Node) {
+        const usernameIndex = activity.author.username.indexOf("(");
+        const regionEndIndex = activity.author.username.indexOf(")");
+        const region = usernameIndex === -1 ? "UNKNOWN" : activity.author.username.substr(usernameIndex + 1, regionEndIndex - usernameIndex - 1);
+        const username = usernameIndex === -1 ? activity.author.username : activity.author.username.substr(0, usernameIndex - 1);
+        const avatar = `http://avatar.leagueoflegends.com/${encodeURIComponent(region)}/${encodeURIComponent(username)}.png?t=${encodeURIComponent(Math.random().toString())}`;
+        let embed = null;
 
-        switch (a_Activity.type) {
+        switch (activity.type) {
             case "question": {
-                t_Embed = new Discord.RichEmbed()
+                embed = new Discord.RichEmbed()
                     .setColor(0xc62f2f)
-                    .setTitle(`${a_Activity.author.username} asked "${a_Activity.title}"`)
-                    .setDescription(this.m_Answerhub.FormatBody(a_Activity.body))
-                    .setURL(`${this.m_Answerhub.m_BaseURL}questions/${a_Activity.id}/${a_Activity.slug}.html`);
+                    .setTitle(`${activity.author.username} asked "${activity.title}"`)
+                    .setDescription(AnswerHubAPI.formatQuestionBody(activity.body))
+                    .setURL(`${this.answerHub.baseURL}questions/${activity.id}/${activity.slug}.html`);
 
-                this.m_KeyFinder.findKey(t_Username, a_Activity.title, <string>t_Embed.url, a_Activity.creationDate);
+                this.keyFinder.findKey(username, activity.title, <string>embed.url, activity.creationDate);
                 break;
             }
 
             case "answer": {
-                const t_Question = await this.GetQuestion(a_Activity.originalParentId);
-                t_Embed = new Discord.RichEmbed()
+                const question = await this.getQuestion(activity.originalParentId);
+                embed = new Discord.RichEmbed()
                     .setColor(0xd1f442)
-                    .setTitle(`${a_Activity.author.username} posted an answer on "${t_Question.title}"`)
-                    .addField("Question", this.m_Answerhub.FormatBody(t_Question.body), false)
-                    .addField(`${a_Activity.author.username}'s answer`, this.m_Answerhub.FormatBody(a_Activity.body), false)
-                    .setURL(`${this.m_Answerhub.m_BaseURL}questions/${a_Activity.originalParentId}/?childToView=${a_Activity.id}#answer-${a_Activity.id}`);
+                    .setTitle(`${activity.author.username} posted an answer on "${question.title}"`)
+                    .addField("Question", AnswerHubAPI.formatQuestionBody(question.body), false)
+                    .addField(`${activity.author.username}'s answer`, AnswerHubAPI.formatQuestionBody(activity.body), false)
+                    .setURL(`${this.answerHub.baseURL}questions/${activity.originalParentId}/?childToView=${activity.id}#answer-${activity.id}`);
 
                 break;
             }
 
             case "comment": {
-                const t_Question: Question = await this.GetQuestion(a_Activity.originalParentId);
-                t_Embed = new Discord.RichEmbed()
+                const question: Question = await this.getQuestion(activity.originalParentId);
+                embed = new Discord.RichEmbed()
                     .setColor(0x4fb9f7)
-                    .setTitle(`${a_Activity.author.username} posted a comment on "${t_Question.title}"`)
-                    .setDescription(this.m_Answerhub.FormatBody(a_Activity.body))
-                    .setURL(`${this.m_Answerhub.m_BaseURL}questions/${a_Activity.originalParentId}/?childToView=${a_Activity.id}#comment-${a_Activity.id}`);
+                    .setTitle(`${activity.author.username} posted a comment on "${question.title}"`)
+                    .setDescription(AnswerHubAPI.formatQuestionBody(activity.body))
+                    .setURL(`${this.answerHub.baseURL}questions/${activity.originalParentId}/?childToView=${activity.id}#comment-${activity.id}`);
 
                 break;
             }
 
             default:
-                console.error("Unknown activity type: " + a_Activity.type);
+                console.error(`Unknown activity type: ${activity.type}`);
         }
+        if (!embed) return;
 
-        if (!t_Embed) return;
+        this.keyFinder.findKey(username, activity.body, <string>embed.url, activity.creationDate);
+        embed.setTimestamp(new Date(activity.creationDate)).setThumbnail(avatar);
 
-        t_Embed.setTimestamp(new Date(a_Activity.creationDate)).setThumbnail(t_Avatar);
-
-        this.m_KeyFinder.findKey(t_Username, a_Activity.body, <string>t_Embed.url, a_Activity.creationDate);
-        t_Embed.setTimestamp(new Date(a_Activity.creationDate)).setThumbnail(t_Avatar);
-
-        await this.m_Channel.send("", {
-            embed: t_Embed
+        await this.channel.send("", {
+            embed: embed
         });
 
-        this.m_Data.Last[a_Activity.type] = a_Activity.creationDate;
+        this.data.Last[activity.type] = activity.creationDate;
     }
 
-    async ReadActivities(a_Promise: Promise<NodeList<Node>>) {
-        let t_Activities;
+    async readActivities(promise: Promise<NodeList<Node>>) {
+        let activities;
         try {
-            t_Activities = await a_Promise;
-        } catch (t_Error) {
-            console.error("Exception occurred fetching forum urls: " + t_Error.message);
+            activities = await promise;
+        } catch (error) {
+            console.error(`Exception occurred fetching forum urls: ${error.message}`);
             return;
         }
 
         try {
-            for (let i = t_Activities.list.length - 1; i >= 0; i--) {
-                const t_Activity = t_Activities.list[i];
+            for (let i = activities.list.length - 1; i >= 0; i--) {
+                const activity = activities.list[i];
 
                 try {
-                    if (t_Activity.creationDate > this.m_Data.Last[t_Activity.type]) await this.ReadActivity(t_Activity);
-                } catch (t_Error) {
-                    console.error(`Error for activity ID ${t_Activity.id}: ${t_Error.message}`);
-                    this.m_ErroredActivities.push({
-                        activity: t_Activity,
+                    if (activity.creationDate > this.data.Last[activity.type]) await this.readActivity(activity);
+                } catch (error) {
+                    console.error(`Error for activity ID ${activity.id}: ${error.message}`);
+                    this.erroredActivities.push({
+                        activity: activity,
                         attempts: 1
                     });
                 }
             }
-        } catch (t_Error) {
-            console.error("Exception occurred reading forum: " + t_Error.message);
+        } catch (error) {
+            console.error(`Exception occurred reading forum: ${error.message}`);
         }
     }
 
-    async RetryErroredActivities() {
-        for (let i = 0; i < this.m_ErroredActivities.length; i++) {
-            const t_Activity = this.m_ErroredActivities[i].activity;
+    async retryErroredActivities() {
+        for (let i = 0; i < this.erroredActivities.length; i++) {
+            const activity = this.erroredActivities[i].activity;
+
             try {
-                await this.ReadActivity(t_Activity);
-            } catch (t_Error) {
-                console.error(`Error for activity ID ${t_Activity.id}: ${t_Error.message}`);
-                if (++this.m_ErroredActivities[i].attempts >= 3) {
-                    console.error(`Giving up on activity ID ${t_Activity.id}`);
-                    this.m_ErroredActivities.splice(i, 1);
+                await this.readActivity(activity);
+            } catch (error) {
+                console.error(`Error for activity ID ${activity.id}: ${error.message}`);
+                if (++this.erroredActivities[i].attempts >= 3) {
+                    console.error(`Giving up on activity ID ${activity.id}`);
+                    this.erroredActivities.splice(i, 1);
                 }
             }
         }
     }
 
-    FetchForumData() {
-        this.ReadActivities(this.m_Answerhub.GetQuestions());
-        this.ReadActivities(this.m_Answerhub.GetAnswers());
-        this.ReadActivities(this.m_Answerhub.GetComments());
-        this.RetryErroredActivities();
+    fetchForumData() {
+        this.readActivities(this.answerHub.getQuestions());
+        this.readActivities(this.answerHub.getAnswers());
+        this.readActivities(this.answerHub.getComments());
+        this.retryErroredActivities();
     }
 }

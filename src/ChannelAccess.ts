@@ -1,5 +1,5 @@
 import Discord = require("discord.js");
-const util = require("./util");
+import { fileBackedObject } from "./util";
 
 export default class ChannelAccess {
     private settings: Settings;
@@ -9,7 +9,7 @@ export default class ChannelAccess {
     constructor(bot: Discord.Client, settingsFile: string) {
         console.log("Requested ChannelAccess extension..");
 
-        this.settings = util.fileBackedObject(settingsFile);
+        this.settings = fileBackedObject(settingsFile);
         console.log("Successfully loaded ChannelAccess settings file.");
 
         this.bot = bot;
@@ -19,15 +19,15 @@ export default class ChannelAccess {
     private onBotReady(): void {
         let guild = this.bot.guilds.get(this.settings.ServerID);
         if (!guild) {
-            console.error("Invalid settings for guild ID " + this.settings.ServerID);
+            console.error(`Invalid settings for guild ID ${this.settings.ServerID}`);
             return;
         }
         this.guild = guild;
 
-        this.bot.on("message", message => this.ProcessMessage(message));
+        this.bot.on("message", message => this.processMessage(message));
     }
 
-    private ProcessMessage(message: Discord.Message) {
+    private processMessage(message: Discord.Message) {
         if (message.author.id === this.bot.user.id) return;
 
         /** The message contents, split at spaces */

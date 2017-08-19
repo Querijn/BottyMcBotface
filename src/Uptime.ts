@@ -1,5 +1,6 @@
 import Discord = require("discord.js");
 import { fileBackedObject } from "./util";
+import prettyMs = require("pretty-ms");
 
 export interface UptimeSettings {
     CheckInterval: number;
@@ -12,92 +13,60 @@ export interface UptimeData {
 }
 
 export default class Uptime {
-    private m_Bot: Discord.Client;
-    private m_Settings: UptimeSettings;
-    private m_Data: UptimeData;
+    private bot: Discord.Client;
+    private settings: UptimeSettings;
+    private data: UptimeData;
 
-    constructor(a_Bot: Discord.Client, a_SettingsFile: string, a_DataFile: string) {
+    constructor(bot: Discord.Client, settingsFile: string, dataFile: string) {
         console.log("Requested uptime extension..");
 
-        this.m_Settings = fileBackedObject(a_SettingsFile);
+        this.settings = fileBackedObject(settingsFile);
         console.log("Successfully loaded uptime settings file.");
 
-        this.m_Data = fileBackedObject(a_DataFile);
+        this.data = fileBackedObject(dataFile);
         console.log("Successfully loaded uptime data file.");
 
-        this.m_Bot = a_Bot;
-        this.m_Bot.on("ready", this.OnBot.bind(this));
-        this.m_Bot.on("message", this.OnMessage.bind(this));
-        setInterval(this.OnUpdate.bind(this), this.m_Settings.CheckInterval);
+        this.bot = bot;
+        this.bot.on("ready", this.onBot.bind(this));
+        this.bot.on("message", this.onMessage.bind(this));
+        setInterval(this.onUpdate.bind(this), this.settings.CheckInterval);
     }
 
-    OnBot() {
-        console.log("Uptime extension loaded.");
+    onBot() {
+        console.log("uptime extension loaded.");
     }
 
-    OnMessage(a_Message: Discord.Message) {
-        if (a_Message.content.startsWith("!uptime") === false) return;
-
-        a_Message.reply(`the bot has been up for ${this.UptimePercentage}% of the time. Bot started ${this.Uptime} ago.`);
+    onMessage(message: Discord.Message) {
+        if (!message.content.startsWith("!uptime")) return;
+        message.reply(`the bot has been up for ${this.uptimePercentage}% of the time. Bot started ${this.uptime} ago.`);
     }
 
-    OnUpdate() {
-        let t_TimeDifference = Date.now() - this.m_Data.LastUptime;
+    onUpdate() {
+        let timeDiff = Date.now() - this.data.LastUptime;
 
         // To restart, basically set either of these values to 0
-        if (this.m_Data.LastUptime === 0 || this.m_Data.UptimeStart === 0) {
-            this.m_Data.UptimeStart = new Date().getTime();
-            this.m_Data.TotalDowntime = 0;
-            t_TimeDifference = 0;
+        if (this.data.LastUptime === 0 || this.data.UptimeStart === 0) {
+            this.data.UptimeStart = Date.now();
+            this.data.TotalDowntime = 0;
+            timeDiff = 0;
         }
 
-        if (t_TimeDifference > this.m_Settings.CheckInterval + 1000) {
+        if (timeDiff > this.settings.CheckInterval + 1000) {
             // Give it some error
-            this.m_Data.TotalDowntime += t_TimeDifference;
-            console.log("Noticed a downtime of " + t_TimeDifference * 0.001 + " seconds.");
+            this.data.TotalDowntime += timeDiff;
+            console.log(`Noticed a downtime of ${timeDiff * 0.001} seconds.`);
         }
 
-        this.m_Data.LastUptime = new Date().getTime();
+        this.data.LastUptime = Date.now();
     }
 
-    get UptimePercentage() {
-        const t_Timespan = new Date().getTime() - this.m_Data.UptimeStart;
-        const t_UptimePercentage = 1.0 - this.m_Data.TotalDowntime / t_Timespan;
-        // return Math.round(t_UptimePercentage * 100.0 * 10000.0) * 0.00001;
-        return +(t_UptimePercentage * 100.0).toFixed(3);
+    get uptimePercentage() {
+        const timeSpan = new Date().getTime() - this.data.UptimeStart;
+        const percentage = 1.0 - this.data.TotalDowntime / timeSpan;
+        return +(percentage * 100.0).toFixed(3);
     }
 
-    AddS(a_Number: number) {
-        return a_Number === 1 ? "" : "s";
-    }
-
-    get Uptime() {
-        let t_Message = "";
-        /* How long each unit of time is, listed in ascending order. For each sub-array, first element is the name of the singular unit of time,
-        and the second elements is how many units of the previous time time (milliseconds for the first entry) are in it. */
-        const t_TimeUnits: [string, number][] = [["second", 1000], ["minute", 60], ["hour", 60], ["day", 24], ["week", 7], ["year", 52]];
-
-        let t_Millis = Date.now() - this.m_Data.UptimeStart;
-        let t_MillisInUnit = 1;
-        // Determine how many milliseconds are in the largest unit of time
-        for (let i = 0; i < t_TimeUnits.length; i++) {
-            t_MillisInUnit *= t_TimeUnits[i][1];
-        }
-
-        for (let i = t_TimeUnits.length - 1; i >= 0; i--) {
-            let t_TimeUnit = t_TimeUnits[i];
-            /** How many of the unit are in the time */
-            let t_Interval = Math.floor(t_Millis / t_MillisInUnit);
-            if (t_Interval >= 1) {
-                if (t_Message) {
-                    t_Message += ", ";
-                    if (i === 0) t_Message += "and ";
-                }
-                t_Message += `${t_Interval} ${t_TimeUnit[0]}${t_Interval === 1 ? "" : "s"}`;
-                t_Millis -= t_Interval * t_MillisInUnit;
-            }
-            t_MillisInUnit /= t_TimeUnit[1];
-        }
-        return t_Message;
+    get uptime() {
+        return prettyMs(Date.now() - this.data.UptimeStart, { verbose: true });
     }
 }

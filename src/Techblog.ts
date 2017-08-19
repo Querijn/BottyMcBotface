@@ -14,55 +14,54 @@ export interface TechblogData {
 }
 
 export default class Techblog {
-    private m_Bot: Discord.Client;
-    private m_Settings: TechblogSettings;
-    private m_Data: TechblogData;
-    private m_Channel: Discord.TextChannel;
+    private bot: Discord.Client;
+    private settings: TechblogSettings;
+    private data: TechblogData;
+    private channel: Discord.TextChannel;
 
-    constructor(a_Bot: Discord.Client, a_SettingsFile: string, a_DataFile: string) {
-        this.m_Settings = fileBackedObject(a_SettingsFile);
+    constructor(bot: Discord.Client, settingsFile: string, dataFile: string) {
+        this.settings = fileBackedObject(settingsFile);
 
-        this.m_Data = fileBackedObject(a_DataFile);
+        this.data = fileBackedObject(dataFile);
         console.log("Successfully loaded TechblogReader data file.");
 
-        this.m_Bot = a_Bot;
+        this.bot = bot;
 
-        this.m_Bot.on("ready", () => {
-            if (!this.m_Data.Last) this.m_Data.Last = Date.now();
+        this.bot.on("ready", () => {
+            if (!this.data.Last) this.data.Last = Date.now();
 
-            const t_Guild = this.m_Bot.guilds.find("name", this.m_Settings.Server);
-            if (!t_Guild) {
-                console.error("Incorrect setting for the server: " + this.m_Settings.Server);
+            const guild = this.bot.guilds.find("name", this.settings.Server);
+            if (!guild) {
+                console.error(`Incorrect setting for the server: ${this.settings.Server}`);
                 return;
             }
 
-            this.m_Channel = t_Guild.channels.find("name", this.m_Settings.Channel) as Discord.TextChannel;
-            if (!this.m_Channel) {
-                console.error("Incorrect setting for the channel: " + this.m_Settings.Channel);
+            this.channel = guild.channels.find("name", this.settings.Channel) as Discord.TextChannel;
+            if (!this.channel) {
+                console.error(`Incorrect setting for the channel: ${this.settings.Channel}`);
                 return;
             }
 
             console.log("TechblogReader extension loaded.");
 
             setInterval(() => {
-                this.CheckFeed();
-            }, this.m_Settings.CheckInterval);
+                this.checkFeed();
+            }, this.settings.CheckInterval);
         });
     }
 
-    CheckFeed() {
-        feedReader(this.m_Settings.URL, (a_Error, a_Articles) => {
-            if (a_Error) {
-                console.error("Error reading tech blog RSS feed:", a_Error);
+    checkFeed() {
+        feedReader(this.settings.URL, (error, articles) => {
+            if (error) {
+                console.error("Error reading tech blog RSS feed:", error);
                 return;
             }
 
-            for (let i = a_Articles.length - 1; i >= 0; i--) {
-                const t_Article = a_Articles[i];
-                const t_Timestamp = +t_Article.published;
-                if (t_Timestamp > this.m_Data.Last) {
-                    this.m_Channel.send(`A new article has been posted on the Riot Games Tech Blog: \`${t_Article.title}\`\n${t_Article.link}`);
-                    this.m_Data.Last = t_Timestamp;
+            for (const article of articles.reverse()) {
+                const timestamp = +article.published;
+                if (timestamp > this.data.Last) {
+                    this.channel.send(`A new article has been posted on the Riot Games Tech Blog: \`${article.title}\`\n${article.link}`);
+                    this.data.Last = timestamp;
                 }
             }
         });

@@ -26,15 +26,16 @@ export default class KeyFinder {
 
         this.bot.on("ready", () => {
             const guild = this.bot.guilds.find("name", this.settings.Server);
+
             if (guild) {
                 const channel = guild.channels.find("name", this.settings.ReportChannel) as Discord.TextChannel;
                 if (channel) {
                     this.channel = channel;
                 } else {
-                    console.error("Incorrect setting for the channel: " + this.settings.ReportChannel);
+                    console.error(`Incorrect setting for the channel: ${this.settings.ReportChannel}`);
                 }
             } else {
-                console.error("Incorrect setting for the server: " + this.settings.Server);
+                console.error(`Incorrect setting for the server: ${this.settings.Server}`);
             }
 
             console.log("KeyFinder extension loaded.");
@@ -63,12 +64,13 @@ export default class KeyFinder {
 
         incomingMessage.reply(outgoingMessage);
     }
+
     /**
-	 * Checks if an API key is valid
-	 * @param key The API key to test
+	 * Checks if an AnswerHubAPI key is valid
+	 * @param key The AnswerHubAPI key to test
 	 * @async
 	 * @returns The value of the "X-App-Rate-Limit" header if the key yields a non-403 response code, or 'null' if the key yields a 403 response code
-	 * @throws {Error} Thrown if the API call cannot be completed or results in a status code other than 200 or 403
+	 * @throws {Error} Thrown if the AnswerHubAPI call cannot be completed or results in a status code other than 200 or 403
 	 */
     testKey(key: string): Promise<string | null> {
         return new Promise((resolve, reject) => {
@@ -82,7 +84,7 @@ export default class KeyFinder {
 
             request(options, (error, response) => {
                 if (error) {
-                    reject("Error while testing key: " + error);
+                    reject(`Error while testing key: ${error}`);
                 } else {
                     if (response.statusCode === 403) {
                         resolve(null);
@@ -115,51 +117,42 @@ export default class KeyFinder {
     }
 
     /**
-	 * Checks if a message contains a working API key. If a working key is found (that had not already been found), moderators will be alerted and the key will be tracked
+	 * Checks if a message contains a working AnswerHubAPI key. If a working key is found (that had not already been found), moderators will be alerted and the key will be tracked
 	 * @param user The user who sent the message (used when reporting found keys). If the key was posted on AnswerHub, this should be their username; if the key was posted in Discord, this should be a string to tag them (e.g. "<@178320409303842817>")
-	 * @param message The message to check for an API key. Where the key was posted. If the key was posted on AnswerHub, this should be a link to the post; if the key was posted in Discord, this should be a string to tag the channel (e.g. "<#187652476080488449>")
+	 * @param message The message to check for an AnswerHubAPI key. Where the key was posted. If the key was posted on AnswerHub, this should be a link to the post; if the key was posted in Discord, this should be a string to tag the channel (e.g. "<#187652476080488449>")
 	 * @param location Where the message was sent (used when reporting found keys)
      * @param timestamp When the key was posted (in milliseconds since the Unix epoch)
 	 * @async
-	 * @returns 'true' if a working API key was found in the message, 'false' if one wasn't
+	 * @returns 'true' if a working AnswerHubAPI key was found in the message, 'false' if one wasn't
 	 */
     async findKey(user: string, message: string, location: string, timestamp: number): Promise<boolean> {
-        const matches = message.match(/RGAPI\-[a-fA-F0-9]{8}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{4}\-[a-fA-F0-9]{12}/i);
+        const matches = message.match(/RGAPI-[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}/ig);
+        if (!matches) return false;
 
-        if (matches === null) return false;
-        /** If any of the keys in the message were active */
-        let foundWorkingKey = false;
+        let found = false;
+        for (const match of matches) {
+            const limit = await this.testKey(match);
+            found = found || !!limit;
 
-        matchesLoop: for (let key of matches) {
-            const rateLimit = await this.testKey(key);
-            // 'rateLimits' will be 'null' if the key is invalid
-            const keyWorks = !!rateLimit;
-            const message = `Found an ${keyWorks ? "active" : "inactive"} key in ${location} posted by ${user}: \`${key}\` Key rate limit: \`${rateLimit}\``;
-
-            if (keyWorks) {
-                // Check if key is already being tracked
-                for (let foundKeyInfo of this.keys) {
-                    if (key === foundKeyInfo.apiKey) {
-                        // An active key was found, but it doesn't need to be logged
-                        foundWorkingKey = true;
-                        break matchesLoop;
-                    }
-                }
+            if (limit) {
+                const existing = this.keys.find(x => x.apiKey === match);
+                if (existing) continue; // we've already seen the key, check for other keys
 
                 this.keys.push({
-                    apiKey: key,
-                    user: user,
-                    location: location,
-                    timestamp: timestamp,
-                    rateLimit: <string>rateLimit
+                    apiKey: match,
+                    rateLimit: limit!,
+                    user,
+                    location,
+                    timestamp
                 });
-                foundWorkingKey = true;
             }
 
+            const message = `Found an ${limit ? "active" : "inactive"} key in ${location} posted by ${user}: \`${match}\`. Key rate limit: \`${limit}\`.`;
             console.warn(message);
             if (this.channel) this.channel.send(message);
         }
-        return foundWorkingKey;
+
+        return found;
     }
 }
 

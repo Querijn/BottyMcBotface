@@ -1,89 +1,89 @@
 import request = require("request");
 import toMarkdown = require("to-markdown");
 
-export class API {
+export default class AnswerHubAPI {
     /** The base AnswerHub URL (with a trailing slash) */
-    public readonly m_BaseURL: string;
-    /** The value of the "Authorization" header to be included with all API requests */
-    private readonly m_Auth: string;
+    public readonly baseURL: string;
+    /** The value of the "Authorization" header to be included with all AnswerHubAPI requests */
+    private readonly auth: string;
 
-    public constructor(a_URL: string, a_Username: string, a_Password: string) {
+    public constructor(url: string, username: string, password: string) {
         // Add a trailing / if missing
-        this.m_BaseURL = a_URL.substr(a_URL.length - 1) === "/" ? a_URL : a_URL + "/";
+        this.baseURL = url.substr(url.length - 1) === "/" ? url : url + "/";
 
-        this.m_Auth = "Basic " + new Buffer(a_Username + ":" + a_Password, "binary").toString("base64");
+        this.auth = `Basic ${new Buffer(username + ":" + password, "binary").toString("base64")}`;
     }
     
     /**
-     * Makes a request to the AnswerHub API
-     * @param a_URL The URL to make a request to, relative to the base API URL
+     * Makes a request to the AnswerHub AnswerHubAPI
+     * @param url The url to make a request to, relative to the base AnswerHubAPI url
      * @async
-     * @throws {any} Thrown if an error is received from the API
-     * @returns The parsed body of the response from the API
+     * @throws {any} Thrown if an error is received from the AnswerHubAPI
+     * @returns The parsed body of the response from the AnswerHubAPI
      */
-    private MakeRequest<T>(a_URL: string): Promise<T> {
+    private makeRequest<T>(url: string): Promise<T> {
         return new Promise((resolve, reject) => {
-            const t_Options = {
+            const options = {
                 followAllRedirects: true,
-                url: `${this.m_BaseURL}services/v2/${a_URL}`,
+                url: `${this.baseURL}services/v2/${url}`,
                 headers: {
                     Accept: "application/json",
                     "Content-Type": "application/json",
-                    Authorization: this.m_Auth
+                    Authorization: this.auth
                 }
             };
 
-            request.post(t_Options, (a_Error, a_Response) => {
-                if (a_Error) {
-                    reject(a_Error);
-                } else if (a_Response.statusCode !== 200) {
-                    reject("Received status code " + a_Response.statusCode);
+            request.post(options, (error, response) => {
+                if (error) {
+                    reject(error);
+                } else if (response.statusCode !== 200) {
+                    reject(`Received status code ${response.statusCode}`);
                 } else {
                     try {
-                        const body = JSON.parse(a_Response.body);
+                        const body = JSON.parse(response.body);
                         resolve(body);
-                    } catch (t_Error) {
-                        reject(t_Error);
+                    } catch (error) {
+                        reject(error);
                     }
                 }
             });
         });
     }
 
-    public FormatBody(a_Body: string): string {
-        const t_Markdown = toMarkdown(a_Body, { gfm: true });
-        const t_Clamped = t_Markdown.substr(0, Math.min(1021, t_Markdown.length));
+    public static formatQuestionBody(body: string): string {
+        const markdown = toMarkdown(body, { gfm: true });
+        const clamped = markdown.substr(0, Math.min(1021, markdown.length));
         // TODO handle relative links
         // TODO handle code blocks
-        return t_Clamped + (t_Clamped.length === 1021 ? "..." : "");
+        return clamped + (clamped.length === 1021 ? "..." : "");
     }
 
-    GetQuestions(a_Page = 1, a_Sort = "active"): Promise<NodeList<Question>> {
-        return this.MakeRequest(`question.json?page=${a_Page}&sort=${a_Sort}`);
+    getQuestions(page = 1, sort = "active"): Promise<NodeList<Question>> {
+        return this.makeRequest(`question.json?page=${page}&sort=${sort}`);
     }
 
-    GetAnswers(a_Page = 1, a_Sort = "active"): Promise<NodeList<Answer>> {
-        return this.MakeRequest(`answer.json?page=${a_Page}&sort=${a_Sort}`);
+    getAnswers(page = 1, sort = "active"): Promise<NodeList<Answer>> {
+        return this.makeRequest(`answer.json?page=${page}&sort=${sort}`);
     }
 
-    GetComments(a_Page = 1, a_Sort = "active"): Promise<NodeList<Comment>> {
-        return this.MakeRequest(`comment.json?page=${a_Page}&sort=${a_Sort}`);
+    getComments(page = 1, sort = "active"): Promise<NodeList<Comment>> {
+        return this.makeRequest(`comment.json?page=${page}&sort=${sort}`);
     }
 
-    GetQuestion(a_ID: number): Promise<Question> {
-        return this.MakeRequest(`question/${a_ID}.json`);
+    getQuestion(id: number): Promise<Question> {
+        return this.makeRequest(`question/${id}.json`);
     }
 
-    GetArticle(a_ID: number): Promise<Article> {
-        return this.MakeRequest(`article/${a_ID}.json`);
+    getArticle(id: number): Promise<Article> {
+        return this.makeRequest(`article/${id}.json`);
     }
 
-    GetAnswer(a_ID: number): Promise<Answer> {
-        return this.MakeRequest(`answer/${a_ID}.json`);
+    getAnswer(id: number): Promise<Answer> {
+        return this.makeRequest(`answer/${id}.json`);
     }
 
-    GetComment(a_ID: number): Promise<Comment> {
-        return this.MakeRequest(`comment/${a_ID}.json`);
+    getComment(id: number): Promise<Comment> {
+        return this.makeRequest(`comment/${id}.json`);
     }
 }
 

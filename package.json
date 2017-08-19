@@ -20,12 +20,14 @@
     "libsodium-wrappers": "^0.5.1",
     "node-opus": "^0.2.5",
     "opusscript": "^0.0.3",
+    "pretty-ms": "^3.0.0",
     "sodium": "^2.0.1",
     "to-markdown": "^3.1.0",
     "uws": "^0.14.1"
   },
   "devDependencies": {
     "@types/node": "^8.0.22",
+    "@types/pretty-ms": "^3.0.0",
     "@types/request": "^2.0.1",
     "typescript": "^2.4.2"
   }

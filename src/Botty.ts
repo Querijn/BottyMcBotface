@@ -9,14 +9,14 @@ export interface BottySettings {
 }
 
 export default class Botty {
-    private m_Client = new Discord.Client();
-    private m_Settings: BottySettings;
+    public readonly client = new Discord.Client();
+    private settings: BottySettings;
 
-    constructor(a_SettingsFile: string) {
-        this.m_Settings = fileBackedObject(a_SettingsFile);
+    constructor(settingsFile: string) {
+        this.settings = fileBackedObject(settingsFile);
         console.log("Successfully loaded settings file.");
 
-        this.m_Client
+        this.client
             .on("error", console.error)
             .on("warn", console.warn)
             //.on("debug", console.log)
@@ -26,11 +26,7 @@ export default class Botty {
             .on("ready", () => console.log("Bot is logged in and ready."));
     }
 
-    Start() {
-        return this.m_Client.login(this.m_Settings.Discord.Key);
-    }
-
-    get Client() {
-        return this.m_Client;
+    start() {
+        return this.client.login(this.settings.Discord.Key);
     }
 }
