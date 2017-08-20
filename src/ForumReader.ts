@@ -21,9 +21,13 @@ export interface ForumReaderData {
 }
 
 export default class ForumReader {
+    /** How many attempts should be made to process each activity before giving up on it */
+    private static MAX_ATTEMPTS = 3;
+
     private answerHub: AnswerHubAPI;
     private cachedNodes: Map<number, Question> = new Map();
-    private erroredActivities: { activity: Node; attempts: number }[] = [];
+    /** Activities that could not be successfully parsed and will be retried */
+    private erroredActivities: { activity: Node; /** How many attempts have been made to process this activity */ attempts: number }[] = [];
     private keyFinder: KeyFinder;
     private settings: ForumReaderSettings;
     private data: ForumReaderData;
@@ -61,9 +65,6 @@ export default class ForumReader {
             this.channel = channel as Discord.TextChannel;
 
             this.fetchForumData();
-            setInterval(() => {
-                this.fetchForumData();
-            }, this.settings.CheckInterval);
         });
     }
 
@@ -84,7 +85,11 @@ export default class ForumReader {
         }
     }
 
-    async readActivity(activity: Node) {
+    /**
+     * Sends a message in Discord for the specified activity.
+     * @param activity The activity to process
+     */
+    async readActivity(activity: Node): Promise<void> {
         const usernameIndex = activity.author.username.indexOf("(");
         const regionEndIndex = activity.author.username.indexOf(")");
         const region = usernameIndex === -1 ? "UNKNOWN" : activity.author.username.substr(usernameIndex + 1, regionEndIndex - usernameIndex - 1);
@@ -139,15 +144,20 @@ export default class ForumReader {
             embed: embed
         });
 
-        this.data.Last[activity.type] = activity.creationDate;
+        if (this.data.Last[activity.type] < activity.creationDate) this.data.Last[activity.type] = activity.creationDate;
     }
 
-    async readActivities(promise: Promise<NodeList<Node>>) {
+    /**
+     * Waits for a promise to be fulfilled, then processes all the activities is was settled with. If any activities cannot be successfully processed,
+     * they will be added to a list to be processed later.
+     * @param promise 
+     */
+    async readActivities(promise: Promise<NodeList<Node>>): Promise<void> {
         let activities;
         try {
             activities = await promise;
         } catch (error) {
-            console.error(`Exception occurred fetching forum urls: ${error.message}`);
+            console.error(`Exception occurred fetching forum urls: ${error}`);
             return;
         }
 
@@ -158,7 +168,7 @@ export default class ForumReader {
                 try {
                     if (activity.creationDate > this.data.Last[activity.type]) await this.readActivity(activity);
                 } catch (error) {
-                    console.error(`Error for activity ID ${activity.id}: ${error.message}`);
+                    console.error(`Error for activity ID ${activity.id}: ${error}`);
                     this.erroredActivities.push({
                         activity: activity,
                         attempts: 1
@@ -166,11 +176,12 @@ export default class ForumReader {
                 }
             }
         } catch (error) {
-            console.error(`Exception occurred reading forum: ${error.message}`);
+            console.error(`Exception occurred reading forum: ${error}`);
         }
+        return;
     }
 
-    async retryErroredActivities() {
+    async retryErroredActivities(): Promise<void> {
         for (let i = 0; i < this.erroredActivities.length; i++) {
             const activity = this.erroredActivities[i].activity;
 
@@ -178,18 +189,23 @@ export default class ForumReader {
                 await this.readActivity(activity);
             } catch (error) {
                 console.error(`Error for activity ID ${activity.id}: ${error.message}`);
-                if (++this.erroredActivities[i].attempts >= 3) {
+                if (++this.erroredActivities[i].attempts >= ForumReader.MAX_ATTEMPTS) {
                     console.error(`Giving up on activity ID ${activity.id}`);
                     this.erroredActivities.splice(i, 1);
                 }
             }
         }
+        return;
     }
 
-    fetchForumData() {
-        this.readActivities(this.answerHub.getQuestions());
-        this.readActivities(this.answerHub.getAnswers());
-        this.readActivities(this.answerHub.getComments());
-        this.retryErroredActivities();
+    /**
+     * Processes all new questions, answers, and comments, then schedules the update.
+     */
+    async fetchForumData(): Promise<void> {
+        await this.readActivities(this.answerHub.getQuestions());
+        await this.readActivities(this.answerHub.getAnswers());
+        await this.readActivities(this.answerHub.getComments());
+        await this.retryErroredActivities();
+        setTimeout(() => this.fetchForumData(), this.settings.CheckInterval);
     }
 }
