@@ -13,7 +13,7 @@ export default class AnswerHubAPI {
 
         this.auth = `Basic ${new Buffer(username + ":" + password, "binary").toString("base64")}`;
     }
-    
+
     /**
      * Makes a request to the AnswerHub AnswerHubAPI
      * @param url The url to make a request to, relative to the base AnswerHubAPI url
@@ -36,11 +36,19 @@ export default class AnswerHubAPI {
         return resp.json();
     }
 
-    public static formatQuestionBody(body: string): string {
-        const markdown = toMarkdown(body, { gfm: true });
+    public formatQuestionBody(body: string): string {
+        let markdown = toMarkdown(body, { gfm: true });
+        // Format code blocks
+        markdown = markdown.replace(/<pre>/g, "```").replace(/<\/pre>/g, "```");
+        // Replace relative URIs in links with absolute URIs
+        markdown = markdown.replace(/\[.*\]\((.*)\)/g, (fullMatch: string, uri: string) => {
+            if (uri.startsWith("/")) {
+                return fullMatch.replace(uri, this.baseURL + uri.slice(1));
+            }
+            return fullMatch;
+        });
+
         const clamped = markdown.substr(0, Math.min(1021, markdown.length));
-        // TODO handle relative links
-        // TODO handle code blocks
         return clamped + (clamped.length === 1021 ? "..." : "");
     }
 

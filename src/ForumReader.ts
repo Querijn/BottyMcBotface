@@ -102,7 +102,7 @@ export default class ForumReader {
                 embed = new Discord.RichEmbed()
                     .setColor(0xc62f2f)
                     .setTitle(`${activity.author.username} asked "${activity.title}"`)
-                    .setDescription(AnswerHubAPI.formatQuestionBody(activity.body))
+                    .setDescription(this.answerHub.formatQuestionBody(activity.body))
                     .setURL(`${this.answerHub.baseURL}questions/${activity.id}/${activity.slug}.html`);
 
                 this.keyFinder.findKey(username, activity.title, <string>embed.url, activity.creationDate);
@@ -114,8 +114,8 @@ export default class ForumReader {
                 embed = new Discord.RichEmbed()
                     .setColor(0xd1f442)
                     .setTitle(`${activity.author.username} posted an answer on "${question.title}"`)
-                    .addField("Question", AnswerHubAPI.formatQuestionBody(question.body), false)
-                    .addField(`${activity.author.username}'s answer`, AnswerHubAPI.formatQuestionBody(activity.body), false)
+                    .addField("Question", this.answerHub.formatQuestionBody(question.body), false)
+                    .addField(`${activity.author.username}'s answer`, this.answerHub.formatQuestionBody(activity.body), false)
                     .setURL(`${this.answerHub.baseURL}questions/${activity.originalParentId}/?childToView=${activity.id}#answer-${activity.id}`);
 
                 break;
@@ -126,7 +126,7 @@ export default class ForumReader {
                 embed = new Discord.RichEmbed()
                     .setColor(0x4fb9f7)
                     .setTitle(`${activity.author.username} posted a comment on "${question.title}"`)
-                    .setDescription(AnswerHubAPI.formatQuestionBody(activity.body))
+                    .setDescription(this.answerHub.formatQuestionBody(activity.body))
                     .setURL(`${this.answerHub.baseURL}questions/${activity.originalParentId}/?childToView=${activity.id}#comment-${activity.id}`);
 
                 break;
