@@ -36,12 +36,14 @@ export default class Thinking {
 
         if (!message.content.includes("🤔")) return;
 
-        if (this.thinkingUsers.indexOf(message.author.id) !== -1) {
-            message.react("🤔");
-            return;
+        if (this.thinkingUsers.indexOf(message.author.id) === -1) {
+            const emoji = message.guild.emojis.filter(x => x.name.includes("thinking")).random();
+            if (emoji) {
+                message.react(emoji.identifier);
+                return;
+            }
         }
 
-        const emoji = message.guild.emojis.filter(x => x.name.includes("thinking")).random();
-        message.react(emoji.identifier);
+        message.react("🤔");
     }
 }
