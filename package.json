@@ -2,25 +2,34 @@
   "name": "botty-mcbotface",
   "version": "1.0.0",
   "description": "A bot for the Riot Games API Discord.",
-  "main": "bot.js",
+  "main": "dist/app.js",
   "repository": {
     "url": "git@github.com:Querijn/BottyMcBotface.git",
     "type": "git"
+  },
+  "scripts": {
+    "start": "tsc -p . && node ./dist/app.js"
   },
   "author": "Querijn Heijmans <querijn@irule.at>",
   "license": "MIT",
   "dependencies": {
     "bufferutil": "^3.0.0",
+    "discord.js": "^11.1.0",
     "erlpack": "hammerandchisel/erlpack",
     "feed-read": "^0.0.1",
     "libsodium-wrappers": "^0.5.1",
+    "node-fetch": "^1.7.2",
     "node-opus": "^0.2.5",
     "opusscript": "^0.0.3",
+    "pretty-ms": "^3.0.0",
     "sodium": "^2.0.1",
     "to-markdown": "^3.1.0",
     "uws": "^0.14.1"
   },
-  "peerDependencies": {
-    "discord.js": "^11.1.0"
+  "devDependencies": {
+    "@types/node": "^8.0.22",
+    "@types/node-fetch": "^1.6.7",
+    "@types/pretty-ms": "^3.0.0",
+    "typescript": "^2.4.2"
   }
 }
