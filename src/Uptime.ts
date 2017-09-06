@@ -1,10 +1,9 @@
 import Discord = require("discord.js");
-import { fileBackedObject } from "./util";
 import prettyMs = require("pretty-ms");
 
-export interface UptimeSettings {
-    CheckInterval: number;
-}
+import { fileBackedObject } from "./FileBackedObject";
+import { SharedSettings } from "./SharedSettings";
+import { PersonalSettings } from "./PersonalSettings";
 
 export interface UptimeData {
     LastUptime: number;
@@ -14,14 +13,16 @@ export interface UptimeData {
 
 export default class Uptime {
     private bot: Discord.Client;
-    private settings: UptimeSettings;
+    private sharedSettings: SharedSettings;
+    private personalSettings: PersonalSettings;
     private data: UptimeData;
 
-    constructor(bot: Discord.Client, settingsFile: string, dataFile: string) {
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings, personalSettings: PersonalSettings, dataFile: string) {
         console.log("Requested uptime extension..");
 
-        this.settings = fileBackedObject(settingsFile);
-        console.log("Successfully loaded uptime settings file.");
+        this.sharedSettings = sharedSettings;
+        this.personalSettings = personalSettings;
+        console.log("Successfully loaded uptime settings.");
 
         this.data = fileBackedObject(dataFile);
         console.log("Successfully loaded uptime data file.");
@@ -29,7 +30,7 @@ export default class Uptime {
         this.bot = bot;
         this.bot.on("ready", this.onBot.bind(this));
         this.bot.on("message", this.onMessage.bind(this));
-        setInterval(this.onUpdate.bind(this), this.settings.CheckInterval);
+        setInterval(this.onUpdate.bind(this), this.sharedSettings.uptimeSettings.checkInterval);
     }
 
     onBot() {
@@ -51,7 +52,7 @@ export default class Uptime {
             timeDiff = 0;
         }
 
-        if (timeDiff > this.settings.CheckInterval + 1000) {
+        if (timeDiff > this.sharedSettings.uptimeSettings.checkInterval + 1000) {
             // Give it some error
             this.data.TotalDowntime += timeDiff;
             console.log(`Noticed a downtime of ${timeDiff * 0.001} seconds.`);

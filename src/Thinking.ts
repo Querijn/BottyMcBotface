@@ -1,5 +1,5 @@
 import Discord = require("discord.js");
-import { fileBackedObject } from "./util";
+import { fileBackedObject } from "./FileBackedObject";
 
 export default class Thinking {
     private bot: Discord.Client;

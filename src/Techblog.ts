@@ -1,13 +1,9 @@
-import { fileBackedObject } from "./util";
+import { fileBackedObject } from "./FileBackedObject";
+import { SharedSettings } from "./SharedSettings";
+import { PersonalSettings } from "./PersonalSettings";
+
 import Discord = require("discord.js");
 import feedReader = require("feed-read");
-
-export interface TechblogSettings {
-    CheckInterval: number;
-    Server: string;
-    Channel: string;
-    URL: string;
-}
 
 export interface TechblogData {
     Last: number;
@@ -15,12 +11,12 @@ export interface TechblogData {
 
 export default class Techblog {
     private bot: Discord.Client;
-    private settings: TechblogSettings;
+    private sharedSettings: SharedSettings;
     private data: TechblogData;
     private channel: Discord.TextChannel;
 
-    constructor(bot: Discord.Client, settingsFile: string, dataFile: string) {
-        this.settings = fileBackedObject(settingsFile);
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings, dataFile: string) {
+        this.sharedSettings = sharedSettings;
 
         this.data = fileBackedObject(dataFile);
         console.log("Successfully loaded TechblogReader data file.");
@@ -30,15 +26,15 @@ export default class Techblog {
         this.bot.on("ready", () => {
             if (!this.data.Last) this.data.Last = Date.now();
 
-            const guild = this.bot.guilds.find("name", this.settings.Server);
+            let guild = this.bot.guilds.get(this.sharedSettings.server);
             if (!guild) {
-                console.error(`Incorrect setting for the server: ${this.settings.Server}`);
+                console.error(`TechBlog: Invalid settings for guild ID ${this.sharedSettings.server}`);
                 return;
             }
 
-            this.channel = guild.channels.find("name", this.settings.Channel) as Discord.TextChannel;
+            this.channel = guild.channels.find("name", this.sharedSettings.techBlog.channel) as Discord.TextChannel;
             if (!this.channel) {
-                console.error(`Incorrect setting for the channel: ${this.settings.Channel}`);
+                console.error(`TechBlog: Incorrect setting for the channel: ${this.sharedSettings.techBlog.channel}`);
                 return;
             }
 
@@ -46,12 +42,12 @@ export default class Techblog {
 
             setInterval(() => {
                 this.checkFeed();
-            }, this.settings.CheckInterval);
+            }, this.sharedSettings.techBlog.checkInterval);
         });
     }
 
     checkFeed() {
-        feedReader(this.settings.URL, (error, articles) => {
+        feedReader(this.sharedSettings.techBlog.url, (error, articles) => {
             if (error) {
                 console.error("Error reading tech blog RSS feed:", error);
                 return;

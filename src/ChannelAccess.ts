@@ -1,15 +1,18 @@
+import { fileBackedObject } from "./FileBackedObject";
+import { SharedSettings } from "./SharedSettings";
+import { PersonalSettings } from "./PersonalSettings";
+
 import Discord = require("discord.js");
-import { fileBackedObject } from "./util";
 
 export default class ChannelAccess {
-    private settings: Settings;
+    private sharedSettings: SharedSettings;
     private bot: Discord.Client;
     private guild: Discord.Guild;
 
-    constructor(bot: Discord.Client, settingsFile: string) {
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings) {
         console.log("Requested ChannelAccess extension..");
 
-        this.settings = fileBackedObject(settingsFile);
+        this.sharedSettings = sharedSettings;
         console.log("Successfully loaded ChannelAccess settings file.");
 
         this.bot = bot;
@@ -17,9 +20,9 @@ export default class ChannelAccess {
     }
 
     private onBotReady(): void {
-        let guild = this.bot.guilds.get(this.settings.ServerID);
+        let guild = this.bot.guilds.get(this.sharedSettings.server);
         if (!guild) {
-            console.error(`Invalid settings for guild ID ${this.settings.ServerID}`);
+            console.error(`ChannelAccess: Invalid settings for guild ID ${this.sharedSettings.server}`);
             return;
         }
         this.guild = guild;
@@ -92,7 +95,7 @@ export default class ChannelAccess {
      */
     private async joinChannel(message: Discord.Message, channel: Discord.TextChannel) {
         try {
-            if (this.settings.RestrictedChannels.indexOf(channel.id) !== -1) {
+            if (this.sharedSettings.channelAccess.restrictedChannels.indexOf(channel.id) !== -1) {
                 await this.reply(message, `You are not allowed to join ${channel}`);
                 return;
             }
@@ -116,7 +119,7 @@ export default class ChannelAccess {
      */
     private async leaveChannel(message: Discord.Message, channel: Discord.TextChannel) {
         try {
-            if (this.settings.ForcedChannels.indexOf(channel.id) !== -1) {
+            if (this.sharedSettings.channelAccess.forcedChannels.indexOf(channel.id) !== -1) {
                 await this.reply(message, `You may not leave ${channel}`);
                 return;
             }
@@ -160,14 +163,4 @@ export default class ChannelAccess {
             }
         }
     }
-}
-
-// Everything is a string instead of a number because some IDs are too large for JavaScript
-interface Settings {
-    /** IDs of channels that users aren't allowed to leave */
-    ForcedChannels: string[];
-    /** IDs of channels that users aren't allowed to join */
-    RestrictedChannels: string[];
-    /** The ID of the Discord server */
-    ServerID: string;
 }

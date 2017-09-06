@@ -1,24 +1,20 @@
-import { fileBackedObject } from "./util";
-import Discord = require("discord.js");
+import { fileBackedObject } from "./FileBackedObject";
+import { SharedSettings } from "./SharedSettings";
+import { PersonalSettings } from "./PersonalSettings";
 
-export interface HoneypotSettings {
-    Discord: {
-        Token: string;
-        Owner: string;
-    };
-    Server: string;
-    ReportChannel: string;
-}
+import Discord = require("discord.js");
 
 export default class Honeypot {
     private master: Discord.Client;
     private client: Discord.Client;
     private joinTime: number;
-    private settings: HoneypotSettings;
+    private sharedSettings: SharedSettings;
+    private personalSettings: PersonalSettings;
 
-    constructor(bot: Discord.Client, settingsFile: string) {
-        this.settings = fileBackedObject(settingsFile);
-        console.log("Successfully loaded honeypot settings file.");
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings, personalSettings: PersonalSettings) {
+        this.sharedSettings = sharedSettings;
+        this.personalSettings = personalSettings;
+        console.log("Successfully loaded honeypot settings.");
 
         this.joinTime = Date.now();
         this.master = bot;
@@ -38,7 +34,7 @@ export default class Honeypot {
 
         this.master.on("ready", () => {
             console.log("Honeypot's master is logged in and ready.");
-            this.client.login(this.settings.Discord.Token);
+            this.client.login(this.personalSettings.honeypot.token);
         });
     }
 
@@ -78,15 +74,15 @@ export default class Honeypot {
     }
 
     get channel(): Discord.TextChannel | null {
-        const guild = this.master.guilds.find("name", this.settings.Server);
+        const guild = this.master.guilds.find("name", this.sharedSettings.honeypot.server);
         if (!guild) {
-            console.error(`Incorrect setting for the server: ${this.settings.Server}`);
+            console.error(`Honeypot: Incorrect setting for the server: ${this.sharedSettings.honeypot.server}`);
             return null;
         }
 
-        const channel = guild.channels.find("name", this.settings.ReportChannel);
+        const channel = guild.channels.find("name", this.sharedSettings.honeypot.reportChannel);
         if (!channel) {
-            console.error(`Incorrect setting for the channel: ${this.settings.ReportChannel}`);
+            console.error(`Honeypot: Incorrect setting for the channel: ${this.sharedSettings.honeypot.reportChannel}`);
             return null;
         }
 

@@ -1,5 +1,8 @@
+import { fileBackedObject } from "./FileBackedObject";
+import { SharedSettings } from "./SharedSettings";
+import { PersonalSettings } from "./PersonalSettings";
+
 import Discord = require("discord.js");
-import { fileBackedObject } from "./util";
 
 export interface BottySettings {
     Discord: {
@@ -10,11 +13,11 @@ export interface BottySettings {
 
 export default class Botty {
     public readonly client = new Discord.Client();
-    private settings: BottySettings;
+    private personalSettings: PersonalSettings;
 
-    constructor(settingsFile: string) {
-        this.settings = fileBackedObject(settingsFile);
-        console.log("Successfully loaded settings file.");
+    constructor(personalSettings: PersonalSettings) {
+        this.personalSettings = personalSettings;
+        console.log("Successfully loaded bot settings.");
 
         this.client
             .on("error", console.error)
@@ -27,6 +30,6 @@ export default class Botty {
     }
 
     start() {
-        return this.client.login(this.settings.Discord.Key);
+        return this.client.login(this.personalSettings.discord.key);
     }
 }

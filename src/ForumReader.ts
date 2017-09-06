@@ -1,16 +1,11 @@
+import { fileBackedObject } from "./FileBackedObject";
+import { SharedSettings } from "./SharedSettings";
+import { PersonalSettings } from "./PersonalSettings";
+
 import { default as AnswerHubAPI, Node, NodeList, Question } from "./AnswerHub";
 import KeyFinder from "./KeyFinder";
 import Discord = require("discord.js");
-import { fileBackedObject } from "./util";
 
-export interface ForumReaderSettings {
-    CheckInterval: number;
-    Server: string;
-    Channel: string;
-    URL: string;
-    Username: string;
-    Password: string;
-}
 
 export interface ForumReaderData {
     Last: {
@@ -29,21 +24,23 @@ export default class ForumReader {
     /** Activities that could not be successfully parsed and will be retried */
     private erroredActivities: { activity: Node; /** How many attempts have been made to process this activity */ attempts: number }[] = [];
     private keyFinder: KeyFinder;
-    private settings: ForumReaderSettings;
+    private sharedSettings: SharedSettings;
+    private personalSettings: PersonalSettings;
     private data: ForumReaderData;
     private channel: Discord.TextChannel;
 
-    constructor(bot: Discord.Client, settingsFile: string, dataFile: string, keyFinder: KeyFinder) {
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings, personalSettings: PersonalSettings, dataFile: string, keyFinder: KeyFinder) {
         console.log("Requested ForumReader extension..");
 
-        this.settings = fileBackedObject(settingsFile);
-        console.log("Successfully loaded ForumReader settings file.");
+        this.sharedSettings = sharedSettings;
+        this.personalSettings = personalSettings;
+        console.log("Successfully loaded ForumReader settings.");
 
         this.data = fileBackedObject(dataFile);
         console.log("Successfully loaded ForumReader data file.");
 
         this.keyFinder = keyFinder;
-        this.answerHub = new AnswerHubAPI(this.settings.URL, this.settings.Username, this.settings.Password);
+        this.answerHub = new AnswerHubAPI(this.sharedSettings.forum.url, this.personalSettings.forum.username, this.personalSettings.forum.password);
         this.cachedNodes = new Map();
 
         if (this.data.Last.question === 0) this.data.Last.question = Date.now();
@@ -51,20 +48,23 @@ export default class ForumReader {
         if (this.data.Last.comment === 0) this.data.Last.comment = Date.now();
 
         bot.on("ready", () => {
-            const guild = bot.guilds.find("name", this.settings.Server);
+            let guild = bot.guilds.get(this.sharedSettings.server);
             if (!guild) {
-                console.error(`Incorrect setting for the server: ${this.settings.Server}`);
+                console.error(`ForumReader: Incorrect settings for guild ID ${this.sharedSettings.server}`);
                 return;
             }
 
-            const channel = guild.channels.find("name", this.settings.Channel);
+            const channel = guild.channels.find("name", this.sharedSettings.forum.channel);
             if (!channel || !(channel instanceof Discord.TextChannel)) {
-                console.error(`Incorrect setting for the channel: ${this.settings.Channel}`);
+                console.error(`ForumReader: Incorrect setting for the channel: ${this.sharedSettings.forum.channel}`);
                 return;
             }
             this.channel = channel as Discord.TextChannel;
 
             this.fetchForumData();
+            setInterval(() => {
+                this.fetchForumData();
+            }, this.sharedSettings.forum.checkInterval);
         });
     }
 
@@ -206,6 +206,6 @@ export default class ForumReader {
         await this.readActivities(this.answerHub.getAnswers());
         await this.readActivities(this.answerHub.getComments());
         await this.retryErroredActivities();
-        setTimeout(() => this.fetchForumData(), this.settings.CheckInterval);
+        setTimeout(() => this.fetchForumData(), this.sharedSettings.forum.checkInterval);
     }
 }

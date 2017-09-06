@@ -1,22 +1,20 @@
+import { fileBackedObject } from "./FileBackedObject";
+import { SharedSettings } from "./SharedSettings";
+import { PersonalSettings } from "./PersonalSettings";
+
 import Discord = require("discord.js");
-import { fileBackedObject } from "./util";
 import fetch from "node-fetch";
 
-export interface KeyFinderSettings {
-    Server: string;
-    ReportChannel: string;
-}
-
 export default class KeyFinder {
-    private settings: KeyFinderSettings;
+    private sharedSettings: SharedSettings;
     private keys: FoundKeyInfo[];
     private bot: Discord.Client;
     private channel?: Discord.TextChannel = undefined;
 
-    constructor(bot: Discord.Client, settingsFile: string, keyFile: string) {
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings, keyFile: string) {
         console.log("Requested KeyFinder extension..");
 
-        this.settings = fileBackedObject(settingsFile);
+        this.sharedSettings = sharedSettings;
         console.log("Successfully loaded KeyFinder settings file.");
 
         this.keys = fileBackedObject(keyFile);
@@ -25,17 +23,17 @@ export default class KeyFinder {
         this.bot = bot;
 
         this.bot.on("ready", () => {
-            const guild = this.bot.guilds.find("name", this.settings.Server);
+            const guild = this.bot.guilds.get(this.sharedSettings.server);
 
             if (guild) {
-                const channel = guild.channels.find("name", this.settings.ReportChannel) as Discord.TextChannel;
+                const channel = guild.channels.find("name", this.sharedSettings.keyFinder.reportChannel) as Discord.TextChannel;
                 if (channel) {
                     this.channel = channel;
                 } else {
-                    console.error(`Incorrect setting for the channel: ${this.settings.ReportChannel}`);
+                    console.error(`KeyFinder: Incorrect setting for the channel: ${this.sharedSettings.keyFinder.reportChannel}`);
                 }
             } else {
-                console.error(`Incorrect setting for the server: ${this.settings.Server}`);
+                console.error(`KeyFinder: Incorrect setting for the server: ${this.sharedSettings.server }`);
             }
 
             console.log("KeyFinder extension loaded.");

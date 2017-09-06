@@ -1,0 +1,27 @@
+{
+    "server": "187652476080488449",
+
+    "channelAccess": {
+        "forcedChannels": ["301148922443726870", "187961895049756672", "190817288507752448"],
+        "restrictedChannels": ["190817288507752448"]
+    },
+    "uptimeSettings": {
+        "checkInterval": 1000
+    },
+    "techBlog": {
+        "checkInterval": 300000,
+        "channel": "tech-articles",
+        "url": "https://engineering.riotgames.com/news/feed"
+    },
+    "keyFinder": {
+        "reportChannel": "moderators"
+    },
+    "forum": {
+        "checkInterval":10000,
+        "channel":"external-activity",
+        "url":"http://discussion.developer.riotgames.com/"
+    },
+    "honeypot": {
+        "reportChannel": "moderators"
+    }
+}
