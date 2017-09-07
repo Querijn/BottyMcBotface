@@ -1,7 +1,7 @@
 import Botty from "./Botty";
 
 import Uptime from "./Uptime";
-import Thinking from "./Thinking";
+import AutoReact from "./AutoReact";
 import Honeypot from "./Honeypot";
 import ForumReader from "./ForumReader";
 import KeyFinder from "./KeyFinder";
@@ -20,8 +20,8 @@ const bot = new Botty(personalSettings);
 const uptime = new Uptime(bot.client, sharedSettings, personalSettings, "data/uptime_data.json");
 const keyFinder = new KeyFinder(bot.client, sharedSettings, "data/riot_keys.json");
 const forum = new ForumReader(bot.client, sharedSettings, personalSettings, "data/forum_data.json", keyFinder);
-const thinking = new Thinking(bot.client, "data/thinking_data.json");
 const honeypot = new Honeypot(bot.client, sharedSettings, personalSettings);
+const autoReact = new AutoReact(bot.client, "data/thinking_data.json");
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
 const channelAccess = new ChannelAccess(bot.client, sharedSettings);
 
