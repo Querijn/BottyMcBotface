@@ -62,9 +62,6 @@ export default class ForumReader {
             this.channel = channel as Discord.TextChannel;
 
             this.fetchForumData();
-            setInterval(() => {
-                this.fetchForumData();
-            }, this.sharedSettings.forum.checkInterval);
         });
     }
 
