@@ -23,5 +23,8 @@
     },
     "honeypot": {
         "reportChannel": "moderators"
+    },
+    "info": {
+        "allowedRoles": ["187653195038720000"]
     }
 }

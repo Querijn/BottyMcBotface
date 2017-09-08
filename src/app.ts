@@ -7,6 +7,7 @@ import ForumReader from "./ForumReader";
 import KeyFinder from "./KeyFinder";
 import Techblog from "./Techblog";
 import ChannelAccess from "./ChannelAccess";
+import Info from "./Info";
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
@@ -24,6 +25,7 @@ const honeypot = new Honeypot(bot.client, sharedSettings, personalSettings);
 const autoReact = new AutoReact(bot.client, "data/thinking_data.json");
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
 const channelAccess = new ChannelAccess(bot.client, sharedSettings);
+const info = new Info(bot.client, sharedSettings, "data/info_data.json");
 
 // start bot
 bot.start();
