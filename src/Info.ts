@@ -21,7 +21,7 @@ export default class Info {
     private sharedSettings: SharedSettings;
 
     constructor(bot: Discord.Client, sharedSettings: SharedSettings, userFile: string) {
-        console.log("Requested Thinking extension..");
+        console.log("Requested Info extension..");
         this.bot = bot;
 
         this.infos = fileBackedObject(userFile);
@@ -40,7 +40,7 @@ export default class Info {
     onInfo(message: Discord.Message) {
         if (!findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) return;
 
-        const split: string[] = message.cleanContent.split(" ");
+        const split = message.cleanContent.split(" ");
         
         let action: "add" | "remove" | "retrieve" | undefined;
         if (split[0].match(/^(!|\/)infoadd$/gi)) action = "add";
