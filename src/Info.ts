@@ -5,8 +5,8 @@ import Discord = require("discord.js");
 
 // If the Collection contains anything in the other array
 const findOne = (arr1: Discord.Collection<string, Discord.Role>, arr2: Array<any>) => {
-    return arr1.some(v => {
-        return arr2.indexOf(v) >= 0;
+    return arr2.some(v => {
+        return !!arr1.get(v);
     });
 };
 
@@ -40,7 +40,7 @@ export default class Info {
     }
 
     onInfo(message: Discord.Message) {
-        if (!findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) return;
+        if (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) return;
         if (message.author.bot) return;
 
         // Needs to start with / or !
