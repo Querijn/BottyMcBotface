@@ -40,7 +40,6 @@ export default class Info {
     }
 
     onInfo(message: Discord.Message) {
-        if (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) return;
         if (message.author.bot) return;
 
         // Needs to start with / or !
@@ -64,11 +63,17 @@ export default class Info {
         let response: string | undefined;
         switch (command) {
             case "add":
+                // Only admins
+                if (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) return;
+                
                 if (split.length <= nextIndex + 1) return;
                 response = this.addInfo(split[nextIndex], split.slice(nextIndex + 1).join(" "));
                 break;
 
             case "remove":
+                // Only admins
+                if (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) return;
+                
                 if (split.length <= nextIndex) return;
                 response = this.removeInfo(split[nextIndex]);
                 break;
