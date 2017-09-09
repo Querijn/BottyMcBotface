@@ -11,18 +11,20 @@ const findOne = (arr1: Discord.Collection<string, Discord.Role>, arr2: Array<any
 };
 
 export interface InfoData {
-    Command: string;
-    Message: string;
+    command: string;
+    message: string;
 }
 
 export default class Info {
     private bot: Discord.Client;
     private infos: InfoData[];
     private sharedSettings: SharedSettings;
+    private command: string;
 
     constructor(bot: Discord.Client, sharedSettings: SharedSettings, userFile: string) {
         console.log("Requested Info extension..");
         this.bot = bot;
+        this.command = sharedSettings.info.command;
 
         this.infos = fileBackedObject(userFile);
         console.log("Successfully loaded info file.");
@@ -39,45 +41,60 @@ export default class Info {
 
     onInfo(message: Discord.Message) {
         if (!findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) return;
+        if (message.author.bot) return;
 
+        // Needs to start with / or !
         const split = message.cleanContent.split(" ");
-        
-        let action: "add" | "remove" | "retrieve" | undefined;
-        if (split[0].match(/^(!|\/)infoadd$/gi)) action = "add";
-        if (split[0].match(/^(!|\/)inforemove$/gi)) action = "remove";
-        if (split[0].match(/^(!|\/)info$/gi)) action = "retrieve";
+        if (split[0][0] !== '!' && split[0][0] !== '/') return;
+            
+        // needs to start with command
+        let command = split[0].substr(1);
+        if (!command.startsWith(this.command)) return;
 
-        if (!action) return;
-        if (split.length <= 1) return;
+        // !info <command>
+        let nextIndex = 1;    
+        if (command.length === this.command.length) {
+            command = split[1];
+            nextIndex++;
+        }
+
+        // !info<command>
+        else command = command.substr(this.command.length);
 
         let response: string | undefined;
-        switch (action) {
+        switch (command) {
             case "add":
-                if (split.length <= 2) return;
-                response = this.addInfo(split[1], split.slice(2).join(" "));
+                if (split.length <= nextIndex + 1) return;
+                response = this.addInfo(split[nextIndex], split.slice(nextIndex + 1).join(" "));
                 break;
+
             case "remove":
-                response = this.removeInfo(split[1]);
+                if (split.length <= nextIndex) return;
+                response = this.removeInfo(split[nextIndex]);
                 break;
-            case "retrieve":
+
+            case "list":
+                response = this.listInfo();
+                break;
+
+            default: // Retrieve or just !info
+                if (split.length <= 1) return;
                 response = this.fetchInfo(split[1]);
                 break;
-            default:
-                return;
         }
 
         if (!response) return;
 
-        message.reply(response);
+        message.channel.send(response);
     }
 
     private addInfo(command: string, message: string) {
-        const alreadyExists = this.infos.some(info => info.Command === command);
+        const alreadyExists = this.infos.some(info => info.command === command);
         if (alreadyExists) return;
 
         const newInfo: InfoData = {
-            Command: command,
-            Message: message
+            command: command,
+            message: message
         };
 
         this.infos.push(newInfo);
@@ -86,7 +103,7 @@ export default class Info {
 
     private removeInfo(command: string) {
         const index = this.infos.findIndex(info => {
-            return info.Command === command;
+            return info.command === command;
         });
 
         if (index === -1) return;
@@ -95,13 +112,25 @@ export default class Info {
         return `Successfully removed ${command}`;
     }
 
+    private listInfo() {
+        const index = this.infos;
+
+        let message = `The available info commands are: \n`;
+
+        for (let i = 0; i < this.infos.length; i++) {
+            message += `- \`!${this.command} ${this.infos[i].command}\`\n`;
+        }
+
+        return message;
+    }
+
     private fetchInfo(command: string) {
         const info = this.infos.find(info => {
-            return info.Command === command;
+            return info.command === command;
         });
 
         if (!info) return;
 
-        return info.Message;
+        return info.message;
     }
 }

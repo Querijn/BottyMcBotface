@@ -28,6 +28,7 @@ export interface SharedSettings {
         reportChannel: string;
     },
     info: {
-        allowedRoles: string[]
+        allowedRoles: string[],
+        command: string
     }
 }
