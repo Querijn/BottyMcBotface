@@ -25,7 +25,7 @@
         "reportChannel": "moderators"
     },
     "info": {
-        "allowedRoles": ["187653195038720000"],
+        "allowedRoles": ["187653195038720000", "187653430372728833", "350692046631206912"],
         "command": "note"
     }
 }
