@@ -74,9 +74,9 @@ export default class Honeypot {
     }
 
     get channel(): Discord.TextChannel | null {
-        const guild = this.master.guilds.find("name", this.sharedSettings.honeypot.server);
+        const guild = this.master.guilds.find("name", this.sharedSettings.server);
         if (!guild) {
-            console.error(`Honeypot: Incorrect setting for the server: ${this.sharedSettings.honeypot.server}`);
+            console.error(`Honeypot: Incorrect setting for the server: ${this.sharedSettings.server}`);
             return null;
         }
 
