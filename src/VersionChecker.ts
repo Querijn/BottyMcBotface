@@ -139,13 +139,15 @@ export default class VersionChecker {
                         lastNewValidMinor = nextMinor;
                         validPatchNotes = patchNotes;
                     }
-                    else if (response.status === 404) break; // no new version
+                    else if (response.status === 404) break;
                 } 
             } 
             while (tries < 100);
 
             let advancedToNextMinor = parseInt(currentVersionArray[0]) == lastNewValidMajor && lastNewValidMinor > parseInt(currentVersionArray[1]);
             let advancedToNextSeason = parseInt(currentVersionArray[0]) > lastNewValidMajor;
+
+            if (!advancedToNextMinor && !advancedToNextSeason) return; // no new version
 
             this.data.latestGameVersion = `${lastNewValidMajor.toString()}.${lastNewValidMinor.toString()}`;
 
