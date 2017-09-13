@@ -26,5 +26,11 @@ export interface SharedSettings {
     info: {
         allowedRoles: string[],
         command: string
+    },
+    versionChecker: {
+        checkInterval: number,
+        channel: string,
+        gameThumbnail: string,
+        dataDragonThumbnail: string
     }
 }

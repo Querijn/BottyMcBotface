@@ -7,6 +7,7 @@ import ForumReader from "./ForumReader";
 import KeyFinder from "./KeyFinder";
 import Techblog from "./Techblog";
 import ChannelAccess from "./ChannelAccess";
+import VersionChecker from "./VersionChecker";
 import Info from "./Info";
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
@@ -26,6 +27,7 @@ const autoReact = new AutoReact(bot.client, "data/thinking_data.json");
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
 const channelAccess = new ChannelAccess(bot.client, sharedSettings);
 const info = new Info(bot.client, sharedSettings, "data/info_data.json");
+const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
 
 // start bot
 bot.start();
