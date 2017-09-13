@@ -9,22 +9,18 @@ export interface SharedSettings {
     },
     techBlog: {
         checkInterval: number,
-        server: string,
         channel: string,
         url: string
     },
     keyFinder: {
-        server: string,
         reportChannel: string
     },
     forum: {
         checkInterval: number,
-        server: string,
         channel: string,
         url: string
     }
     honeypot: {
-        server: string;
         reportChannel: string;
     },
     info: {
