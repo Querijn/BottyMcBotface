@@ -29,7 +29,7 @@
         "command": "note"
     },
     "versionChecker": {
-        "checkInterval": 43200000,
+        "checkInterval": 1800000,
         "channel": "external-activity",
         "dataDragonThumbnail": "https://cdn.discordapp.com/attachments/187652476080488449/357422324015955970/ddragon.png",
         "gameThumbnail": "http://na.leagueoflegends.com/profiles/lol2_profile/themes/custom/lolt/img/lol_logo.png"

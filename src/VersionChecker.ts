@@ -99,13 +99,14 @@ export default class VersionChecker {
             let nextMajor: number = parseInt(currentVersionArray[0]);
             let nextMinor: number = parseInt(currentVersionArray[1]);
             
-            let lastNewValidMajor = nextMajor;
-            let lastNewValidMinor = nextMinor;
-
             let tries = 0;
 
             let patchNotes: string;
-            let validPatchNotes: string = "http://irule.at";
+
+            let lastNewValidMajor = nextMajor;
+            let lastNewValidMinor = nextMinor;
+            let validPatchNotes: string = "invalid";
+            let newPatch = false;
 
             do {
                 nextMinor++;
@@ -120,6 +121,7 @@ export default class VersionChecker {
                     lastNewValidMajor = nextMajor;
                     lastNewValidMinor = nextMinor;
                     validPatchNotes = patchNotes;
+                    newPatch = true;
                 }
                 
                 // check for change in season
@@ -138,16 +140,14 @@ export default class VersionChecker {
                         lastNewValidMajor = nextMajor;
                         lastNewValidMinor = nextMinor;
                         validPatchNotes = patchNotes;
+                        newPatch = true;
                     }
                     else if (response.status === 404) break;
                 } 
             } 
             while (tries < 100);
 
-            let advancedToNextMinor = parseInt(currentVersionArray[0]) == lastNewValidMajor && lastNewValidMinor > parseInt(currentVersionArray[1]);
-            let advancedToNextSeason = parseInt(currentVersionArray[0]) > lastNewValidMajor;
-
-            if (!advancedToNextMinor && !advancedToNextSeason) return; // no new version
+            if (newPatch == false) return; // no new version
 
             this.data.latestGameVersion = `${lastNewValidMajor.toString()}.${lastNewValidMinor.toString()}`;
 
@@ -171,6 +171,6 @@ export default class VersionChecker {
         await this.updateDataDragonVersion();
         await this.updateGameVersion();
 
-        setInterval(this.onUpdate.bind(this), this.sharedSettings.versionChecker.checkInterval);
+        setTimeout(this.onUpdate.bind(this), this.sharedSettings.versionChecker.checkInterval);
     }
 }
