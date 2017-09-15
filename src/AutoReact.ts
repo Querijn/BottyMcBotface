@@ -2,6 +2,8 @@ import { fileBackedObject } from "./FileBackedObject";
 
 import Discord = require("discord.js");
 
+const greetingAry:string[] = ["hi", "hello", "hey"];
+
 export default class AutoReact {
     private bot: Discord.Client;
     private thinkingUsers: string[];
@@ -43,7 +45,7 @@ export default class AutoReact {
             return;
         }
 
-        if (!message.content.includes("🤔")) return;
+        if (!message.content.includes("🤔") && !message.content.toLowerCase().includes("thinking")) return;
 
         if (this.thinkingUsers.indexOf(message.author.id) === -1) {
             const emoji = message.guild.emojis.filter(x => x.name.includes("thinking")).random();
@@ -56,14 +58,11 @@ export default class AutoReact {
         message.react("🤔");
     }
 
-    onGreeting(message: Discord.Message) {
-        let greeting = message.content.toLowerCase();
+    onGreeting(message: Discord.Message) {	
+		const isGreeting = greetingAry.some((greeting:string) => message.content.startsWith(greeting));
 
-        if (!greeting.startsWith("hello") 
-            && !greeting.startsWith("hi ") && greeting != "hi"
-            && !greeting.startsWith("hey ") && greeting != "hey")
-            return;
-
-        message.react(this.greetingEmoji);
+		if (!isGreeting) return;
+		
+		message.react(this.greetingEmoji);
     }
 }
