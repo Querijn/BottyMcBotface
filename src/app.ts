@@ -9,6 +9,7 @@ import Techblog from "./Techblog";
 import ChannelAccess from "./ChannelAccess";
 import VersionChecker from "./VersionChecker";
 import Info from "./Info";
+import MentionTracker from "./MentionTracker";
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
@@ -27,6 +28,7 @@ const autoReact = new AutoReact(bot.client, "data/thinking_data.json");
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
 const channelAccess = new ChannelAccess(bot.client, sharedSettings);
 const info = new Info(bot.client, sharedSettings, "data/info_data.json");
+const mentionTracker = new MentionTracker(bot.client);
 const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
 
 // start bot
