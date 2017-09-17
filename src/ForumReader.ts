@@ -12,6 +12,7 @@ export interface ForumReaderData {
         question: number;
         answer: number;
         comment: number;
+        kbentry: number;
     };
 }
 
@@ -46,6 +47,7 @@ export default class ForumReader {
         if (this.data.Last.question === 0) this.data.Last.question = Date.now();
         if (this.data.Last.answer === 0) this.data.Last.answer = Date.now();
         if (this.data.Last.comment === 0) this.data.Last.comment = Date.now();
+        if (this.data.Last.kbentry === 0) this.data.Last.kbentry = Date.now();
 
         bot.on("ready", () => {
             let guild = bot.guilds.get(this.sharedSettings.server);
@@ -129,6 +131,16 @@ export default class ForumReader {
                 break;
             }
 
+            case "kbentry": {
+                embed = new Discord.RichEmbed()
+                    .setColor(0x4fb9f7)
+                    .setTitle(`${activity.author.username} posted the article "${activity.title}"`)
+                    .setDescription(this.answerHub.formatQuestionBody(activity.body))
+                    .setURL(`${this.answerHub.baseURL}articles/${activity.id}/`);
+
+                break;
+            }
+
             default:
                 console.error(`Unknown activity type: ${activity.type}`);
         }
@@ -196,12 +208,13 @@ export default class ForumReader {
     }
 
     /**
-     * Processes all new questions, answers, and comments, then schedules the update.
+     * Processes all new questions, answers, comments, and articles, then schedules the update.
      */
     async fetchForumData(): Promise<void> {
         await this.readActivities(this.answerHub.getQuestions());
         await this.readActivities(this.answerHub.getAnswers());
         await this.readActivities(this.answerHub.getComments());
+        await this.readActivities(this.answerHub.getArticles());
         await this.retryErroredActivities();
         setTimeout(() => this.fetchForumData(), this.sharedSettings.forum.checkInterval);
     }

@@ -64,6 +64,10 @@ export default class AnswerHubAPI {
         return this.makeRequest(`comment.json?page=${page}&sort=${sort}`);
     }
 
+    getArticles(page = 1, sort = "active"): Promise<NodeList<Article>> {
+        return this.makeRequest(`article.json?page=${page}&sort=${sort}`);
+    }
+
     getQuestion(id: number): Promise<Question> {
         return this.makeRequest(`question/${id}.json`);
     }
@@ -88,7 +92,7 @@ export default class AnswerHubAPI {
  */
 export interface Node {
     id: number;
-    type: "question" | "comment" | "answer";
+    type: "question" | "comment" | "answer" | "kbentry";
     /** The time when this node was created (in epoch milliseconds) */
     creationDate: number;
     title: string;
