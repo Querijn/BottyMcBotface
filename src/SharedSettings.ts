@@ -32,5 +32,9 @@ export interface SharedSettings {
         channel: string,
         gameThumbnail: string,
         dataDragonThumbnail: string
+    },
+    logger: {
+        server: string,
+        channel: string
     }
 }

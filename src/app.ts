@@ -9,6 +9,7 @@ import Techblog from "./Techblog";
 import ChannelAccess from "./ChannelAccess";
 import VersionChecker from "./VersionChecker";
 import Info from "./Info";
+import Logger from "./Logger";
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
@@ -19,6 +20,7 @@ const personalSettings = fileBackedObject<PersonalSettings>("settings/personal_s
 const bot = new Botty(personalSettings);
 
 // Load extensions
+const logger = new Logger(bot.client, sharedSettings);
 const uptime = new Uptime(bot.client, sharedSettings, personalSettings, "data/uptime_data.json");
 const keyFinder = new KeyFinder(bot.client, sharedSettings, "data/riot_keys.json");
 const forum = new ForumReader(bot.client, sharedSettings, personalSettings, "data/forum_data.json", keyFinder);
