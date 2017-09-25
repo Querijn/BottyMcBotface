@@ -69,13 +69,13 @@ export default class AutoReact {
         this.oldLog(message, ...optionalParams);
         
         try {
-            this.channel.sendMessage(message.toString());
+            this.channel.send(`Log: ${message.toString()}`);
             for(let i = 0; i < optionalParams.length; i++) {
-                this.channel.sendMessage(`Log: ${message.toString()}`);
+                this.channel.send(`Log param ${(i+1)}: {optionalParams.toString()}`);
             }
         }
         catch (e) {
-            this.oldError(e.toString());
+            this.oldError(`Error trying to send a log message: ${e.toString()}`);
         }
     }
     
@@ -83,13 +83,13 @@ export default class AutoReact {
         this.oldLog(message, ...optionalParams);
         
         try {
-            this.channel.sendMessage(message.toString());
+            this.channel.send(`Warning: ${message.toString()}`);
             for(let i = 0; i < optionalParams.length; i++) {
-                this.channel.sendMessage(`Warning: ${message.toString()}`);
+                this.channel.send(`Warning param ${(i+1)}: ${optionalParams.toString()}`);
             }
         }
         catch (e) {
-            this.oldError(e.toString());
+            this.oldError(`Error trying to send a warning message: ${e.toString()}`);
         }
     }
     
@@ -97,13 +97,13 @@ export default class AutoReact {
         this.oldLog(message, ...optionalParams);
         
         try {
-            this.channel.sendMessage(message.toString());
+            this.channel.send(`Error: ${message.toString()}`);
             for(let i = 0; i < optionalParams.length; i++) {
-                this.channel.send(`Error: ${message.toString()}`);
+                this.channel.send(`Error param ${(i+1)}: ${optionalParams.toString()}`);
             }
         }
         catch (e) {
-            this.oldError(e.toString());
+            this.oldError(`Error trying to send an error message: ${e.toString()}`);
         }
     }
 }
