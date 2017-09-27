@@ -83,6 +83,11 @@ export default class AnswerHubAPI {
     getComment(id: number): Promise<Comment> {
         return this.makeRequest(`comment/${id}.json`);
     }
+
+    getNode(id: number): Promise<Node> {
+        // '/services/v2/article/[articleId].json' works for questions, answers, comments, and articles
+        return this.makeRequest(`article/${id}.json`);
+    }
 }
 
 // TODO document more fields that this contains (that aren't being used)?

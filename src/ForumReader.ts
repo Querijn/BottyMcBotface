@@ -2,7 +2,7 @@ import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
 
-import { default as AnswerHubAPI, Node, NodeList, Question } from "./AnswerHub";
+import { default as AnswerHubAPI, Article, Node, NodeList, Question } from "./AnswerHub";
 import KeyFinder from "./KeyFinder";
 import Discord = require("discord.js");
 
@@ -21,7 +21,7 @@ export default class ForumReader {
     private static MAX_ATTEMPTS = 3;
 
     private answerHub: AnswerHubAPI;
-    private cachedNodes: Map<number, Question> = new Map();
+    private cachedNodes: Map<number, Node> = new Map();
     /** Activities that could not be successfully parsed and will be retried */
     private erroredActivities: { activity: Node; /** How many attempts have been made to process this activity */ attempts: number }[] = [];
     private keyFinder: KeyFinder;
@@ -68,19 +68,19 @@ export default class ForumReader {
     }
 
     /**
-	 * Gets the question with the specified ID, first checking the cache, then the AnswerHubAPI
-	 * @param id The question ID
+	 * Gets the node with the specified ID, first checking the cache, then the AnswerHub API
+	 * @param id The node ID
 	 * @async
-	 * @returns The question with the specified ID
+	 * @returns The node with the specified ID
 	 * @throws {Error} Thrown if an AnswerHubAPI error occurs
 	 */
-    async getQuestion(id: number): Promise<Question> {
+    async getNode(id: number): Promise<Node> {
         if (this.cachedNodes.has(id)) {
             return this.cachedNodes.get(id)!;
         } else {
-            const question = await this.answerHub.getQuestion(id);
-            this.cachedNodes.set(id, question);
-            return question;
+            const node = await this.answerHub.getNode(id);
+            this.cachedNodes.set(id, node);
+            return node;
         }
     }
 
@@ -109,7 +109,7 @@ export default class ForumReader {
             }
 
             case "answer": {
-                const question = await this.getQuestion(activity.originalParentId);
+                const question: Question = await this.getNode(activity.originalParentId);
                 embed = new Discord.RichEmbed()
                     .setColor(0xd1f442)
                     .setTitle(`${activity.author.username} posted an answer on "${question.title}"`)
@@ -121,10 +121,11 @@ export default class ForumReader {
             }
 
             case "comment": {
-                const question: Question = await this.getQuestion(activity.originalParentId);
+                /* The root question or article of the comment */
+                const rootNode: Article | Question = await this.getNode(activity.originalParentId);
                 embed = new Discord.RichEmbed()
                     .setColor(0x4fb9f7)
-                    .setTitle(`${activity.author.username} posted a comment on "${question.title}"`)
+                    .setTitle(`${activity.author.username} posted a comment on "${rootNode.title}"`)
                     .setDescription(this.answerHub.formatQuestionBody(activity.body))
                     .setURL(`${this.answerHub.baseURL}questions/${activity.originalParentId}/?childToView=${activity.id}#comment-${activity.id}`);
 
