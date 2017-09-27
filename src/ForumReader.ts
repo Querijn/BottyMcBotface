@@ -152,8 +152,6 @@ export default class ForumReader {
         await this.channel.send("", {
             embed: embed
         });
-
-        if (this.data.Last[activity.type] < activity.creationDate) this.data.Last[activity.type] = activity.creationDate;
     }
 
     /**
@@ -183,6 +181,7 @@ export default class ForumReader {
                         attempts: 1
                     });
                 }
+                if (this.data.Last[activity.type] < activity.creationDate) this.data.Last[activity.type] = activity.creationDate;
             }
         } catch (error) {
             console.error(`Exception occurred reading forum: ${error}`);
