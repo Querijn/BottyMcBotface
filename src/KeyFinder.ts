@@ -67,7 +67,7 @@ export default class KeyFinder {
 	 * Checks if an AnswerHubAPI key is valid
 	 * @param key The AnswerHubAPI key to test
 	 * @async
-	 * @returns The value of the "X-App-Rate-Limit" header if the key yields a non-403 response code, or 'null' if the key yields a 403 response code
+	 * @returns The value of the "X-App-Rate-Limit" header ('undefined' if a header is not included in the response) if the key yields a non-403 response code, or 'null' if the key yields a 403 response code
 	 * @throws {Error} Thrown if the AnswerHubAPI call cannot be completed or results in a status code other than 200 or 403
 	 */
     async testKey(key: string): Promise<string | null> {
@@ -86,8 +86,8 @@ export default class KeyFinder {
     testAllKeys(): void {
         for (let i = 0; i < this.keys.length; i++) {
             const keyInfo = this.keys[i];
-            this.testKey(keyInfo.apiKey).then(keyWorks => {
-                if (keyWorks) return;
+            this.testKey(keyInfo.apiKey).then(header => {
+                if (header !== null) return;
 
                 this.keys.splice(i, 1);
 
@@ -116,15 +116,15 @@ export default class KeyFinder {
         let found = false;
         for (const match of matches) {
             const limit = await this.testKey(match);
-            found = found || !!limit;
+            found = found || limit !== null;
 
-            if (limit) {
+            if (limit !== null) {
                 const existing = this.keys.find(x => x.apiKey === match);
                 if (existing) continue; // we've already seen the key, check for other keys
 
                 this.keys.push({
                     apiKey: match,
-                    rateLimit: limit!,
+                    rateLimit: limit,
                     user,
                     location,
                     timestamp
