@@ -77,7 +77,16 @@ export default class KeyFinder {
             }
         });
 
-        return resp.status === 403 ? null : resp.headers.get("x-app-rate-limit");
+        // resp.headers.get("x-app-rate-limit") might return null
+        // if it is, just send the rate limit as 'unknown'
+        const rateLimit = resp.headers.get('x-app-rate-limit');
+        if (resp.status === 403) {
+            return null;
+        } else if (rateLimit) {
+            return rateLimit;
+        } else {
+            return 'unknown';
+        }
     }
 
     /**
