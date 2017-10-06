@@ -52,7 +52,7 @@ export default class Uptime {
             timeDiff = 0;
         }
 
-        if (timeDiff > this.sharedSettings.uptimeSettings.checkInterval + 1000) {
+        if (timeDiff > this.sharedSettings.uptimeSettings.checkInterval + 4000) {
             // Give it some error
             this.data.TotalDowntime += timeDiff;
             console.log(`Noticed a downtime of ${timeDiff * 0.001} seconds.`);
