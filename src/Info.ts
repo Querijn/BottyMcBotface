@@ -43,21 +43,18 @@ export default class Info {
         if (message.author.bot) return;
 
         // if using .syntax we can only read notes
-        let readOnly = false;
+        let commandIsFetch = false;
 
-        // Needs to start with / or !
+        // Needs to start with '/' or '!' or in separate cases '.'
         const split = message.cleanContent.split(" ");
-        if (split[0][0] !== '!' && split[0][0] !== '/') {
-            if (split[0][0] !== '.') return;
-
-            readOnly = true;
-        };
-            
+        if (split[0][0] === '.') commandIsFetch = true;
+        else if (split[0][0] !== '!' && split[0][0] !== '/') return;
+        
         // needs to start with command unless we are reading a note
         let command = split[0].substr(1);
         let nextIndex = 1;
         
-        if (!readOnly && command.startsWith(this.command)) {
+        if (!commandIsFetch && command.startsWith(this.command)) {
             // !info <command>
             if (command.length === this.command.length) {
                 command = split[1];
@@ -66,9 +63,11 @@ export default class Info {
 
             // !info<command>
             else command = command.substr(this.command.length);
-        } else {
-            if (["add", "remove", "list", this.command].find(c => c === command)) return;
-        }
+        } 
+
+        // Things we can't fetch
+        else if (command === "add" || command === "remove" || command === "list") 
+            return;
 
         let response: string | undefined;
         switch (command) {
@@ -93,8 +92,14 @@ export default class Info {
                 break;
 
             default: // Retrieve or just !info
-                if (split.length <= 1) return;
-                response = this.fetchInfo(split[1]);
+
+                if (!commandIsFetch) {
+                    if (split.length <= 1) return;
+                    response = this.fetchInfo(split[1]);
+                }
+                else {
+                    response = this.fetchInfo(command);
+                }
                 break;
         }
 
