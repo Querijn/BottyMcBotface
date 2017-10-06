@@ -28,6 +28,9 @@
         "allowedRoles": ["187653195038720000", "187653430372728833", "350692046631206912"],
         "command": "note"
     },
+    "autoReact": {
+        "emoji": "362667342456684565"
+    },
     "versionChecker": {
         "checkInterval": 1800000,
         "channel": "external-activity",

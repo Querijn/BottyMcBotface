@@ -1,3 +1,4 @@
+import { SharedSettings } from "./SharedSettings";
 import { fileBackedObject } from "./FileBackedObject";
 
 import Discord = require("discord.js");
@@ -6,10 +7,13 @@ export default class AutoReact {
     private bot: Discord.Client;
     private thinkingUsers: string[];
     private greetingEmoji: Discord.Emoji;
+    private sharedSettings: SharedSettings;
 
-    constructor(bot: Discord.Client, userFile: string) {
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings, userFile: string) {
         console.log("Requested Thinking extension..");
         this.bot = bot;
+
+        this.sharedSettings = sharedSettings;
 
         this.thinkingUsers = fileBackedObject(userFile);
         console.log("Successfully loaded original thinking user file.");
@@ -21,14 +25,14 @@ export default class AutoReact {
     onBot() {
         console.log("Thinking extension loaded.");
         
-        let emoji = this.bot.emojis.get("362667342456684565");
+        let emoji = this.bot.emojis.get(this.sharedSettings.autoReact.emoji);
         if (emoji instanceof Discord.Emoji) {
             this.greetingEmoji = emoji;
             this.bot.on("message", this.onGreeting.bind(this));
             console.log("Bot has succesfully loaded greetings.");
         }
         else {
-            console.error("Unable to find the greeting emoji '362667342456684565'.");
+            console.error(`Unable to find the greeting emoji '${this.sharedSettings.autoReact.emoji}'.`);
         }
     }
 

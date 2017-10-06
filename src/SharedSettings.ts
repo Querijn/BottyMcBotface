@@ -23,6 +23,9 @@ export interface SharedSettings {
     honeypot: {
         reportChannel: string;
     },
+    autoReact: {
+        emoji: string;
+    },
     info: {
         allowedRoles: string[],
         command: string
