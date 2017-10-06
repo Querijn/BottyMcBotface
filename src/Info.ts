@@ -46,19 +46,22 @@ export default class Info {
         const split = message.cleanContent.split(" ");
         if (split[0][0] !== '!' && split[0][0] !== '/') return;
             
-        // needs to start with command
+        // needs to start with command unless we are reading a note
         let command = split[0].substr(1);
-        if (!command.startsWith(this.command)) return;
+        let nextIndex = 1;
+        
+        if (command.startsWith(this.command)) {
+            // !info <command>
+            if (command.length === this.command.length) {
+                command = split[1];
+                nextIndex++;
+            }
 
-        // !info <command>
-        let nextIndex = 1;    
-        if (command.length === this.command.length) {
-            command = split[1];
-            nextIndex++;
+            // !info<command>
+            else command = command.substr(this.command.length);
+        } else {
+            if (["add", "remove", "list", this.command].find(c => c === command)) return;
         }
-
-        // !info<command>
-        else command = command.substr(this.command.length);
 
         let response: string | undefined;
         switch (command) {
