@@ -92,12 +92,6 @@ export default class ForumReader {
      */
     async readActivity(activity: Node): Promise<void> {
 
-        let timeDiff = (Date.now() - this.lastCheckTime);
-        if (timeDiff < this.sharedSettings.forum.checkInterval) {
-            console.log(`last ForumReader.readActivity was ${Math.round(timeDiff * 0.001)} seconds ago, should have been ${Math.round(this.sharedSettings.forum.checkInterval * 0.001)} seconds ago.`);
-        }
-        this.lastCheckTime = Date.now();
-
         const usernameIndex = activity.author.username.indexOf("(");
         const regionEndIndex = activity.author.username.indexOf(")");
         const region = usernameIndex === -1 ? "UNKNOWN" : activity.author.username.substr(usernameIndex + 1, regionEndIndex - usernameIndex - 1);
@@ -220,6 +214,13 @@ export default class ForumReader {
      * Processes all new questions, answers, comments, and articles, then schedules the update.
      */
     async fetchForumData(): Promise<void> {
+        
+        let timeDiff = (Date.now() - this.lastCheckTime);
+        if (timeDiff < this.sharedSettings.forum.checkInterval) {
+            console.log(`last ForumReader.fetchForumData was ${Math.round(timeDiff * 0.001)} seconds ago, should have been ${Math.round(this.sharedSettings.forum.checkInterval * 0.001)} seconds ago.`);
+        }
+        this.lastCheckTime = Date.now();
+
         await this.readActivities(this.answerHub.getQuestions());
         await this.readActivities(this.answerHub.getAnswers());
         await this.readActivities(this.answerHub.getComments());
