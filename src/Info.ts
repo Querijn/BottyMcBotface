@@ -42,15 +42,22 @@ export default class Info {
     onInfo(message: Discord.Message) {
         if (message.author.bot) return;
 
+        // if using .syntax we can only read notes
+        let readOnly = false;
+
         // Needs to start with / or !
         const split = message.cleanContent.split(" ");
-        if (split[0][0] !== '!' && split[0][0] !== '/') return;
+        if (split[0][0] !== '!' && split[0][0] !== '/') {
+            if (split[0][0] !== '.') return;
+
+            readOnly = true;
+        };
             
         // needs to start with command unless we are reading a note
         let command = split[0].substr(1);
         let nextIndex = 1;
         
-        if (command.startsWith(this.command)) {
+        if (!readOnly && command.startsWith(this.command)) {
             // !info <command>
             if (command.length === this.command.length) {
                 command = split[1];
