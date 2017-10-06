@@ -69,9 +69,9 @@ export default class AutoReact {
         this.oldLog(message, ...optionalParams);
         
         try {
-            this.channel.send(`Log: ${message.toString()}`);
+            this.channel.send(`[${(new Date()).toUTCString()}] Log: ${message.toString()}`);
             for(let i = 0; i < optionalParams.length; i++) {
-                this.channel.send(`Log param ${(i+1)}: {optionalParams.toString()}`);
+                this.channel.send(`[${(new Date()).toUTCString()}] Log param ${(i+1)}: {optionalParams.toString()}`);
             }
         }
         catch (e) {
@@ -80,12 +80,12 @@ export default class AutoReact {
     }
     
     onWarning(message?:any, ...optionalParams: any[]) {
-        this.oldLog(message, ...optionalParams);
+        this.oldWarning(message, ...optionalParams);
         
         try {
-            this.channel.send(`Warning: ${message.toString()}`);
+            this.channel.send(`[${(new Date()).toUTCString()}] Warning: ${message.toString()}`);
             for(let i = 0; i < optionalParams.length; i++) {
-                this.channel.send(`Warning param ${(i+1)}: ${optionalParams.toString()}`);
+                this.channel.send(`[${(new Date()).toUTCString()}] Warning param ${(i+1)}: ${optionalParams.toString()}`);
             }
         }
         catch (e) {
@@ -94,12 +94,12 @@ export default class AutoReact {
     }
     
     onError(message?:any, ...optionalParams: any[]) {
-        this.oldLog(message, ...optionalParams);
+        this.oldError(message, ...optionalParams);
         
         try {
-            this.channel.send(`Error: ${message.toString()}`);
+            this.channel.send(`[${(new Date()).toUTCString()}] Error: ${message.toString()}`);
             for(let i = 0; i < optionalParams.length; i++) {
-                this.channel.send(`Error param ${(i+1)}: ${optionalParams.toString()}`);
+                this.channel.send(`[${(new Date()).toUTCString()}] Error param ${(i+1)}: ${optionalParams.toString()}`);
             }
         }
         catch (e) {
