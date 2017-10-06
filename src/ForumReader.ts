@@ -30,6 +30,8 @@ export default class ForumReader {
     private data: ForumReaderData;
     private channel: Discord.TextChannel;
 
+    private lastCheckTime: number = 0;
+
     constructor(bot: Discord.Client, sharedSettings: SharedSettings, personalSettings: PersonalSettings, dataFile: string, keyFinder: KeyFinder) {
         console.log("Requested ForumReader extension..");
 
@@ -89,6 +91,13 @@ export default class ForumReader {
      * @param activity The activity to process
      */
     async readActivity(activity: Node): Promise<void> {
+
+        let timeDiff = (Date.now() - this.lastCheckTime);
+        if (timeDiff < this.sharedSettings.forum.checkInterval) {
+            console.log(`last ForumReader.readActivity was ${Math.round(timeDiff * 0.001)} seconds ago, should have been ${Math.round(this.sharedSettings.forum.checkInterval * 0.001)} seconds ago.`);
+        }
+        this.lastCheckTime = Date.now();
+
         const usernameIndex = activity.author.username.indexOf("(");
         const regionEndIndex = activity.author.username.indexOf(")");
         const region = usernameIndex === -1 ? "UNKNOWN" : activity.author.username.substr(usernameIndex + 1, regionEndIndex - usernameIndex - 1);
@@ -216,6 +225,6 @@ export default class ForumReader {
         await this.readActivities(this.answerHub.getComments());
         await this.readActivities(this.answerHub.getArticles());
         await this.retryErroredActivities();
-        setTimeout(() => this.fetchForumData(), this.sharedSettings.forum.checkInterval);
+        setTimeout(this.fetchForumData.bind(this), this.sharedSettings.forum.checkInterval);
     }
 }
