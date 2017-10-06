@@ -21,11 +21,14 @@ export default class AutoReact {
     onBot() {
         console.log("Thinking extension loaded.");
         
-        let emoji = this.bot.emojis.get("355252071882162176");
+        let emoji = this.bot.emojis.get("362667342456684565");
         if (emoji instanceof Discord.Emoji) {
             this.greetingEmoji = emoji;
             this.bot.on("message", this.onGreeting.bind(this));
             console.log("Bot has succesfully loaded greetings.");
+        }
+        else {
+            console.error("Unable to find the greeting emoji '362667342456684565'.");
         }
     }
 

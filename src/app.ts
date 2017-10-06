@@ -27,7 +27,7 @@ const forum = new ForumReader(bot.client, sharedSettings, personalSettings, "dat
 //const honeypot = new Honeypot(bot.client, sharedSettings, personalSettings);
 const autoReact = new AutoReact(bot.client, "data/thinking_data.json");
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
-const channelAccess = new ChannelAccess(bot.client, sharedSettings);
+//const channelAccess = new ChannelAccess(bot.client, sharedSettings);
 const info = new Info(bot.client, sharedSettings, "data/info_data.json");
 const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
 
