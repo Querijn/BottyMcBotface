@@ -42,23 +42,32 @@ export default class Info {
     onInfo(message: Discord.Message) {
         if (message.author.bot) return;
 
-        // Needs to start with / or !
+        // if using .syntax we can only read notes
+        let commandIsFetch = false;
+
+        // Needs to start with '/' or '!' or in separate cases '.'
         const split = message.cleanContent.split(" ");
-        if (split[0][0] !== '!' && split[0][0] !== '/') return;
-            
-        // needs to start with command
+        if (split[0][0] === '.') commandIsFetch = true;
+        else if (split[0][0] !== '!' && split[0][0] !== '/') return;
+        
+        // needs to start with command unless we are reading a note
         let command = split[0].substr(1);
-        if (!command.startsWith(this.command)) return;
+        let nextIndex = 1;
+        
+        if (!commandIsFetch && command.startsWith(this.command)) {
+            // !info <command>
+            if (command.length === this.command.length) {
+                command = split[1];
+                nextIndex++;
+            }
 
-        // !info <command>
-        let nextIndex = 1;    
-        if (command.length === this.command.length) {
-            command = split[1];
-            nextIndex++;
-        }
+            // !info<command>
+            else command = command.substr(this.command.length);
+        } 
 
-        // !info<command>
-        else command = command.substr(this.command.length);
+        // Things we can't fetch
+        else if (command === "add" || command === "remove" || command === "list") 
+            return;
 
         let response: string | undefined;
         switch (command) {
@@ -83,8 +92,14 @@ export default class Info {
                 break;
 
             default: // Retrieve or just !info
-                if (split.length <= 1) return;
-                response = this.fetchInfo(split[1]);
+
+                if (!commandIsFetch) {
+                    if (split.length <= 1) return;
+                    response = this.fetchInfo(split[1]);
+                }
+                else {
+                    response = this.fetchInfo(command);
+                }
                 break;
         }
 
