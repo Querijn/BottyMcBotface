@@ -40,5 +40,18 @@
     "logger": {
         "server": "342988445498474498",
         "channel": "prod-bot-log"
+    },
+    "apiStatus": {
+        "checkInterval": 300000,
+        "apiOnFireThreshold": 0.1,
+        "statusUrl": "http://querijn.codes/api_status/1.1/",
+        "command": "status",
+        "aliases": ["apistatus"],
+        "onFireImages": [    
+            "https://media.giphy.com/media/dbtDDSvWErdf2/giphy.gif",
+            "https://media.giphy.com/media/nLhdSinRtaL2E/giphy.gif",
+            "https://i.imgur.com/Ufq47yf.gif",
+            "https://i.imgur.com/6NfmQ.jpg"
+        ]
     }
 }

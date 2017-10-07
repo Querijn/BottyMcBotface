@@ -13,6 +13,7 @@ import Logger from "./Logger";
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
+import ApiStatus from './ApiStatus'
 
 // Load and initialise settings
 const sharedSettings = fileBackedObject<SharedSettings>("settings/shared_settings.json");
@@ -30,6 +31,6 @@ const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.js
 //const channelAccess = new ChannelAccess(bot.client, sharedSettings);
 const info = new Info(bot.client, sharedSettings, "data/info_data.json");
 const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
-
+const apiStatus = new ApiStatus(bot.client, sharedSettings);
 // start bot
 bot.start();

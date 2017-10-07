@@ -39,5 +39,13 @@ export interface SharedSettings {
     logger: {
         server: string,
         channel: string
+    },
+    apiStatus: {
+        checkInterval: number,
+        apiOnFireThreshold: number,
+        statusUrl: string,
+        command: string,
+        aliases: Array<string>,
+        onFireImages: Array<string>
     }
 }
