@@ -1,5 +1,6 @@
 import { SharedSettings } from "./SharedSettings";
 import APIStatusAPI, {APIStatus} from './ApiStatusApi';
+import * as prettyMs from 'pretty-ms';
 
 import Discord = require("discord.js");
 
@@ -51,7 +52,7 @@ export default class ApiStatus {
 
         const apiStatus = await this.getApiStatus();
 
-        const fields: Array<{name: string, value: string, inline: boolean}> = [];
+        const fields: {name: string, value: string, inline: boolean}[] = [];
         for (const api in apiStatus.api){ 
             fields.push({name: api, value: apiStatus.api[api], inline: true});
         }
@@ -92,16 +93,9 @@ export default class ApiStatus {
 
     private getLastUpdate(): string {
         const timeDiff = Date.now() - this.lastCheckTime;
-        const min = Math.floor(timeDiff / 1000 / 60);
-        if (min >= 1) {
-            const minutes = min == 1 ? "minute" : "minutes";
-            return "Last refresh: " + min + " " + minutes +" ago";
-        } else {
-            const sec = Math.floor((timeDiff - min * 60000) / 1000);
-            const seconds = sec == 1 ? "second" : "seconds";
-            return "Last refresh: " + sec + " " + seconds + " ago";
-        }
+        return "Last refresh: " + prettyMs(Math.max(timeDiff, 1000), { verbose: true, secDecimalDigits: 0 }) + " ago";
     }
+    
     private async getApiStatus(): Promise<StatusEmbedState> {
         // cache embed state
         const timeDiff = Date.now() - this.lastCheckTime;
@@ -124,10 +118,8 @@ export default class ApiStatus {
         let apiCounter = 0;
         const statusEmbed: StatusEmbedState = { api: {}, onFire: false, allApisOK: true, allApisIssues: false};
 
-        type RegionState = {"troubled": string[], "up": string[], "down": string[]};
-
         for (let api in apiStatus) {
-            const regionStates: RegionState  = {"troubled": [], "up": [], "down": []};
+            const regionStates: {troubled: string[], up: string[], down: string[]}  = {"troubled": [], "up": [], "down": []};
             let regionCounter = 0;
             for (let region in apiStatus[api]) {
                 const regionState = apiStatus[api][region];
