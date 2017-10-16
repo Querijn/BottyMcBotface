@@ -77,7 +77,7 @@ export default class ApiStatus {
             color: 0xe74c3c,
             author: {
                 icon_url: "http://ddragon.leagueoflegends.com/cdn/7.20.2/img/champion/Heimerdinger.png",
-                name: "API Status",
+                name: "API Status (" + this.getLastUpdate() + ")",
                 url: "https://developer.riotgames.com/api-status/"
             },
             fields: fields
@@ -90,6 +90,18 @@ export default class ApiStatus {
         message.channel.send({embed: embedContent});
     }
 
+    private getLastUpdate(): string {
+        const timeDiff = Date.now() - this.lastCheckTime;
+        const min = Math.floor(timeDiff / 1000 / 60);
+        if (min >= 1) {
+            const minutes = min == 1 ? "minute" : "minutes";
+            return "Last refresh: " + min + " " + minutes +" ago";
+        } else {
+            const sec = Math.floor((timeDiff - min * 60000) / 1000);
+            const seconds = sec == 1 ? "second" : "seconds";
+            return "Last refresh: " + sec + " " + seconds + " ago";
+        }
+    }
     private async getApiStatus(): Promise<StatusEmbedState> {
         // cache embed state
         const timeDiff = Date.now() - this.lastCheckTime;
