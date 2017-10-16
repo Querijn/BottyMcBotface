@@ -3,9 +3,9 @@ import fetch from "node-fetch";
 type RegionState = "up" | "troubled" | "down";
 
 export interface RegionStatus {
-    "uptime": string,
-    "performance": string,
-    "state": RegionState
+    uptime: string,
+    performance: string,
+    state: RegionState
 }
 export interface EndpointStatus {
     [key: string]: RegionStatus

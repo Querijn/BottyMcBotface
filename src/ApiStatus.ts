@@ -1,4 +1,3 @@
-import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 import APIStatusAPI, {APIStatus} from './ApiStatusApi';
 
@@ -21,7 +20,7 @@ export default class ApiStatus {
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
     private command: string;
-    private apiStatusAPI: APIStatusAPI
+    private apiStatusAPI: APIStatusAPI;
 
     private lastCheckTime: number;
     private currentStatus: StatusEmbedState;
@@ -50,11 +49,11 @@ export default class ApiStatus {
         if (!this.isApiStatusCommand(content))
             return;
 
-        let apiStatus = await this.getApiStatus();
+        const apiStatus = await this.getApiStatus();
 
-        let fields: Array<{name: string, value: string, inline: boolean}> = [];
-        for (let api in apiStatus.api){ 
-            fields.push({name: api, value: apiStatus.api[api], inline: true})
+        const fields: Array<{name: string, value: string, inline: boolean}> = [];
+        for (const api in apiStatus.api){ 
+            fields.push({name: api, value: apiStatus.api[api], inline: true});
         }
 
         if (!apiStatus.allApisIssues) {
@@ -62,7 +61,7 @@ export default class ApiStatus {
                 "name": apiStatus.allApisOK ? "All APIs" : "All other APIs",
                 "value": ":white_check_mark:",
                 "inline": true
-            })
+            });
         }
 
         // fixes formatting with empty fields
@@ -71,10 +70,10 @@ export default class ApiStatus {
               "name": "\u200b",
               "value": "\u200b",
               "inline": true
-            })
+            });
         }
 
-        let embedContent: any = {
+        const embedContent: any = {
             color: 0xe74c3c,
             author: {
                 icon_url: "http://ddragon.leagueoflegends.com/cdn/7.20.2/img/champion/Heimerdinger.png",
@@ -82,7 +81,7 @@ export default class ApiStatus {
                 url: "https://developer.riotgames.com/api-status/"
             },
             fields: fields
-        }
+        };
 
         if (apiStatus.onFire) {
             embedContent.image = { url: this.pickRandomOnFireImage() };
@@ -93,9 +92,9 @@ export default class ApiStatus {
 
     private async getApiStatus(): Promise<StatusEmbedState> {
         // cache embed state
-        let timeDiff = Date.now() - this.lastCheckTime;
+        const timeDiff = Date.now() - this.lastCheckTime;
         if (timeDiff > this.sharedSettings.apiStatus.checkInterval) {
-            let apiStatus = await this.apiStatusAPI.getApiStatus();
+            const apiStatus = await this.apiStatusAPI.getApiStatus();
             this.currentStatus = this.parseApiStatus(apiStatus);
             this.lastCheckTime = Date.now();            
         }
@@ -104,22 +103,22 @@ export default class ApiStatus {
     }
 
     private parseApiStatus(apiStatus: APIStatus): StatusEmbedState {
-        let cacheObject: { [key: string]: any } = {};
+        const cacheObject: { [key: string]: any } = {};
 
         let onFire = false;
         let allApisOK = true;
         let allApisIssues = false;
         let apiIssuesCounter = 0;
         let apiCounter = 0;
-        let statusEmbed: StatusEmbedState = { api: {}, onFire: false, allApisOK: true, allApisIssues: false};
+        const statusEmbed: StatusEmbedState = { api: {}, onFire: false, allApisOK: true, allApisIssues: false};
 
-        type RegionState = {"troubled": Array<string>, "up": Array<string>, "down": Array<string>};
+        type RegionState = {"troubled": string[], "up": string[], "down": string[]};
 
         for (let api in apiStatus) {
-            let regionStates: RegionState  = {"troubled": [], "up": [], "down": []};
+            const regionStates: RegionState  = {"troubled": [], "up": [], "down": []};
             let regionCounter = 0;
             for (let region in apiStatus[api]) {
-                let regionState = apiStatus[api][region];
+                const regionState = apiStatus[api][region];
                 regionStates[regionState.state].push(region);
                 regionCounter++;
             }
@@ -141,7 +140,7 @@ export default class ApiStatus {
             apiCounter += regionStates.troubled.length + regionStates.down.length + regionStates.up.length;
 
             // API on fire, if all regions for one api have issues
-            if (regionStates.troubled.length + regionStates.down.length == regionCounter) {
+            if (regionStates.troubled.length + regionStates.down.length === regionCounter) {
                 onFire = true;
             }
 
@@ -156,24 +155,22 @@ export default class ApiStatus {
         return statusEmbed;
     }
 
-    private joinArray(arr: Array<string>): string {
-        let retStr = ''
-        let i = 0;
+    private joinArray(arr: string[]): string {
+        let retStr = '';
         for (let j = 0; j < arr.length; j++) {
-            let a = arr[j]
-            retStr += a + (j < arr.length - 1 ? ', ' : '')
+            const a = arr[j];
+            retStr += a + (j < arr.length - 1 ? ', ' : '');
     
-            if (i % 4 == 3) {
-                retStr += '\n'
+            if (j % 4 == 3) {
+                retStr += '\n';
             }
-            i++
         }
 
         // pad to minimum length
-        while(retStr.length < 'BR, EUNE, EUW, JP,'.length) {
-            retStr += " "
-        }
-        return retStr
+        const pad = "                  ";
+        retStr += pad;
+        retStr = retStr.substring(0, pad.length);
+        return retStr;
     }
     
     private pickRandomOnFireImage(): string {
@@ -183,13 +180,7 @@ export default class ApiStatus {
     }
 
     private startsWithAlias(msgContent: string): boolean {
-        for (let alias of this.sharedSettings.apiStatus.aliases) {
-            console.log("alias " + alias);
-            if (msgContent.startsWith("!" + alias)) {
-                return true;
-            }
-        }
-        return false;
+        return this.sharedSettings.apiStatus.aliases.some(x => msgContent.startsWith("!" + x));
     }
 
     private isApiStatusCommand(content: string): boolean {

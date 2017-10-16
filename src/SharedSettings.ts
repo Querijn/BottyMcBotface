@@ -45,7 +45,7 @@ export interface SharedSettings {
         apiOnFireThreshold: number,
         statusUrl: string,
         command: string,
-        aliases: Array<string>,
-        onFireImages: Array<string>
+        aliases: string[],
+        onFireImages: string[]
     }
 }

@@ -13,7 +13,7 @@ import Logger from "./Logger";
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
-import ApiStatus from './ApiStatus'
+import ApiStatus from './ApiStatus';
 
 // Load and initialise settings
 const sharedSettings = fileBackedObject<SharedSettings>("settings/shared_settings.json");
