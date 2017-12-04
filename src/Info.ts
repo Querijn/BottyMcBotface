@@ -41,7 +41,7 @@ export default class Info {
 
     onInfo(message: Discord.Message) {
         if (message.author.bot) return;
-
+        const superUser = message.author.id === '84285493604290560';
         // if using .syntax we can only read notes
         let commandIsFetch = false;
 
@@ -73,7 +73,7 @@ export default class Info {
         switch (command) {
             case "add":
                 // Only admins
-                if (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) return;
+                if (!superUser && (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles))) return;
                 
                 if (split.length <= nextIndex + 1) return;
                 response = this.addInfo(split[nextIndex], split.slice(nextIndex + 1).join(" "));
@@ -81,7 +81,7 @@ export default class Info {
 
             case "remove":
                 // Only admins
-                if (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) return;
+                if (!superUser && (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles))) return;
                 
                 if (split.length <= nextIndex) return;
                 response = this.removeInfo(split[nextIndex]);
