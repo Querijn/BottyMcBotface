@@ -137,7 +137,7 @@ export default class ForumReader {
 
             case "kbentry": {
                 embed = new Discord.RichEmbed()
-                    .setColor(0x4fb9f7)
+                    .setColor(0xc6c6c6)
                     .setTitle(`${activity.author.username} posted the article "${activity.title}"`)
                     .setDescription(this.answerHub.formatQuestionBody(activity.body))
                     .setURL(`${this.answerHub.baseURL}articles/${activity.id}/`);
