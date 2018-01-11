@@ -17,7 +17,7 @@ export function fileBackedObject<T>(path: string): T {
 
         get(object: any, property: string, receiver: any): any {
             const child = Reflect.get(object, property, receiver);
-            if (typeof child !== "object") return child;
+            if (!child || typeof child !== "object") return child;
             return new Proxy(child, proxy);
         }
     };

@@ -1,5 +1,6 @@
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
+import VersionChecker from "./VersionChecker";
 
 import Discord = require("discord.js");
 
@@ -13,6 +14,7 @@ const findOne = (arr1: Discord.Collection<string, Discord.Role>, arr2: Array<any
 export interface InfoData {
     command: string;
     message: string;
+    counter: number;
 }
 
 export default class Info {
@@ -20,11 +22,13 @@ export default class Info {
     private infos: InfoData[];
     private sharedSettings: SharedSettings;
     private command: string;
+    private versionChecker: VersionChecker;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, userFile: string) {
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings, userFile: string, versionChecker: VersionChecker) {
         console.log("Requested Info extension..");
         this.bot = bot;
         this.command = sharedSettings.info.command;
+        this.versionChecker = versionChecker;
 
         this.infos = fileBackedObject(userFile);
         console.log("Successfully loaded info file.");
@@ -93,17 +97,26 @@ export default class Info {
 
             default: // Retrieve or just !info
 
+                let infoData: InfoData|null;
                 if (!commandIsFetch) {
                     if (split.length <= 1) return;
-                    response = this.fetchInfo(split[1]);
+                    infoData = this.fetchInfo(split[1]);
                 }
                 else {
-                    response = this.fetchInfo(command);
+                    infoData = this.fetchInfo(command);
+                }
+
+                if (infoData) {
+                    response = infoData.message;
+                    response = response.replace(/{ddragonVersion}/g, this.versionChecker.ddragonVersion);
+                    response = response.replace(/{gameVersion}/g, this.versionChecker.gameVersion);
+                    response = response.replace(/{counter}/g, infoData.counter.toString());
                 }
                 break;
         }
 
         if (!response) return;
+
 
         message.channel.send(response);
     }
@@ -114,7 +127,8 @@ export default class Info {
 
         const newInfo: InfoData = {
             command: command,
-            message: message
+            message: message,
+            counter: 0
         };
 
         this.infos.push(newInfo);
@@ -144,13 +158,18 @@ export default class Info {
         return message;
     }
 
-    private fetchInfo(command: string) {
+    private fetchInfo(command: string): InfoData | null {
         const info = this.infos.find(info => {
             return info.command === command;
         });
 
-        if (!info) return;
+        if (!info) return null;
 
-        return info.message;
+        // Backwards compatibility
+        if (info.counter === undefined || info.counter === null) 
+            info.counter = 0;
+
+        info.counter++;
+        return info;
     }
 }

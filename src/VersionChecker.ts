@@ -168,4 +168,12 @@ export default class VersionChecker {
 
         setTimeout(this.onUpdate.bind(this), this.sharedSettings.versionChecker.checkInterval);
     }
+
+    get ddragonVersion(): string {
+        return this.data.latestDataDragonVersion;
+    }
+
+    get gameVersion(): string {
+        return this.data.latestGameVersion;
+    }
 }
