@@ -6,7 +6,12 @@ export function fileBackedObject<T>(path: string): T {
     const proxy = {
         set(object: any, property: string, value: any, receiver: any) {
             Reflect.set(object, property, value, receiver);
-            fs.writeFileSync(path, JSON.stringify(obj));
+            try {
+                fs.writeFileSync(path, JSON.stringify(obj));
+            }
+            catch {
+
+            }
             return true;
         },
 
