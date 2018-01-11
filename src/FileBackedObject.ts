@@ -10,7 +10,13 @@ export function fileBackedObject<T>(path: string): T {
                 fs.writeFileSync(path, JSON.stringify(obj));
             }
             catch {
-
+                fs.writeFile(path, JSON.stringify(obj), (err) => {
+                    if (err) {
+                        console.error(`${path} had trouble saving, but we weren't able to fix it.`);
+                        fs.writeFileSync(path + "_backup", JSON.stringify(obj)); // last-ditch effort
+                    } 
+                    else console.warn(`${path} had trouble saving, but we fixed it.`);
+                });
             }
             return true;
         },
