@@ -11,4 +11,5 @@ export interface PersonalSettings {
         token: string,
         owner: number
     },
+    isProduction: boolean
 }

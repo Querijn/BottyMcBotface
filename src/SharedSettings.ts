@@ -38,6 +38,7 @@ export interface SharedSettings {
     },
     logger: {
         server: string,
-        channel: string
+        errorChannel: string
+        logChannel: string
     }
 }
