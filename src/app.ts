@@ -17,7 +17,7 @@ import { PersonalSettings } from "./PersonalSettings";
 // Load and initialise settings
 const sharedSettings = fileBackedObject<SharedSettings>("settings/shared_settings.json");
 const personalSettings = fileBackedObject<PersonalSettings>("settings/personal_settings.json");
-const bot = new Botty(personalSettings);
+const bot = new Botty(personalSettings, sharedSettings);
 
 // Load extensions
 const logger = new Logger(bot.client, sharedSettings);
