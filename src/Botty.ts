@@ -35,16 +35,16 @@ export default class Botty {
     onConnect() {
         console.log("Bot is logged in and ready.");
 
-        // Set correct nickname
-        if (this.personalSettings.isProduction) {
-            const guild = this.client.guilds.get(this.sharedSettings.server);
-            if (!guild) {
-                console.error(`Botty: Incorrect setting for the server: ${this.sharedSettings.server }`);
-                return;
-            }
-
-            guild.me.setNickname("Botty McBotface");
+        const guild = this.client.guilds.get(this.sharedSettings.server);
+        if (!guild) {
+            console.error(`Botty: Incorrect setting for the server: ${this.sharedSettings.server }`);
+            return;
         }
+
+        // Set correct nickname
+        if (this.personalSettings.isProduction)
+            guild.me.setNickname("Botty McBotface");
+        else guild.me.setNickname("");
     }
 
     start() {
