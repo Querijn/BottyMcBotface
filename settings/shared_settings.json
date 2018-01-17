@@ -41,5 +41,8 @@
         "server": "342988445498474498",
         "logChannel": "dev-bot-log",
         "errorChannel": "dev-bot-error"
+    },
+    "onJoin": {
+        "messageFile": "data/message.markdown"
     }
 }

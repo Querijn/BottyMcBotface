@@ -9,6 +9,7 @@ import Techblog from "./Techblog";
 import ChannelAccess from "./ChannelAccess";
 import VersionChecker from "./VersionChecker";
 import Info from "./Info";
+import JoinMessaging from "./JoinMessaging";
 import Logger from "./Logger";
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
@@ -30,6 +31,7 @@ const autoReact = new AutoReact(bot.client, sharedSettings, "data/thinking_data.
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
 //const channelAccess = new ChannelAccess(bot.client, sharedSettings);
 const info = new Info(bot.client, sharedSettings, "data/info_data.json", versionChecker);
+const joinMessaging = new JoinMessaging(bot.client, sharedSettings);
 
 // start bot
 bot.start();

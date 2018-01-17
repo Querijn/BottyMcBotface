@@ -40,5 +40,8 @@ export interface SharedSettings {
         server: string,
         errorChannel: string
         logChannel: string
+    },
+    onJoin: {
+        messageFile: string
     }
 }
