@@ -6,7 +6,8 @@ import Discord = require("discord.js");
 
 export default class AutoReact {
     private bot: Discord.Client;
-    private channel: Discord.TextChannel;
+    private errorChannel: Discord.TextChannel;
+    private logChannel: Discord.TextChannel;
     private sharedSettings: SharedSettings;
 
     private loaded: boolean = false;
@@ -30,12 +31,20 @@ export default class AutoReact {
             return;
         }
 
-        const channel = guild.channels.find("name", this.sharedSettings.logger.channel);
-        if (!channel || !(channel instanceof Discord.TextChannel)) {
-            console.error(`Logger: Incorrect setting for the channel: ${this.sharedSettings.logger.channel}`);
+
+        const errorChannel = guild.channels.find("name", this.sharedSettings.logger.errorChannel);
+        if (!errorChannel || !(errorChannel instanceof Discord.TextChannel)) {
+            console.error(`Logger: Incorrect setting for the channel: ${this.sharedSettings.logger.errorChannel}`);
             return;
         }
-        this.channel = channel as Discord.TextChannel;
+        this.errorChannel = errorChannel as Discord.TextChannel;
+
+        const logChannel = guild.channels.find("name", this.sharedSettings.logger.logChannel);
+        if (!logChannel || !(logChannel instanceof Discord.TextChannel)) {
+            console.error(`Logger: Incorrect setting for the channel: ${this.sharedSettings.logger.logChannel}`);
+            return;
+        }
+        this.logChannel = logChannel as Discord.TextChannel;
 
         this.onLoad();
         console.log("Logger extension loaded.");
@@ -69,9 +78,9 @@ export default class AutoReact {
         this.oldLog(message, ...optionalParams);
         
         try {
-            this.channel.send(`[${(new Date()).toUTCString()}] Log: ${message.toString()}`);
+            this.logChannel.send(`[${(new Date()).toUTCString()}] Log: ${message.toString()}`);
             for(let i = 0; i < optionalParams.length; i++) {
-                this.channel.send(`[${(new Date()).toUTCString()}] Log param ${(i+1)}: {optionalParams.toString()}`);
+                this.logChannel.send(`[${(new Date()).toUTCString()}] Log param ${(i+1)}: {optionalParams.toString()}`);
             }
         }
         catch (e) {
@@ -83,9 +92,9 @@ export default class AutoReact {
         this.oldWarning(message, ...optionalParams);
         
         try {
-            this.channel.send(`[${(new Date()).toUTCString()}] Warning: ${message.toString()}`);
+            this.errorChannel.send(`[${(new Date()).toUTCString()}] Warning: ${message.toString()}`);
             for(let i = 0; i < optionalParams.length; i++) {
-                this.channel.send(`[${(new Date()).toUTCString()}] Warning param ${(i+1)}: ${optionalParams.toString()}`);
+                this.errorChannel.send(`[${(new Date()).toUTCString()}] Warning param ${(i+1)}: ${optionalParams.toString()}`);
             }
         }
         catch (e) {
@@ -97,9 +106,9 @@ export default class AutoReact {
         this.oldError(message, ...optionalParams);
         
         try {
-            this.channel.send(`[${(new Date()).toUTCString()}] Error: ${message.toString()}`);
+            this.errorChannel.send(`[${(new Date()).toUTCString()}] Error: ${message.toString()}`);
             for(let i = 0; i < optionalParams.length; i++) {
-                this.channel.send(`[${(new Date()).toUTCString()}] Error param ${(i+1)}: ${optionalParams.toString()}`);
+                this.errorChannel.send(`[${(new Date()).toUTCString()}] Error param ${(i+1)}: ${optionalParams.toString()}`);
             }
         }
         catch (e) {

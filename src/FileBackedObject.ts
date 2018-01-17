@@ -6,13 +6,24 @@ export function fileBackedObject<T>(path: string): T {
     const proxy = {
         set(object: any, property: string, value: any, receiver: any) {
             Reflect.set(object, property, value, receiver);
-            fs.writeFileSync(path, JSON.stringify(obj));
+            try {
+                fs.writeFileSync(path, JSON.stringify(obj));
+            }
+            catch (e) {
+                fs.writeFile(path, JSON.stringify(obj), (err) => {
+                    if (err) {
+                        console.error(`${path} had trouble saving, but we weren't able to fix it.`);
+                        fs.writeFileSync(path + "_backup", JSON.stringify(obj)); // last-ditch effort
+                    } 
+                    else console.warn(`${path} had trouble saving, but we fixed it.`);
+                });
+            }
             return true;
         },
 
         get(object: any, property: string, receiver: any): any {
             const child = Reflect.get(object, property, receiver);
-            if (typeof child !== "object") return child;
+            if (!child || typeof child !== "object") return child;
             return new Proxy(child, proxy);
         }
     };

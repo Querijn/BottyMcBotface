@@ -1,5 +1,5 @@
 {
-    "server": "187652476080488449",
+    "server": "342988445498474498",
 
     "channelAccess": {
         "forcedChannels": ["301148922443726870", "187961895049756672", "190817288507752448"],
@@ -25,7 +25,7 @@
         "reportChannel": "moderators"
     },
     "info": {
-        "allowedRoles": ["187653195038720000", "187653430372728833", "350692046631206912"],
+        "allowedRoles": ["187653195038720000", "187653430372728833", "350692046631206912", "347539422943903755"],
         "command": "note"
     },
     "autoReact": {
@@ -39,7 +39,8 @@
     },
     "logger": {
         "server": "342988445498474498",
-        "channel": "prod-bot-log"
+        "logChannel": "dev-bot-log",
+        "errorChannel": "dev-bot-error"
     },
     "apiStatus": {
         "checkInterval": 300000,
@@ -53,5 +54,8 @@
             "https://i.imgur.com/Ufq47yf.gif",
             "https://i.imgur.com/6NfmQ.jpg"
         ]
+    },
+    "onJoin": {
+        "messageFile": "data/message.markdown"
     }
 }

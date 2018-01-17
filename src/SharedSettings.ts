@@ -38,7 +38,8 @@ export interface SharedSettings {
     },
     logger: {
         server: string,
-        channel: string
+        errorChannel: string
+        logChannel: string
     },
     apiStatus: {
         checkInterval: number,
@@ -47,5 +48,8 @@ export interface SharedSettings {
         command: string,
         aliases: string[],
         onFireImages: string[]
+    },
+    onJoin: {
+        messageFile: string
     }
 }

@@ -50,7 +50,7 @@ export default class VersionChecker {
 
     async updateDataDragonVersion() {
         try { 
-            const response = await fetch(`http://ddragon.leagueoflegends.com/realms/na.json`, {
+            const response = await fetch(`http://ddragon.leagueoflegends.com/api/versions.json`, {
                 method: "GET",
                 headers: {
                     Accept: "application/json",
@@ -62,18 +62,13 @@ export default class VersionChecker {
 
             let dataDragonVersion = await response.json();
 
-            if (!dataDragonVersion || !dataDragonVersion["v"]) {
-                console.error("ddragon version json seems to be incorrect? Data corrupted?");
-                return;
-            }
-
-            if (dataDragonVersion["v"] == this.data.latestDataDragonVersion) {
+            if (dataDragonVersion[0] == this.data.latestDataDragonVersion) {
                 return;
             }
 
             // new version
             // TODO: Maybe check for higher version, denote type of update? (patch/etc)
-            this.data.latestDataDragonVersion = dataDragonVersion["v"];
+            this.data.latestDataDragonVersion = dataDragonVersion[0];
             let downloadLink = `http://ddragon.leagueoflegends.com/cdn/dragontail-${this.data.latestDataDragonVersion}.tgz`;
 
             let embed = new Discord.RichEmbed()
@@ -172,5 +167,13 @@ export default class VersionChecker {
         await this.updateGameVersion();
 
         setTimeout(this.onUpdate.bind(this), this.sharedSettings.versionChecker.checkInterval);
+    }
+
+    get ddragonVersion(): string {
+        return this.data.latestDataDragonVersion;
+    }
+
+    get gameVersion(): string {
+        return this.data.latestGameVersion;
     }
 }

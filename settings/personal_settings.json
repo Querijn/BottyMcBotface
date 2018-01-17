@@ -10,5 +10,6 @@
     "forum": { 
         "username": "<lowercase summoner name> (<region>)",
         "password": ""
-    }
+    },
+    "isProduction": false
 }
