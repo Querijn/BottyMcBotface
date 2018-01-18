@@ -11,6 +11,7 @@ import VersionChecker from "./VersionChecker";
 import Info from "./Info";
 import JoinMessaging from "./JoinMessaging";
 import Logger from "./Logger";
+import ApiUrlInterpreter from "./ApiUrlInterpreter";
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
@@ -34,6 +35,7 @@ const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.js
 const info = new Info(bot.client, sharedSettings, "data/info_data.json", versionChecker);
 const apiStatus = new ApiStatus(bot.client, sharedSettings);
 const joinMessaging = new JoinMessaging(bot.client, sharedSettings);
+const apiUrlInterpreter = new ApiUrlInterpreter(bot.client, personalSettings, sharedSettings);
 
 // start bot
 bot.start();

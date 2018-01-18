@@ -51,5 +51,8 @@ export interface SharedSettings {
     },
     onJoin: {
         messageFile: string
+    },
+    apiUrlInterpreter: {
+        timeOutDuration: number
     }
 }

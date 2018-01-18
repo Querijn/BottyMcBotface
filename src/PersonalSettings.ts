@@ -11,5 +11,12 @@ export interface PersonalSettings {
         token: string,
         owner: number
     },
+    riotApi: {
+        key: string
+    },
+    webServer: {
+        relativeFolderLocation: string,
+        relativeLiveLocation: string
+    },
     isProduction: boolean
 }

@@ -10,6 +10,12 @@
     "forum": { 
         "username": "<lowercase summoner name> (<region>)",
         "password": ""
+    "riotApi": {
+        "key": "RGAPI-350560a5-51b7-4dc1-b8e3-6a1b967bf243"
+    },
+    "webServer": {
+        "relativeFolderLocation": "www/",
+        "relativeLiveLocation": "http://thuis.irule.at/"
     },
     "isProduction": false
 }
