@@ -15,7 +15,7 @@
     },
     "webServer": {
         "relativeFolderLocation": "www/",
-        "relativeLiveLocation": "http://thuis.irule.at/"
+        "relativeLiveLocation": "https://irule.at/riot/api/"
     },
     "isProduction": false
 }

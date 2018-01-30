@@ -1,6 +1,7 @@
 import Discord = require("discord.js");
 import prettyMs = require("pretty-ms");
 import fetch from "node-fetch";
+import fs = require("fs");
 
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
@@ -41,6 +42,7 @@ export default class ApiUrlInterpreter {
     private sharedSettings: SharedSettings;
     private personalSettings: PersonalSettings;
     private timeOut: NodeJS.Timer|null;
+    private iterator: number = 1;
 
     private baseUrl: string;
     private platforms: string[];
@@ -91,6 +93,7 @@ export default class ApiUrlInterpreter {
             const validMatch = content.match(path.regex.valid);
             if (validMatch && validMatch.length > 0) {
 
+                const test = path.regex.valid.exec(content);
                 let replyMessageContent = (validMatch.length != 1) ?
                     "Found multiple links of the same method, gonna request just the first one." : 
                     `Making a request to ${path.method}..`;
@@ -98,7 +101,7 @@ export default class ApiUrlInterpreter {
                 const replyMessages = await message.channel.send(replyMessageContent);
                 const replyMessage = Array.isArray(replyMessages) ? replyMessages[0] : replyMessages;
 
-                await this.makeRequest(path, validMatch[0], replyMessage);
+                await this.makeRequest(path, test && test.length > 1 ? test[1] : "unknownregion", validMatch[0], replyMessage);
                 break;
             }
 
@@ -131,18 +134,19 @@ export default class ApiUrlInterpreter {
         else replyMessage.edit(newMessage);
     }
 
-    async makeRequest(path: Path, url: string, message: Discord.Message) {
+    async makeRequest(path: Path, service: string, url: string, message: Discord.Message) {
         
         const currentTime = Date.now();
         if (currentTime < this.applicationRatelimit) {
             const timeDiff = prettyMs(this.applicationRatelimit - currentTime, { verbose: true });
-            message.edit(`We are ratelimited, please wait ${timeDiff}.`);
+            message.edit(`We are ratelimited on our application, please wait ${timeDiff}.`);
             return;
         }
 
-        if (this.methodRatelimit[path.method] && currentTime < this.methodRatelimit[path.method]) {
-            const timeDiff = prettyMs(this.methodRatelimit[path.method] - currentTime, { verbose: true });
-            message.edit(`We are ratelimited, please wait ${timeDiff}.`);
+        const servicedMethodName = `${service}.${path.method}`;
+        if (this.methodRatelimit[servicedMethodName] && currentTime < this.methodRatelimit[servicedMethodName]) {
+            const timeDiff = prettyMs(this.methodRatelimit[servicedMethodName] - currentTime, { verbose: true });
+            message.edit(`We are ratelimited by the method (${servicedMethodName}), please wait ${timeDiff}.`);
             return;
         }
         
@@ -152,31 +156,43 @@ export default class ApiUrlInterpreter {
             }
         });
 
-        if (!this.methodStartTime[path.method]) {
-            this.methodStartTime[path.method] = Date.now();
+        if (!this.methodStartTime[servicedMethodName]) {
+            this.methodStartTime[servicedMethodName] = Date.now();
         }
 
         // Update application ratelimit
         {
-            const appCountStrings = resp.headers.get("x-app-rate-limit-count").split(",");
-            const appLimitStrings = resp.headers.get("x-app-rate-limit").split(",");
-            const appResult = this.handleRatelimit("application", path.method, this.applicationStartTime, appCountStrings, appLimitStrings);
+            const countHeader = resp.headers.get("x-app-rate-limit-count");
+            const limitHeader = resp.headers.get("x-app-rate-limit");
 
-            if (appResult) {
-                this.applicationRatelimit = appResult.rateLimit;
-                if (appResult.startTime !== null) this.applicationStartTime = appResult.startTime;
+            if (countHeader && limitHeader) {
+                
+                const appCountStrings = countHeader.split(",");
+                const appLimitStrings = limitHeader.split(",");
+                const appResult = this.handleRatelimit("application", servicedMethodName, this.applicationStartTime, appCountStrings, appLimitStrings);
+    
+                if (appResult) {
+                    this.applicationRatelimit = appResult.rateLimit;
+                    if (appResult.startTime !== null) this.applicationStartTime = appResult.startTime;
+                }
             }
         }
 
         // Update method ratelimit
         {
-            const methodCountStrings = resp.headers.get("x-method-rate-limit-count").split(",");
-            const methodLimitStrings = resp.headers.get("x-method-rate-limit").split(",");
-            const methodResult = this.handleRatelimit("method", path.method, this.methodStartTime[path.method], methodCountStrings, methodLimitStrings);
+            const countHeader = resp.headers.get("x-method-rate-limit-count");
+            const limitHeader = resp.headers.get("x-method-rate-limit");
 
-            if (methodResult) {
-                this.methodRatelimit[path.method] = methodResult.rateLimit;
-                if (methodResult.startTime !== null) this.methodStartTime[path.method] = methodResult.startTime;
+            if (countHeader && limitHeader) {
+
+                const methodCountStrings = countHeader.split(",");
+                const methodLimitStrings = limitHeader.split(",");
+                const methodResult = this.handleRatelimit("method", servicedMethodName, this.methodStartTime[servicedMethodName], methodCountStrings, methodLimitStrings);
+
+                if (methodResult) {
+                    this.methodRatelimit[servicedMethodName] = methodResult.rateLimit;
+                    if (methodResult.startTime !== null) this.methodStartTime[servicedMethodName] = methodResult.startTime;
+                }
             }
         }
 
@@ -186,12 +202,21 @@ export default class ApiUrlInterpreter {
         }
 
         // TODO: Message is good here, reply with upload
+        try {
+            fs.writeFileSync(`${this.personalSettings.webServer.relativeFolderLocation}${this.iterator}.json`, await resp.text());
+            message.edit(`Response for ${url}:\n${this.personalSettings.webServer.relativeLiveLocation}${this.iterator}`);
+            this.iterator = (this.iterator % 50) + 1;
+        }
+        catch (e) {
+            message.edit("Eh, something went wrong trying to upload this :(");
+            console.error(`Error trying to save the result of an API call: ${e.message}`);
+        }
     }
 
     handleRatelimit(ratelimitType: string, methodName: string, startTime: number, countStrings: string[], limitStrings: string[]): RatelimitResult|null {
         
         let found = false;
-        let lowestRequestsPerSecond = 5e5;
+        let longestSpreadTime = 0;
         let resultStartTime: number|null = 0;
         let resultRatelimit = 0;
 
@@ -211,18 +236,19 @@ export default class ApiUrlInterpreter {
             const splitLimit = limit.split(":");
             const max = parseInt(splitLimit[0].trim());
 
-            if (count + 1 == max) {
+            if (count + 1 >= max) {
                 console.warn(`Hit ${ratelimitType} ratelimit with ${methodName}.`);
                 return new RatelimitResult(startTime + time * 1000 + ApiUrlInterpreter.ratelimitErrorMs, startTime + time * 1000 + ApiUrlInterpreter.ratelimitErrorMs);
             }
 
-            const requestsPerSecond = max / time; // Find the slowest ratelimit.
-            if (requestsPerSecond < lowestRequestsPerSecond) {
+            const spreadTime = 1 / (max / time); // Find the slowest ratelimit.
+            if (spreadTime > longestSpreadTime) {
 
                 found = true;
-                lowestRequestsPerSecond = requestsPerSecond;
+                longestSpreadTime = spreadTime;
 
-                resultRatelimit = Date.now() + requestsPerSecond * 1000 + ApiUrlInterpreter.ratelimitErrorMs;
+                let delay = spreadTime * 1000 + ApiUrlInterpreter.ratelimitErrorMs;
+                resultRatelimit = Date.now() + delay;
                 if (count <= 1) resultStartTime = Date.now();
                 else resultStartTime = null;
             }
