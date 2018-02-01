@@ -10,6 +10,7 @@
     "forum": { 
         "username": "<lowercase summoner name> (<region>)",
         "password": ""
+    },
     "riotApi": {
         "key": ""
     },
