@@ -4,6 +4,12 @@ import { PersonalSettings } from "./PersonalSettings";
 
 import Discord = require("discord.js");
 
+/**
+ * Log handler.
+ * 
+ * @export
+ * @class AutoReact
+ */
 export default class AutoReact {
     private bot: Discord.Client;
     private errorChannel: Discord.TextChannel;

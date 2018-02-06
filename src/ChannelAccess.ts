@@ -90,6 +90,7 @@ export default class ChannelAccess {
 
     /**
      * Tries to add a user to a channel, informing them of any problems that occur.
+     *
      * @param message The message the user sent to initiate the action. This is used to determine who will be added to the channel, and to reply to the user if any issues occur.
      * @param channel The channel to add the user to. This channel is a valid text channel on the correct server.
      */
@@ -114,6 +115,7 @@ export default class ChannelAccess {
 
     /**
      * Tries to remove a user from a channel, informing them of any problems that occur.
+     *
      * @param message The message the user sent to initiate the action. This is used to determine who will be removed from the channel, and to reply to the user if any issues occur.
      * @param channel The channel remove the user from. This channel is a valid text channel on the correct server.
      */
@@ -138,6 +140,7 @@ export default class ChannelAccess {
 
     /**
      * Replies to a message. This will try to DM the user, or reply in the channel of the original message if they have DMs disabled.
+     *
      * @param message The message to reply to
      * @param content The message to send to the author
      * @param dmOnly (Optional) If set to 'true' and the user has DMs disabled, the bot will not respond to their message. Defaults to 'false'.

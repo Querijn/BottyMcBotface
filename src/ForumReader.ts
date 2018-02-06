@@ -16,6 +16,12 @@ export interface ForumReaderData {
     };
 }
 
+/**
+ * Reads data from the forum.
+ * 
+ * @export
+ * @class ForumReader
+ */
 export default class ForumReader {
     /** How many attempts should be made to process each activity before giving up on it */
     private static MAX_ATTEMPTS = 3;
@@ -71,6 +77,7 @@ export default class ForumReader {
 
     /**
 	 * Gets the node with the specified ID, first checking the cache, then the AnswerHub API
+     *
 	 * @param id The node ID
 	 * @async
 	 * @returns The node with the specified ID
@@ -88,6 +95,7 @@ export default class ForumReader {
 
     /**
      * Sends a message in Discord for the specified activity.
+     *
      * @param activity The activity to process
      */
     async readActivity(activity: Node): Promise<void> {
@@ -161,6 +169,7 @@ export default class ForumReader {
     /**
      * Waits for a promise to be fulfilled, then processes all the activities is was settled with. If any activities cannot be successfully processed,
      * they will be added to a list to be processed later.
+     * 
      * @param promise 
      */
     async readActivities(promise: Promise<NodeList<Node>>): Promise<void> {
