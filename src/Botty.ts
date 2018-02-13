@@ -3,6 +3,7 @@ import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
 
 import Discord = require("discord.js");
+import { GuildMember } from "discord.js";
 
 export interface BottySettings {
     Discord: {
@@ -30,6 +31,43 @@ export default class Botty {
             .on("connect", () => console.warn("Connected."))
             .on("ready", this.onConnect.bind(this));
 
+        this.initListeners();
+    }
+
+    initListeners() {
+
+        this.client.on("guildMemberAdd", function(user: GuildMember) {
+            console.log(`${user.displayName} joined the server.`);
+        }.bind(this));
+
+        this.client.on("guildMemberRemove", function(user: GuildMember) {
+            console.log(`${user.displayName} left (or was removed) from the server.`);
+        }.bind(this));
+
+        this.client.on("guildMemberUpdate", function(oldMember: GuildMember, newMember: GuildMember) {
+
+            if (oldMember.displayName != newMember.displayName)
+                console.log(`${oldMember.displayName} changed his display name to ${newMember.displayName}.`);
+
+            if (oldMember.nickname != newMember.nickname)
+                console.log(`${oldMember.nickname} changed his nickname to ${newMember.nickname}.`);
+
+            if (oldMember.user.avatarURL != newMember.user.avatarURL)
+                console.log(`${oldMember.displayName} changed his avatar from ${oldMember.user.avatarURL} to ${newMember.user.avatarURL}.`);
+
+            if (oldMember.user.discriminator != newMember.user.discriminator)
+                console.log(`${oldMember.displayName} changed his discriminator from ${oldMember.user.discriminator} to ${newMember.user.discriminator}.`);
+
+            const oldGame = oldMember.user.presence && oldMember.user.presence.game ? oldMember.user.presence.game.name : "nothing";
+            const newGame = newMember.user.presence && newMember.user.presence.game ? newMember.user.presence.game.name : "nothing";
+            if (oldGame != newGame) console.log(`${oldMember.displayName} is now playing ${newGame} (was ${oldGame}).`);
+
+            const oldStatus = (oldMember.user.presence && oldMember.user.presence.status) ? oldMember.user.presence.status : "offline (undefined)";
+            const newStatus = (newMember.user.presence && newMember.user.presence.status) ? newMember.user.presence.status : "offline (undefined)";
+            if (oldStatus != newStatus && (newStatus == "offline" || newStatus == "online")) console.log(`${oldMember.displayName} is now ${newStatus} (was ${oldStatus}).`);
+            
+            console.log("Initialised listeners.");
+        }.bind(this));
     }
 
     onConnect() {

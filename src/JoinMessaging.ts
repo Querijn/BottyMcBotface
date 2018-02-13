@@ -27,7 +27,6 @@ export default class JoinMessaging {
 
             this.bot.on("guildMemberAdd", function(user: GuildMember) {
                 user.send(this.messageContents);
-                console.log(`${user.displayName} joined the server.`);
             }.bind(this));
 
             console.log("Join message extension loaded.");
