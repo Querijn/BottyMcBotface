@@ -6,7 +6,7 @@
         "restrictedChannels": ["190817288507752448"]
     },
     "uptimeSettings": {
-        "checkInterval": 1000
+        "checkInterval": 60000
     },
     "techBlog": {
         "checkInterval": 300000,
