@@ -66,8 +66,8 @@ export default class Botty {
             const newStatus = (newMember.user.presence && newMember.user.presence.status) ? newMember.user.presence.status : "offline (undefined)";
             if (oldStatus != newStatus && (newStatus == "offline" || newStatus == "online")) console.log(`${oldMember.displayName} is now ${newStatus} (was ${oldStatus}).`);
             
-            console.log("Initialised listeners.");
         }.bind(this));
+        console.log("Initialised listeners.");
     }
 
     onConnect() {
