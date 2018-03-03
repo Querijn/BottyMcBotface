@@ -47,9 +47,9 @@ export default class ApiUrlInterpreter {
     private baseUrl: string;
     private platforms: string[];
 
-    private applicationRatelimit: number = 0;
-    private methodRatelimit: {[method: string]: number} = {};
-    private applicationStartTime: number = Date.now();
+    private applicationRatelimitLastTime: number = 0;
+    private methodRatelimitLastTime: {[method: string]: number} = {};
+    private applicationStartTime: number = 0;
     private methodStartTime: {[method: string]: number} = {};
 
     private paths: Path[] = [];
@@ -139,15 +139,15 @@ export default class ApiUrlInterpreter {
     async makeRequest(path: Path, service: string, url: string, message: Discord.Message) {
         
         const currentTime = Date.now();
-        if (currentTime < this.applicationRatelimit) {
-            const timeDiff = prettyMs(this.applicationRatelimit - currentTime, { verbose: true });
+        if (currentTime < this.applicationRatelimitLastTime) {
+            const timeDiff = prettyMs(this.applicationRatelimitLastTime - currentTime, { verbose: true });
             message.edit(`We are ratelimited on our application, please wait ${timeDiff}.`);
             return;
         }
 
         const servicedMethodName = `${service}.${path.method}`;
-        if (this.methodRatelimit[servicedMethodName] && currentTime < this.methodRatelimit[servicedMethodName]) {
-            const timeDiff = prettyMs(this.methodRatelimit[servicedMethodName] - currentTime, { verbose: true });
+        if (this.methodRatelimitLastTime[servicedMethodName] && currentTime < this.methodRatelimitLastTime[servicedMethodName]) {
+            const timeDiff = prettyMs(this.methodRatelimitLastTime[servicedMethodName] - currentTime, { verbose: true });
             message.edit(`We are ratelimited by the method (${servicedMethodName}), please wait ${timeDiff}.`);
             return;
         }
@@ -174,7 +174,7 @@ export default class ApiUrlInterpreter {
                 const appResult = this.handleRatelimit("application", servicedMethodName, this.applicationStartTime, appCountStrings, appLimitStrings);
     
                 if (appResult) {
-                    this.applicationRatelimit = appResult.rateLimit;
+                    this.applicationRatelimitLastTime = appResult.rateLimit;
                     if (appResult.startTime !== null) this.applicationStartTime = appResult.startTime;
                 }
             }
@@ -192,7 +192,7 @@ export default class ApiUrlInterpreter {
                 const methodResult = this.handleRatelimit("method", servicedMethodName, this.methodStartTime[servicedMethodName], methodCountStrings, methodLimitStrings);
 
                 if (methodResult) {
-                    this.methodRatelimit[servicedMethodName] = methodResult.rateLimit;
+                    this.methodRatelimitLastTime[servicedMethodName] = methodResult.rateLimit;
                     if (methodResult.startTime !== null) this.methodStartTime[servicedMethodName] = methodResult.startTime;
                 }
             }
