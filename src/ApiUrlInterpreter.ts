@@ -101,13 +101,15 @@ export default class ApiUrlInterpreter {
                 const replyMessages = await message.channel.send(replyMessageContent);
                 const replyMessage = Array.isArray(replyMessages) ? replyMessages[0] : replyMessages;
 
-                await this.makeRequest(path, test && test.length > 1 ? test[1] : "unknownregion", validMatch[0], replyMessage);
+                const region = test && test.length > 1 ? test[1] : "unknownregion";
+                await this.makeRequest(path, region, validMatch[0], replyMessage);
                 break;
             }
 
             const invalidMatch = content.match(path.regex.invalid);
             if (invalidMatch && invalidMatch.length > 0) {
-                debugger;
+                // TODO
+
                 break;
             }
         }
@@ -203,12 +205,19 @@ export default class ApiUrlInterpreter {
 
         // TODO: Message is good here, reply with upload
         try {
-            fs.writeFileSync(`${this.personalSettings.webServer.relativeFolderLocation}${this.iterator}.json`, await resp.text());
-            message.edit(`Response for ${url}:\n${this.personalSettings.webServer.relativeLiveLocation}${this.iterator}`);
+            const curIterator = this.iterator;
+            fs.writeFile(`${this.personalSettings.webServer.relativeFolderLocation}${curIterator}.json`, await resp.text(), null, (err: NodeJS.ErrnoException) =>
+            {
+                debugger;
+                message.edit(`Response for ${url}:\n${this.personalSettings.webServer.relativeLiveLocation}${curIterator}`);
+            });
+
             this.iterator = (this.iterator % 50) + 1;
         }
         catch (e) {
-            message.edit("Eh, something went wrong trying to upload this :(");
+            message.edit("Eh, something went wrong trying to upload this :(").catch((reason) => {
+                console.error(`Error occurred trying to edit the message when the upload failed, reason: ${reason}\nreason for failed upload: ${e}`);
+            });
             console.error(`Error trying to save the result of an API call: ${e.message}`);
         }
     }
@@ -254,7 +263,7 @@ export default class ApiUrlInterpreter {
             }
         }
 
-        if (found == false) return null;
+        if (found === false) return null;
         return new RatelimitResult(resultRatelimit, resultStartTime)
     }
 
