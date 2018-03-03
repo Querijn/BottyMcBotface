@@ -38,4 +38,6 @@ const joinMessaging = new JoinMessaging(bot.client, sharedSettings);
 const apiUrlInterpreter = new ApiUrlInterpreter(bot.client, personalSettings, sharedSettings);
 
 // start bot
-bot.start();
+bot.start().catch((reason) => {
+    console.error(`Unable to run botty: ${reason}.`);
+});
