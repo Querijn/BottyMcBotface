@@ -4,7 +4,12 @@ import VersionChecker from "./VersionChecker";
 
 import Discord = require("discord.js");
 
-// If the Collection contains anything in the other array
+/**
+ * Check if Collection contains anything in the other array.
+ *
+ * @param {Array} arr1
+ * @param {Array} arr2
+ */
 const findOne = (arr1: Discord.Collection<string, Discord.Role>, arr2: Array<any>) => {
     return arr2.some(v => {
         return !!arr1.get(v);

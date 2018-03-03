@@ -4,8 +4,12 @@ import * as prettyMs from 'pretty-ms';
 
 import Discord = require("discord.js");
 
-// map from api name (e.g. champion-mastery-v3) to the string used in the embed field
-// only apis with issues (troubled/down) are stored
+/**
+ * Map from API name (e.g. champion-mastery-v3) to the string used in the embed field.
+ * Only APIs with issues (troubled/down) are stored.
+ *
+ * @interface ApiStates
+ */
 interface ApiStates {
     [key: string]: string;    
 }
