@@ -321,13 +321,7 @@ export default class ApiUrlInterpreter {
         const platforms = schema.servers[0].variables.platform.enum;
 
         // This makes a regex string from all the platform options
-        let platformRegexString = "(";
-        for (let i = 0; i < platforms.length; i++) {
-            platformRegexString += platforms[i];
-            if (i + 1 != platforms.length) 
-                platformRegexString += "|";
-        }
-        platformRegexString += ")";
+        let platformRegexString = `(${platforms.join("|")})`;
 
         return baseUrl.replace(/{platform}/g, platformRegexString);
     }
