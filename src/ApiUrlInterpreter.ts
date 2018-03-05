@@ -1,5 +1,6 @@
 import Discord = require("discord.js");
 import prettyMs = require("pretty-ms");
+import { Response } from "node-fetch";
 import fetch from "node-fetch";
 import fs = require("fs");
 
@@ -54,12 +55,20 @@ export default class ApiUrlInterpreter {
 
     private paths: Path[] = [];
 
+    private fetchSettings: Object;
+
     constructor(bot: Discord.Client, personalSettings: PersonalSettings, sharedSettings: SharedSettings) {
         console.log("Requested API URL Interpreter extension..");
 
         this.sharedSettings = sharedSettings;
         this.personalSettings = personalSettings;
         console.log("Successfully loaded API URL Interpreter settings.");
+
+        this.fetchSettings = { 
+            headers: { 
+                "X-Riot-Token": this.personalSettings.riotApi.key 
+            }
+        };
 
         this.bot = bot;
         this.bot.on("ready", this.onBot.bind(this));
@@ -93,24 +102,25 @@ export default class ApiUrlInterpreter {
             const validMatch = new RegExp(path.regex.valid, "g").exec(content);
             if (validMatch && validMatch.length > 0) {
 
-                const test = path.regex.valid.exec(content);
-                let replyMessageContent = (validMatch.length != 1) ?
-                    "Found multiple links of the same method, gonna request just the first one." : 
-                    `Making a request to ${path.method}..`;
+                let replyMessageContent = `Making a request to ${path.method}..`;
 
                 const replyMessages = await message.channel.send(replyMessageContent);
                 const replyMessage = Array.isArray(replyMessages) ? replyMessages[0] : replyMessages;
 
-                const region = test && test.length > 1 ? test[1] : "unknownregion";
+                const region = validMatch[1];
                 await this.makeRequest(path, region, validMatch[0], replyMessage);
-                break;
+                return;
             }
+        }
 
+        for (let i = 0; i < this.paths.length; i++) {
+            const path = this.paths[i];
             const invalidMatch = new RegExp(path.regex.valid, "g").exec(content);
             if (invalidMatch && invalidMatch.length > 0) {
                 // TODO
 
-                break;
+
+                return;
             }
         }
     }
@@ -152,12 +162,25 @@ export default class ApiUrlInterpreter {
             return;
         }
         
-        const resp = await fetch(url, {
-            headers: {
-                "X-Riot-Token": this.personalSettings.riotApi.key
-            }
+        fetch(url, this.fetchSettings)
+        .then((resp) => {
+            this.handleResponse(resp, message, url, servicedMethodName);
+        })
+        .catch((e) => {
+            console.error(`Error handling the API call: ${e.message}`);
         });
+    }
 
+    async handleResponse(resp: Response, message: Discord.Message, url: string, servicedMethodName: string) {
+        if (resp === null) {
+            console.warn(`Not handling ratelimits due to missing response.`);
+            return;
+        } 
+
+        // Set start times
+        if (this.applicationStartTime === 0) {
+            this.applicationStartTime = Date.now();
+        }
         if (!this.methodStartTime[servicedMethodName]) {
             this.methodStartTime[servicedMethodName] = Date.now();
         }
@@ -202,14 +225,20 @@ export default class ApiUrlInterpreter {
             message.edit(`The Riot API responded to ${url} with ${resp.status} ${resp.statusText}.`);
             return;
         }
-
         // TODO: Message is good here, reply with upload
         try {
             const curIterator = this.iterator;
-            fs.writeFile(`${this.personalSettings.webServer.relativeFolderLocation}${curIterator}.json`, await resp.text(), null, (err: NodeJS.ErrnoException) =>
+            const fileName = `${curIterator}.json`;
+            const localFile = `${this.personalSettings.webServer.relativeFolderLocation}${fileName}`;
+            fs.writeFile(localFile, await resp.text(), null, (err: NodeJS.ErrnoException) =>
             {
-                debugger;
-                message.edit(`Response for ${url}:\n${this.personalSettings.webServer.relativeLiveLocation}${curIterator}`);
+                if (err != null) {
+                    message.edit(`Woah, something went wrong trying to fetch ${url}, sorry!`);
+                    console.warn(`Error ${err.code} (${err.name}) while trying to save \`${url}\` to \`${localFile}\`: ${err.message}`);
+                    return;
+                }
+
+                message.edit(`Response for ${url}:\n${this.personalSettings.webServer.relativeLiveLocation}${fileName}`);
             });
 
             this.iterator = (this.iterator % 50) + 1;
