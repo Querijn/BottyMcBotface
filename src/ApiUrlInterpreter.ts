@@ -11,12 +11,12 @@ import { platform } from "os";
 
 class PathRegexCollection {
     constructor(validString: string, invalidString: string) {
-        this.valid = new RegExp(validString, "g");
-        this.invalid = new RegExp(invalidString, "g");
+        this.valid = validString;
+        this.invalid = invalidString;
     }
 
-    public invalid: RegExp;
-    public valid: RegExp;
+    public invalid: string;
+    public valid: string;
 };
 
 class RatelimitResult {
@@ -90,7 +90,7 @@ export default class ApiUrlInterpreter {
         for (let i = 0; i < this.paths.length; i++) {
             const path = this.paths[i];
 
-            const validMatch = content.match(path.regex.valid);
+            const validMatch = new RegExp(path.regex.valid, "g").exec(content);
             if (validMatch && validMatch.length > 0) {
 
                 const test = path.regex.valid.exec(content);
@@ -106,7 +106,7 @@ export default class ApiUrlInterpreter {
                 break;
             }
 
-            const invalidMatch = content.match(path.regex.invalid);
+            const invalidMatch = new RegExp(path.regex.valid, "g").exec(content);
             if (invalidMatch && invalidMatch.length > 0) {
                 // TODO
 
