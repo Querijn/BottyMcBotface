@@ -18,6 +18,9 @@ export default class AutoReact {
 
         this.thinkingUsers = fileBackedObject(userFile);
         console.log("Successfully loaded original thinking user file.");
+        
+        this.reactIgnore = fileBackedObject(ignoreFile);
+        console.log("Successfully loaded ignore reaction file.");
 
         this.bot.on("ready", this.onBot.bind(this));
         this.bot.on("message", this.onThinking.bind(this));
