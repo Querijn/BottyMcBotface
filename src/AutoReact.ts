@@ -6,10 +6,11 @@ import Discord = require("discord.js");
 export default class AutoReact {
     private bot: Discord.Client;
     private thinkingUsers: string[];
+	private reactIgnore: string[];
     private greetingEmoji: Discord.Emoji;
     private sharedSettings: SharedSettings;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, userFile: string) {
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings, userFile: string, ignoreFile: string) {
         console.log("Requested Thinking extension..");
         this.bot = bot;
 
@@ -37,13 +38,27 @@ export default class AutoReact {
     }
 
     onThinking(message: Discord.Message) {
-        if (message.content.startsWith("!original_thinko_reacts_only") && this.thinkingUsers.indexOf(message.author.id) === -1) {
-            this.thinkingUsers.push(message.author.id);
+		
+		const authorId = message.author.id;
+		const reactIndex = this.reactIgnore.indexOf(authorId);
+			
+		if(message.content.startsWith("!toggle_react") {
+			if(reactIndex === -1) {
+				this.reactIgnore.push(authorId);
+				message.reply("I will no longer react to your messages");
+			} else {
+				this.reactIgnore.splice(index, 1);
+				message.reply("I will now react to your messages");
+			}
+			
+			return;
+		} else if (message.content.startsWith("!original_thinko_reacts_only") && this.thinkingUsers.indexOf(authorId) === -1) {
+            this.thinkingUsers.push(authorId);
 
             message.reply("I will now discriminate for you. !no_more_original_thinkos to stop.");
             return;
-        } else if (message.content.startsWith("!no_more_original_thinkos") && this.thinkingUsers.indexOf(message.author.id) !== -1) {
-            const index = this.thinkingUsers.indexOf(message.author.id);
+        } else if (message.content.startsWith("!no_more_original_thinkos") && this.thinkingUsers.indexOf(authorId) !== -1) {
+            const index = this.thinkingUsers.indexOf(authorId);
             this.thinkingUsers.splice(index, 1);
 
             message.reply("REEEEEEEEEEEEEEEEE");
@@ -51,8 +66,9 @@ export default class AutoReact {
         }
 
         if (!message.content.includes("🤔")) return;
-
-        if (this.thinkingUsers.indexOf(message.author.id) === -1) {
+		if (reactIndex !== -1) return;
+		
+        if (this.thinkingUsers.indexOf(authorId) === -1) {
             const emoji = message.guild.emojis.filter(x => x.name.includes("thinking")).random();
             if (emoji) {
                 message.react(emoji);
@@ -78,6 +94,9 @@ export default class AutoReact {
             && !greeting.startsWith("goodday ") && greeting != "goodday"
             && !greeting.startsWith("good day ") && greeting != "good day")
             return;
+			
+		if (this.reactIgnore.indexOf(message.author.id) !== -1)
+			return;
 
         message.react(this.greetingEmoji);
     }
