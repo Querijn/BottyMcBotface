@@ -49,13 +49,14 @@ export default class AutoReact {
             return;
         }
 
+        if (this.ignoreUsers.indexOf(authorId) !== -1) return; // Only react to people not on list
+
         if (message.content.startsWith("!toggle_default_thinking")) {
             this.onToggleThinkingRequest(message, authorId);
             return;
         }
 
         if (!message.content.includes("🤔")) return;
-        if (this.ignoreUsers.indexOf(authorId) !== -1) return; // Only react to people not on list
 
         // If original thinking user
         if (this.thinkingUsers.indexOf(authorId) !== -1) {
