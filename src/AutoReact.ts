@@ -88,21 +88,23 @@ export default class AutoReact {
     onGreeting(message: Discord.Message) {
         let greeting = message.content.toLowerCase();
 
-        if (!greeting.startsWith("hello ") && greeting != "hello"
-            && !greeting.startsWith("hi ") && greeting != "hi"
-            && !greeting.startsWith("hey ") && greeting != "hey"
-            && !greeting.startsWith("good morning ") && greeting != "good morning"
-            && !greeting.startsWith("goodmorning ") && greeting != "goodmorning"
-            && !greeting.startsWith("good evening ") && greeting != "good evening"
-            && !greeting.startsWith("goodevening ") && greeting != "goodevening"
-            && !greeting.startsWith("good night ") && greeting != "good night"
-            && !greeting.startsWith("goodnight ") && greeting != "goodnight"
-            && !greeting.startsWith("goodday ") && greeting != "goodday"
-            && !greeting.startsWith("good day ") && greeting != "good day")
-            return;
+        const words: String[] = [
+            "hello", "hi", "hey",
+            "good morning", "goodmorning",
+            "good evening", "goodevening",
+            "good night", "goodnight",
+            "good day", "goodday"
+        ];
 
-        if (this.reactIgnore.indexOf(message.author.id) !== -1)
+        const shouldReact = words.filter((x: string) => !greeting.startsWith(x)).filter((x: string) => greeting != x).length != words.length;
+
+        if (!shouldReact) {
             return;
+        }
+
+        if (this.reactIgnore.indexOf(message.author.id) !== -1) {
+            return;
+        }
 
         message.react(this.greetingEmoji);
     }
