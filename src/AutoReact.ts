@@ -88,7 +88,7 @@ export default class AutoReact {
     onGreeting(message: Discord.Message) {
         let greeting = message.content.toLowerCase();
 
-        const words: String[] = [
+        const words: string[] = [
             "hello", "hi", "hey",
             "good morning", "goodmorning",
             "good evening", "goodevening",
@@ -96,7 +96,7 @@ export default class AutoReact {
             "good day", "goodday"
         ];
 
-        const shouldReact = words.filter((x: string) => !greeting.startsWith(x)).filter((x: string) => greeting != x).length != words.length;
+        const shouldReact = words.some(x => greeting.startsWith(x));
 
         if (!shouldReact) {
             return;
