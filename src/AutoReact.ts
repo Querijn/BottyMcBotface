@@ -42,6 +42,7 @@ export default class AutoReact {
 
     onThinking(message: Discord.Message) {
 
+        if (message.author.bot) return;
         const authorId = message.author.id;
 
         if (message.content.startsWith("!toggle_react")) {
@@ -105,8 +106,10 @@ export default class AutoReact {
     }
 
     onGreeting(message: Discord.Message) {
-        let greeting = message.content.toLowerCase();
 
+        if (message.author.bot) return;
+        let greeting = message.content.toLowerCase();
+        
         const words = [
             "hello", "hi", "hey",
             "good morning", "goodmorning",
