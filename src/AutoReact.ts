@@ -7,6 +7,7 @@ export default class AutoReact {
     private bot: Discord.Client;
     private thinkingUsers: string[];
     private ignoreUsers: string[];
+    private thinkingEmojis: Discord.Emoji[] = [];
     private greetingEmoji: Discord.Emoji;
     private sharedSettings: SharedSettings;
 
@@ -29,6 +30,8 @@ export default class AutoReact {
     onBot() {
         console.log("Thinking extension loaded.");
 
+        this.refreshThinkingEmojis();
+
         let emoji = this.bot.emojis.get(this.sharedSettings.autoReact.emoji);
         if (emoji instanceof Discord.Emoji) {
             this.greetingEmoji = emoji;
@@ -40,10 +43,24 @@ export default class AutoReact {
         }
     }
 
+    refreshThinkingEmojis() {
+        const guilds = this.bot.guilds.array();
+        for (let i = 0; i < guilds.length; i++) {
+            const emojiSet = guilds[i].emojis.filter((x: Discord.Emoji) => x.name.includes("thinking"));
+            this.thinkingEmojis = this.thinkingEmojis.concat(emojiSet.array());
+        }
+    }
+
     onThinking(message: Discord.Message) {
 
         if (message.author.bot) return;
         const authorId = message.author.id;
+
+        if (message.content.startsWith("!refresh_thinking")) {
+            message.reply("reloading thinking emojis.")
+            this.refreshThinkingEmojis();
+            return;
+        }
 
         if (message.content.startsWith("!toggle_react")) {
             this.onToggleReactRequest(message, authorId);
@@ -57,7 +74,25 @@ export default class AutoReact {
             return;
         }
 
-        if (!message.content.includes("🤔")) return;
+        if (!message.content.includes("🤔")) {
+
+            // If it's not the regular thinking emoji, maybe it's one of our custom ones?
+            let emojiIds = /<:(.*?):([0-9]+)>/g.exec(message.content);
+            if (!emojiIds) return;
+
+            let found = false;
+            for (let i = 2; i < emojiIds.length; i += 3) {
+                const emoji = emojiIds[i];
+                if (!this.thinkingEmojis.some((e: Discord.Emoji) => e.id == emoji))
+                    continue;
+                
+                found = true;
+                break;
+            }
+            
+            if (!found) return;
+        }
+        
 
         // If original thinking user
         if (this.thinkingUsers.indexOf(authorId) !== -1) {
