@@ -88,7 +88,7 @@ export default class AutoReact {
     onGreeting(message: Discord.Message) {
         let greeting = message.content.toLowerCase();
 
-        const words: string[] = [
+        const words = [
             "hello", "hi", "hey",
             "good morning", "goodmorning",
             "good evening", "goodevening",
