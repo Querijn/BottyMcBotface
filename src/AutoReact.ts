@@ -45,12 +45,12 @@ export default class AutoReact {
         const authorId = message.author.id;
         const reactIndex = this.reactIgnore.indexOf(authorId);
             
-        if(message.content.startsWith("!toggle_react") {
+        if(message.content.startsWith("!toggle_react")) {
             if(reactIndex === -1) {
                 this.reactIgnore.push(authorId);
                 message.reply("I will no longer react to your messages");
             } else {
-                this.reactIgnore.splice(index, 1);
+                this.reactIgnore.splice(reactIndex, 1);
                 message.reply("I will now react to your messages");
             }
             
@@ -72,7 +72,7 @@ export default class AutoReact {
         if (reactIndex !== -1) return;
         
         if (this.thinkingUsers.indexOf(authorId) === -1) {
-            const emoji = message.guild.emojis.filter(x => x.name.includes("thinking")).random();
+            const emoji = message.guild.emojis.filter((x: Discord.Emoji)=> x.name.includes("thinking")).random();
             if (emoji) {
                 message.react(emoji);
                 return;
