@@ -12,4 +12,4 @@ Here's some tips to help you on your way:
 The commands I have right now are:
 `!note list`: Gives you a list of notes that I have. The shorthand of these notes is `.`, for example: `.repo`, which is the same as `!note repo`, which links to the repository where my code is located!
 `!uptime`: How long I've been online.
-`!toggle_react`: By default, I react to some of your messages. Use this command to toggle that.
+`!toggle_react`: By default, I react to some of your messages. If you don't enjoy them, use this command to toggle them on or off.
