@@ -30,6 +30,13 @@ export interface SharedSettings {
         allowedRoles: string[],
         command: string
     },
+    officehours: {
+        allowedRoles: string[],
+        openMessage: string,
+        closeMessage: string,
+        addedMessage: string,
+        removedMessage: string
+    },
     versionChecker: {
         checkInterval: number,
         channel: string,

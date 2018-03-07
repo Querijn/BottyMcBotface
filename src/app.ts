@@ -15,6 +15,7 @@ import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
 import ApiStatus from './ApiStatus';
+import OfficeHours from "./OfficeHours";
 
 // Load and initialise settings
 const sharedSettings = fileBackedObject<SharedSettings>("settings/shared_settings.json");
@@ -29,6 +30,7 @@ const keyFinder = new KeyFinder(bot.client, sharedSettings, "data/riot_keys.json
 const forum = new ForumReader(bot.client, sharedSettings, personalSettings, "data/forum_data.json", keyFinder);
 //const honeypot = new Honeypot(bot.client, sharedSettings, personalSettings);
 const autoReact = new AutoReact(bot.client, sharedSettings, "data/thinking_data.json");
+const officeHours = new OfficeHours(bot.client, sharedSettings, "data/office_hour_questions.json");
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
 //const channelAccess = new ChannelAccess(bot.client, sharedSettings);
 const info = new Info(bot.client, sharedSettings, "data/info_data.json", versionChecker);
