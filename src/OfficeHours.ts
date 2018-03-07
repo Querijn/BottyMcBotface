@@ -22,6 +22,7 @@ export default class OfficeHours {
         this.questions = fileBackedObject(questionFile);
         console.log("Successfully question file.");
 
+        this.sharedSettings = sharedSettings;
 
         this.bot.on("ready", this.onBot.bind(this));
         this.bot.on("message", this.onCommand.bind(this));
