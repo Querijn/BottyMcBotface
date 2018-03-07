@@ -6,7 +6,7 @@ import Discord = require("discord.js");
 export default class AutoReact {
     private bot: Discord.Client;
     private thinkingUsers: string[];
-    private reactIgnore: string[];
+    private ignoreUsers: string[];
     private greetingEmoji: Discord.Emoji;
     private sharedSettings: SharedSettings;
 
@@ -19,7 +19,7 @@ export default class AutoReact {
         this.thinkingUsers = fileBackedObject(userFile);
         console.log("Successfully loaded original thinking user file.");
 
-        this.reactIgnore = fileBackedObject(ignoreFile);
+        this.ignoreUsers = fileBackedObject(ignoreFile);
         console.log("Successfully loaded ignore reaction file.");
 
         this.bot.on("ready", this.onBot.bind(this));
@@ -43,46 +43,64 @@ export default class AutoReact {
     onThinking(message: Discord.Message) {
 
         const authorId = message.author.id;
-        const reactIndex = this.reactIgnore.indexOf(authorId);
-        const thinkIndex = this.thinkingUsers.indexOf(authorId);
 
         if (message.content.startsWith("!toggle_react")) {
-            if (reactIndex === -1) {
-                this.reactIgnore.push(authorId);
-                message.reply("I will no longer react to your messages");
-            } else {
-                this.reactIgnore.splice(reactIndex, 1);
-                message.reply("I will now react to your messages");
-            }
+            this.onToggleReactRequest(message, authorId);
             return;
         }
 
-        if (message.content.startsWith("!original_thinko_reacts_only")) {
-            if (thinkIndex === -1) {
-                this.thinkingUsers.push(authorId);
-
-                message.reply("I will now discriminate for you. !no_more_original_thinkos to stop.");
-                return;
-            } else {
-                this.thinkingUsers.splice(thinkIndex, 1);
-
-                message.reply("REEEEEEEEEEEEEEEEE");
-                return;
-            }
+        if (message.content.startsWith("!toggle_default_thinking")) {
+            this.onToggleThinkingRequest(message, authorId);
+            return;
         }
 
         if (!message.content.includes("🤔")) return;
-        if (reactIndex !== -1) return;
+        if (this.ignoreUsers.indexOf(authorId) !== -1) return; // Only react to people not on list
 
-        if (thinkIndex === -1) {
-            const emoji = message.guild.emojis.filter((x: Discord.Emoji) => x.name.includes("thinking")).random();
-            if (emoji) {
-                message.react(emoji);
-                return;
-            }
+        // If original thinking user
+        if (this.thinkingUsers.indexOf(authorId) !== -1) {
+            message.react("🤔");
+            return;
         }
 
-        message.react("🤔");
+        // Otherwise use our custom ones
+        const emoji = message.guild.emojis.filter((x: Discord.Emoji) => x.name.includes("thinking")).random();
+        if (emoji) {
+            message.react(emoji);
+            return;
+        }
+    }
+
+    onToggleReactRequest(message: Discord.Message, authorId: string) {
+        
+        const reactIndex = this.ignoreUsers.indexOf(authorId);
+
+        // Add 
+        if (reactIndex === -1) {
+            this.ignoreUsers.push(authorId);
+            message.reply("I will no longer react to your messages");
+            return;
+        } 
+
+        // Remove
+        this.ignoreUsers.splice(reactIndex, 1);
+        message.reply("I will now react to your messages");
+    }
+
+    onToggleThinkingRequest(message: Discord.Message, authorId: string) {
+        
+        const thinkIndex = this.thinkingUsers.indexOf(authorId);
+
+        // Add 
+        if (thinkIndex === -1) {
+            this.thinkingUsers.push(authorId);
+            message.reply("I will now only reply with default thinking emojis.");
+            return;
+        } 
+
+        // Remove
+        this.thinkingUsers.splice(thinkIndex, 1);
+        message.reply("I will no longer only reply with default thinking emojis.");
     }
 
     onGreeting(message: Discord.Message) {
@@ -102,7 +120,7 @@ export default class AutoReact {
             return;
         }
 
-        if (this.reactIgnore.indexOf(message.author.id) !== -1) {
+        if (this.ignoreUsers.indexOf(message.author.id) !== -1) {
             return;
         }
 
