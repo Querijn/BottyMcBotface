@@ -18,7 +18,7 @@ export default class AutoReact {
 
         this.thinkingUsers = fileBackedObject(userFile);
         console.log("Successfully loaded original thinking user file.");
-        
+
         this.reactIgnore = fileBackedObject(ignoreFile);
         console.log("Successfully loaded ignore reaction file.");
 
@@ -28,7 +28,7 @@ export default class AutoReact {
 
     onBot() {
         console.log("Thinking extension loaded.");
-        
+
         let emoji = this.bot.emojis.get(this.sharedSettings.autoReact.emoji);
         if (emoji instanceof Discord.Emoji) {
             this.greetingEmoji = emoji;
@@ -41,38 +41,41 @@ export default class AutoReact {
     }
 
     onThinking(message: Discord.Message) {
-        
+
         const authorId = message.author.id;
         const reactIndex = this.reactIgnore.indexOf(authorId);
-            
-        if(message.content.startsWith("!toggle_react")) {
-            if(reactIndex === -1) {
+        const thinkIndex = this.thinkingUsers.indexOf(authorId);
+
+        if (message.content.startsWith("!toggle_react")) {
+            if (reactIndex === -1) {
                 this.reactIgnore.push(authorId);
                 message.reply("I will no longer react to your messages");
             } else {
                 this.reactIgnore.splice(reactIndex, 1);
                 message.reply("I will now react to your messages");
             }
-            
             return;
-        } else if (message.content.startsWith("!original_thinko_reacts_only") && this.thinkingUsers.indexOf(authorId) === -1) {
-            this.thinkingUsers.push(authorId);
+        }
 
-            message.reply("I will now discriminate for you. !no_more_original_thinkos to stop.");
-            return;
-        } else if (message.content.startsWith("!no_more_original_thinkos") && this.thinkingUsers.indexOf(authorId) !== -1) {
-            const index = this.thinkingUsers.indexOf(authorId);
-            this.thinkingUsers.splice(index, 1);
+        if (message.content.startsWith("!original_thinko_reacts_only")) {
+            if (thinkIndex === -1) {
+                this.thinkingUsers.push(authorId);
 
-            message.reply("REEEEEEEEEEEEEEEEE");
-            return;
+                message.reply("I will now discriminate for you. !no_more_original_thinkos to stop.");
+                return;
+            } else {
+                this.thinkingUsers.splice(thinkIndex, 1);
+
+                message.reply("REEEEEEEEEEEEEEEEE");
+                return;
+            }
         }
 
         if (!message.content.includes("🤔")) return;
         if (reactIndex !== -1) return;
-        
-        if (this.thinkingUsers.indexOf(authorId) === -1) {
-            const emoji = message.guild.emojis.filter((x: Discord.Emoji)=> x.name.includes("thinking")).random();
+
+        if (thinkIndex === -1) {
+            const emoji = message.guild.emojis.filter((x: Discord.Emoji) => x.name.includes("thinking")).random();
             if (emoji) {
                 message.react(emoji);
                 return;
@@ -97,7 +100,7 @@ export default class AutoReact {
             && !greeting.startsWith("goodday ") && greeting != "goodday"
             && !greeting.startsWith("good day ") && greeting != "good day")
             return;
-            
+
         if (this.reactIgnore.indexOf(message.author.id) !== -1)
             return;
 
