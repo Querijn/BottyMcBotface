@@ -5,7 +5,7 @@ import Discord = require("discord.js");
 
 interface QuestionData {
     uuid: number;
-    author: string;
+    author: number;
     question: string;
 }
 
@@ -39,14 +39,11 @@ export default class OfficeHours {
 
     onCommand(message: Discord.Message) {
 
-        const authorId = message.author.id;
-        const isAdmin = (message.member && findOne(message.member.roles, this.sharedSettings.officehours.allowedRoles));
-
         if (message.content.startsWith("!ask")) {
 
             const question = message.content.substr(message.content.indexOf(" ") + 1);
             const qData = {
-                author: authorId,
+                author: +message.author.id,
                 question: question,
                 uuid: this.nextId()
             };
@@ -56,9 +53,33 @@ export default class OfficeHours {
             message.reply(this.sharedSettings.officehours.addedMessage);
         }
 
+
+        const isAdmin = (message.member && findOne(message.member.roles, this.sharedSettings.officehours.allowedRoles));
         if (!isAdmin) {
             return;
         }
+
+
+        if (message.content.startsWith("!ask_for")) {
+
+            const content = message.content.split(" ");
+            const asker = message.mentions.members.first();
+
+            if (asker) {
+                const question = content.slice(2).join(" ");
+
+                const qData = {
+                    author: +asker.id,
+                    question: question,
+                    uuid: this.nextId()
+                };
+
+                this.questions.push(qData);
+
+                message.reply(this.sharedSettings.officehours.addedMessage);
+            }
+        }
+
 
         if (message.content.startsWith("!question_list")) {
 
@@ -67,16 +88,18 @@ export default class OfficeHours {
             }
         }
 
+
         if (message.content.startsWith("!question_remove")) {
             const arr = message.content.split(" ");
 
             if (arr.length === 2) {
-                const id = Number(message.content.split(" ")[1]);
+                const id = +message.content.split(" ")[1];
                 this.questions = this.questions.filter(q => q.uuid != id);
             }
 
             message.reply(this.sharedSettings.officehours.removedMessage);
         }
+
 
         if (message.content.startsWith("!open")) {
             message.delete();
@@ -88,6 +111,7 @@ export default class OfficeHours {
 
             this.questions = [];
         }
+
 
         if (message.content.startsWith("!close")) {
             message.delete();
