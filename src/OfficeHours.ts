@@ -5,27 +5,34 @@ import Discord = require("discord.js");
 
 interface QuestionData {
     uuid: number;
-    author: number;
+    authorId: string;
+    authorName: string,
     question: string;
+}
+
+interface OfficeHoursData {
+    questions: QuestionData[];
+    isOpen: boolean;
+    lastCloseMessage: string
 }
 
 export default class OfficeHours {
     private bot: Discord.Client;
-    private questions: QuestionData[];
+    private data: OfficeHoursData;
     private sharedSettings: SharedSettings;
 
-
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, questionFile: string) {
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings, officeHoursData: string) {
         console.log("Requested OfficeHours extension..");
         this.bot = bot;
 
-        this.questions = fileBackedObject(questionFile);
+        this.data = fileBackedObject(officeHoursData);
         console.log("Successfully question file.");
 
         this.sharedSettings = sharedSettings;
 
         this.bot.on("ready", this.onBot.bind(this));
         this.bot.on("message", this.onCommand.bind(this));
+		this.bot.on("channelUpdate", this.onChannelUpdate.bind(this));
     }
 
     onBot() {
@@ -33,7 +40,7 @@ export default class OfficeHours {
     }
 
     nextId() {
-        return Math.max(...this.questions.map(x => x.uuid)) + 1;
+        return Math.max(...this.data.questions.map(x => x.uuid)) + 1;
     }
 
 
@@ -42,13 +49,14 @@ export default class OfficeHours {
         if (message.content.startsWith("!ask")) {
 
             const question = message.content.substr(message.content.indexOf(" ") + 1);
-            const qData = {
-                author: +message.author.id,
+            const questionData = {
+                authorId: message.author.id,
+                authorName: message.author.username,
                 question: question,
                 uuid: this.nextId()
             };
 
-            this.questions.push(qData);
+            this.data.questions.push(questionData);
 
             message.reply(this.sharedSettings.officehours.addedMessage);
         }
@@ -59,7 +67,6 @@ export default class OfficeHours {
             return;
         }
 
-
         if (message.content.startsWith("!ask_for")) {
 
             const content = message.content.split(" ");
@@ -68,13 +75,14 @@ export default class OfficeHours {
             if (asker) {
                 const question = content.slice(2).join(" ");
 
-                const qData = {
-                    author: +asker.id,
+                const questionData = {
+                    authorId: asker.id,
+                    authorName: asker.nickname,
                     question: question,
                     uuid: this.nextId()
                 };
 
-                this.questions.push(qData);
+                this.data.questions.push(questionData);
 
                 message.reply(this.sharedSettings.officehours.addedMessage);
             }
@@ -83,8 +91,8 @@ export default class OfficeHours {
 
         if (message.content.startsWith("!question_list")) {
 
-            for (const data of this.questions) {
-                message.author.sendMessage(`${data.uuid}: <@${data.author}>: ${data.question}`)
+            for (const data of this.data.questions) {
+                message.author.send(`${data.uuid}: ${data.authorName}: ${data.question}`);
             }
         }
 
@@ -93,30 +101,91 @@ export default class OfficeHours {
             const arr = message.content.split(" ");
 
             if (arr.length === 2) {
-                const id = +message.content.split(" ")[1];
-                this.questions = this.questions.filter(q => q.uuid != id);
+                const id = +arr[1];
+                this.data.questions = this.data.questions.filter(q => q.uuid != id);
             }
 
             message.reply(this.sharedSettings.officehours.removedMessage);
         }
 
+        if (!(message.channel instanceof Discord.TextChannel) || message.channel.name !== "office-hours")
+            return;
 
         if (message.content.startsWith("!open")) {
             message.delete();
-            message.channel.sendMessage(this.sharedSettings.officehours.openMessage);
-
-            for (const data of this.questions) {
-                message.channel.sendMessage(`<@${data.author}>: ${data.question}`)
-            }
-
-            this.questions = [];
+            this.open(message.channel);
         }
 
 
         if (message.content.startsWith("!close")) {
             message.delete();
-            message.channel.sendMessage(this.sharedSettings.officehours.closeMessage);
+            this.close(message.channel);
         }
+    }
+
+    onChannelUpdate(oldChannel: Discord.TextChannel, newChannel: Discord.TextChannel) {
+
+        if (newChannel.name !== "office-hours")
+            return;
+
+        let everyone = newChannel.guild.roles.find("name", "@everyone");
+        let randomUser = newChannel.guild.members.find(x => x.roles.has(everyone.id));
+
+        let canSendMessages = newChannel.permissionsFor(randomUser).has("SEND_MESSAGES");
+        if (canSendMessages && !this.data.isOpen)
+            this.open(newChannel);
+        else if (canSendMessages && this.data.isOpen) 
+            this.close(newChannel);
+    }
+
+    open(channel: Discord.TextChannel) {
+        if (this.data.isOpen) return;
+        this.data.isOpen = true;
+
+        let messageText = this.sharedSettings.officehours.openMessage;
+
+        for (const data of this.data.questions) {
+            const member = channel.guild.members.get(data.authorId);
+            const mention = member ? member : data.authorName;
+
+            messageText += `${mention} asked: \`\`\`${data.question}\`\`\`\n`;
+        }
+
+        // Request last close message from Discord
+        channel.fetchMessage(this.data.lastCloseMessage)
+        .then(closeMessage => {
+            messageText += "\n";
+
+            // Find all users that raised their hand
+            const reactions = closeMessage.reactions.get("✋");
+            if (reactions) {
+
+                const usersToMention = reactions.users.array().filter(user => !user.bot);
+                messageText += usersToMention.join(", ") + "\n";
+            }
+
+            channel.send(messageText);
+            this.data.questions = [];
+        })
+        .catch(reason => {
+            console.warn("Failed getting last close message: " + reason);
+            channel.send(messageText);
+        });
+    }
+
+    close(channel: Discord.TextChannel) {
+        if (!this.data.isOpen) return;
+        this.data.isOpen = false;
+
+        channel.send(this.sharedSettings.officehours.closeMessage)
+        .then(message => {
+            if (Array.isArray(message)) {
+                message = message[0];
+            }
+
+            this.data.lastCloseMessage = message.id;
+            message.react("✋");
+        });
     }
 }
 
