@@ -203,7 +203,6 @@ export default class OfficeHours {
             }
 
             this.sendOnThisDayMessage(channel);
-            this.data.questions = [];
         })
         .catch(reason => {
             console.warn("Failed getting last close message: " + reason);
