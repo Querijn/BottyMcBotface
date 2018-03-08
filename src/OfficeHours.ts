@@ -6,6 +6,7 @@ import Discord = require("discord.js");
 
 interface QuestionData {
     uuid: number;
+    requester: string | null,
     authorId: string;
     authorName: string,
     question: string;
@@ -47,10 +48,12 @@ export default class OfficeHours {
 
     onCommand(message: Discord.Message) {
 
-        if (message.content.startsWith("!ask")) {
+        const isAskFor = message.content.startsWith("!ask_for");
+        if (message.content.startsWith("!ask") && !isAskFor) {
 
             const question = message.content.substr(message.content.indexOf(" ") + 1);
             const questionData = {
+                requester: null,
                 authorId: message.author.id,
                 authorName: message.author.username,
                 question: question,
@@ -68,7 +71,7 @@ export default class OfficeHours {
             return;
         }
 
-        if (message.content.startsWith("!ask_for")) {
+        if (isAskFor) {
 
             const content = message.content.split(" ");
             const asker = message.mentions.members.first();
@@ -77,8 +80,9 @@ export default class OfficeHours {
                 const question = content.slice(2).join(" ");
 
                 const questionData = {
+                    requester: message.author.username,
                     authorId: asker.id,
-                    authorName: asker.nickname,
+                    authorName: asker.toString(),
                     question: question,
                     uuid: this.nextId()
                 };
@@ -87,6 +91,7 @@ export default class OfficeHours {
 
                 message.reply(this.sharedSettings.officehours.addedMessage);
             }
+            return;
         }
 
 
@@ -95,6 +100,7 @@ export default class OfficeHours {
             for (const data of this.data.questions) {
                 message.author.send(`${data.uuid}: ${data.authorName}: ${data.question}`);
             }
+            return;
         }
 
 
@@ -107,6 +113,7 @@ export default class OfficeHours {
             }
 
             message.reply(this.sharedSettings.officehours.removedMessage);
+            return;
         }
 
         if (!(message.channel instanceof Discord.TextChannel) || message.channel.name !== "office-hours")
@@ -143,38 +150,40 @@ export default class OfficeHours {
         if (this.data.isOpen) return;
         this.data.isOpen = true;
 
-        let messageText = this.sharedSettings.officehours.openMessage;
+        // Start with open message
+        channel.send(this.sharedSettings.officehours.openMessage);
 
+        // Add all questions with mention
         for (const data of this.data.questions) {
             const member = channel.guild.members.get(data.authorId);
             const mention = member ? member : data.authorName;
 
-            messageText += `${mention} asked: \`\`\`${data.question}\`\`\`\n`;
+            channel.send(`${mention} asked ${data.requester ? `(via ${data.requester})` : ""}: \`\`\`${data.question}\`\`\``);
         }
 
-        if (this.data.lastCloseMessage) {
-            // Request last close message from Discord
-            channel.fetchMessage(this.data.lastCloseMessage)
-            .then(closeMessage => {
-                messageText += "\n";
-    
-                // Find all users that raised their hand
-                const reactions = closeMessage.reactions.get("✋");
-                if (reactions) {
-    
-                    const usersToMention = reactions.users.array().filter(user => !user.bot);
-                    messageText += usersToMention.join(", ") + "\n";
-                }
-    
-                channel.send(messageText);
-                this.data.questions = [];
-            })
-            .catch(reason => {
-                console.warn("Failed getting last close message: " + reason);
-                channel.send(messageText);
-            });
-        }
-        else channel.send(messageText);
+        if (!this.data.lastCloseMessage) return;
+
+        // Request last close message from Discord
+        channel.fetchMessage(this.data.lastCloseMessage)
+        .then(closeMessage => {
+            // Find all users that raised their hand
+            const reactions = closeMessage.reactions.get("✋");
+            if (reactions) {
+
+                const usersToMention = reactions.users.array().filter(user => !user.bot);
+                channel.send(usersToMention.join(", ") + "\n");
+            }
+
+            this.sendOnThisDayMessage(channel);
+            this.data.questions = [];
+        })
+        .catch(reason => {
+            console.warn("Failed getting last close message: " + reason);
+            this.sendOnThisDayMessage(channel);
+        });
+    }
+
+    sendOnThisDayMessage(channel: Discord.TextChannel) {
         
         const onThisDayMsg = fetch('https://history.muffinlabs.com/date')
         .then(r => r.json())
