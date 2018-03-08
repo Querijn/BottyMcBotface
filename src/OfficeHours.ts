@@ -1,5 +1,6 @@
 import { SharedSettings } from "./SharedSettings";
 import { fileBackedObject } from "./FileBackedObject";
+import fetch from "node-fetch";
 
 import Discord = require("discord.js");
 
@@ -138,7 +139,7 @@ export default class OfficeHours {
             this.close(newChannel);
     }
 
-    open(channel: Discord.TextChannel) {
+    async open(channel: Discord.TextChannel) {
         if (this.data.isOpen) return;
         this.data.isOpen = true;
 
@@ -151,26 +152,37 @@ export default class OfficeHours {
             messageText += `${mention} asked: \`\`\`${data.question}\`\`\`\n`;
         }
 
-        // Request last close message from Discord
-        channel.fetchMessage(this.data.lastCloseMessage)
-        .then(closeMessage => {
-            messageText += "\n";
-
-            // Find all users that raised their hand
-            const reactions = closeMessage.reactions.get("✋");
-            if (reactions) {
-
-                const usersToMention = reactions.users.array().filter(user => !user.bot);
-                messageText += usersToMention.join(", ") + "\n";
-            }
-
-            channel.send(messageText);
-            this.data.questions = [];
+        if (this.data.lastCloseMessage) {
+            // Request last close message from Discord
+            channel.fetchMessage(this.data.lastCloseMessage)
+            .then(closeMessage => {
+                messageText += "\n";
+    
+                // Find all users that raised their hand
+                const reactions = closeMessage.reactions.get("✋");
+                if (reactions) {
+    
+                    const usersToMention = reactions.users.array().filter(user => !user.bot);
+                    messageText += usersToMention.join(", ") + "\n";
+                }
+    
+                channel.send(messageText);
+                this.data.questions = [];
+            })
+            .catch(reason => {
+                console.warn("Failed getting last close message: " + reason);
+                channel.send(messageText);
+            });
+        }
+        else channel.send(messageText);
+        
+        const onThisDayMsg = fetch('https://history.muffinlabs.com/date')
+        .then(r => r.json())
+        .then(({ data: { Events } }) => Events[Math.floor(Math.random() * Events.length)])
+        .then(event => { 
+            channel.send(`On this day in ${event.year}, ${event.text}`);
         })
-        .catch(reason => {
-            console.warn("Failed getting last close message: " + reason);
-            channel.send(messageText);
-        });
+        .catch(r => console.warn('Failed to fetch message of the day: ' + r));
     }
 
     close(channel: Discord.TextChannel) {
