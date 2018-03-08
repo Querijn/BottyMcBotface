@@ -153,7 +153,13 @@ export default class AutoReact {
             "good day", "goodday"
         ];
 
-        const shouldReact = words.some(x => greeting.startsWith(x));
+        // Determine if the greeting is just the greeting, or ends in punctuation and not "his"
+        const shouldReact = words.some(x => {
+            if (greeting === x) return true;
+            
+            const endChar = greeting.charAt(x.length);            
+            return greeting.startsWith(x) && (endChar == " " || endChar == "!" || endChar == "." || endChar == ",");
+        });
 
         if (!shouldReact) {
             return;
