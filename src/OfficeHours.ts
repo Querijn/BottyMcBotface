@@ -189,7 +189,7 @@ export default class OfficeHours {
         if (!this.data.isOpen) return;
         this.data.isOpen = false;
 
-        channel.send(this.sharedSettings.officehours.closeMessage)
+        channel.send(this.sharedSettings.officehours.closeMessage.replace(/{botty}/g, this.bot.user.toString()))
         .then(message => {
             if (Array.isArray(message)) {
                 message = message[0];
