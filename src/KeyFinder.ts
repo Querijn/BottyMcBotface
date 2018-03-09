@@ -110,7 +110,7 @@ export default class KeyFinder {
 	 * @returns 'true' if a working AnswerHubAPI key was found in the message, 'false' if one wasn't
 	 */
     async findKey(user: string, message: string, location: string, timestamp: number): Promise<boolean> {
-        const matches = message.match(/RGAPI-[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}/ig);
+        const matches = message.match(/(RGAPI-)?[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}/ig);
         if (!matches) return false;
 
         let found = false;
@@ -118,22 +118,23 @@ export default class KeyFinder {
             const limit = await this.testKey(match);
             found = found || limit !== null;
 
-            if (limit !== null) {
-                const existing = this.keys.find(x => x.apiKey === match);
-                if (existing) continue; // we've already seen the key, check for other keys
+            if (limit == null) continue;
 
-                this.keys.push({
-                    apiKey: match,
-                    rateLimit: limit,
-                    user,
-                    location,
-                    timestamp
-                });
-            }
+            const existing = this.keys.find(x => x.apiKey === match);
+            if (existing) continue; // we've already seen the key, check for other keys
 
+            this.keys.push({
+                apiKey: match,
+                rateLimit: limit,
+                user,
+                location,
+                timestamp
+            });
+            
             const message = `Found an ${limit ? "active" : "inactive"} key in ${location} posted by ${user}: \`${match}\`. Key rate limit: \`${limit}\`.`;
             console.warn(message);
             if (this.channel) this.channel.send(message);
+            break;
         }
 
         return found;
