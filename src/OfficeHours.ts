@@ -55,7 +55,7 @@ export default class OfficeHours {
         }
 
         const everyone = mainGuild.roles.find("name", "@everyone");
-        let randomUser = mainGuild.members.find(x => x.roles.has(everyone.id));
+        let randomUser = mainGuild.members.find(x => x.roles.has(everyone.id) && x.roles.size === 1);
         this.data.isOpen = officeHoursChannel.permissionsFor(randomUser).has("SEND_MESSAGES");
         console.log(`OfficeHours extension loaded (${this.data.isOpen ? "open" : "closed"}).`);
     }
@@ -151,7 +151,7 @@ export default class OfficeHours {
             return;
 
         const everyone = newChannel.guild.roles.find("name", "@everyone");
-        let randomUser = newChannel.guild.members.find(x => x.roles.has(everyone.id));
+        let randomUser = newChannel.guild.members.find(x => x.roles.has(everyone.id) && x.roles.size === 1);
         const canSendMessages = newChannel.permissionsFor(randomUser).has("SEND_MESSAGES");
         if (canSendMessages && !this.data.isOpen)
             this.open(newChannel);
