@@ -87,13 +87,15 @@ export default class GithubLibraries {
             const response = await fetch(this.settings.githubLibraries.baseURL + language);
             const data = await response.json();
 
-            if (this.isValidResponse(data)) {
+            if (!this.isValidResponse(data)) {
                 message.reply(this.settings.githubLibraries.noLanguage + language);
                 return;
             }
 
-            var printMe = `List of languages for ${language}:\n`;
-            data.map(await this.readJsonData).forEach(x => printMe += x);
+            let printMe = `List of libraries for ${language}:\n`;
+            for (const lib of data) {
+                printMe += await this.readJsonData(lib);
+            }
 
             message.reply(printMe);
         }
@@ -107,7 +109,6 @@ export default class GithubLibraries {
             return "";
         }
 
-        const lib = data as APILibraryStruct;
-        return `${lib.repo} by ${lib.owner}\n`;
+        return `${data.repo} by ${data.owner}\n`;
     }
 }
