@@ -92,12 +92,13 @@ export default class GithubLibraries {
                 return;
             }
 
-            let printMe = `List of libraries for ${language}:\n`;
+            let printMe = "";
             for (const lib of data) {
                 printMe += await this.readJsonData(lib);
             }
 
-            message.reply(printMe);
+            const embed = new Discord.RichEmbed().addField("`List of libraries for ${language}:`", printMe);
+            message.reply({ embed });
         }
     }
 
@@ -109,6 +110,6 @@ export default class GithubLibraries {
             return "";
         }
 
-        return `${data.repo} by ${data.owner} (<https://github.com/${data.owner}/${data.repo}>)\n`;
+        return `[${data.repo} by ${data.owner}](https://github.com/${data.owner}/${data.repo})\n`;
     }
 }
