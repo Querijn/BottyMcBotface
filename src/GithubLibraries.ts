@@ -84,6 +84,17 @@ export default class GithubLibraries {
 
         if (this.settings.githubLibraries.aliases.some(x => x === command.substr(1))) {
 
+            if (language === "list") {
+                const response = await fetch(this.settings.githubLibraries.baseURL);
+                const data = await response.json() as GithubAPIStruct[];
+
+                let printMe = "";
+                data.map(x => x.name).forEach(x => printMe += x + "\n");
+                message.reply(printMe);
+                return;
+            }
+
+
             const response = await fetch(this.settings.githubLibraries.baseURL + language);
             const data = await response.json();
 
