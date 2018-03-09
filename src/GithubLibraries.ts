@@ -109,6 +109,6 @@ export default class GithubLibraries {
             return "";
         }
 
-        return `${data.repo} by ${data.owner} (<https://github.com/${data.repo}/${data.owner}>)\n`;
+        return `${data.repo} by ${data.owner} (<https://github.com/${data.owner}/${data.repo}>)\n`;
     }
 }
