@@ -20,7 +20,7 @@ export default class GithubLibraries {
         console.log("Github extension loaded.");
     }
 
-    onCommand(message: Discord.Message) {
+    async onCommand(message: Discord.Message) {
 
         const args = message.content.split(" ");
 
@@ -30,9 +30,13 @@ export default class GithubLibraries {
 
         const [command, language] = args;
 
+        if (!command.startsWith("!")) {
+            return;
+        }
+
         if (this.settings.githubLibraries.aliases.some(x => x === command.substr(1))) {
 
-            const response = fetch(this.settings.githubLibraries.baseURL + language);
+            const response = await fetch(this.settings.githubLibraries.baseURL + language);
             const data = response.json();
 
             // github api returns an array of files in the directory, or an error object if the path doesnt exist
@@ -42,14 +46,14 @@ export default class GithubLibraries {
             }
 
             var printMe = `List of languages for ${language}:\n`;
-            data.map(x => this.readJsonData).forEach(x => printMe += x);
+            data.map(await this.readJsonData).forEach(x => printMe += x);
 
             message.reply(printMe);
         }
     }
 
-    readJsonData(json: any): string {
-        const response = fetch(json.download_url);
+    async readJsonData(json: any): Promise<string> {
+        const response = await fetch(json.download_url);
         const data = response.json();
 
         // do not return libraries that are uncompatible with v3
