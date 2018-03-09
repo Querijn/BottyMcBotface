@@ -108,7 +108,7 @@ export default class OfficeHours {
         if (message.content.startsWith("!question_list")) {
 
             for (const data of this.data.questions) {
-                message.author.send(`${data.uuid}: ${data.authorName}: ${data.question}`);
+                message.channel.send(`${data.uuid}: ${data.authorName}: ${data.question}`);
             }
             return;
         }
