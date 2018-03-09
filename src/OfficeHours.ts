@@ -60,10 +60,6 @@ export default class OfficeHours {
         console.log(`OfficeHours extension loaded (${this.data.isOpen ? "open" : "closed"}).`);
     }
 
-    nextId() {
-        return ++this.data.nextId;
-    }
-
     storeQuestion(question: string, message: Discord.Message, authorId: string, authorName: string, requester: string | null = null) {
         
         const questionData = {
@@ -71,7 +67,7 @@ export default class OfficeHours {
             authorId: authorId,
             authorName: authorName,
             question: question,
-            uuid: this.nextId()
+            uuid: ++this.data.nextId
         };
 
         this.data.questions.push(questionData);
@@ -188,6 +184,9 @@ export default class OfficeHours {
 
             channel.send(`${mention} asked ${data.requester ? `(via ${data.requester})` : ""}: \`\`\`${data.question}\`\`\``);
         }
+
+        this.data.questions = [];
+        this.data.nextId = 0;
 
         if (!this.data.lastCloseMessage) return;
 
