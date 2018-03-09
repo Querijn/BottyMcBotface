@@ -50,6 +50,15 @@
         "addedMessage": "Your question is added to the queue, I will tag you with this message the next time #office-hours opens!",
         "removedMessage": "The question has been removed."
     },
+    "githubLibraries": {
+        "aliases": [
+            "!lib",
+            "!libs",
+            "!libraries"
+        ],
+        "noLanguage":"No libraries found for language: ",
+        "baseURL":"https://api.github.com/repos/WxWatch/riot-api-libraries/contents/libraries/"
+    },
     "autoReact": {
         "emoji": "408527155891273738"
     },

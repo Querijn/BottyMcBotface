@@ -37,6 +37,11 @@ export interface SharedSettings {
         addedMessage: string,
         removedMessage: string
     },
+    githubLibraries: {
+        aliases: string[],
+        noLanguage: string,
+        baseURL: string
+    },
     versionChecker: {
         checkInterval: number,
         channel: string,
