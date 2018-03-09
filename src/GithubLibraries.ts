@@ -3,6 +3,36 @@ import fetch from "node-fetch";
 
 import Discord = require("discord.js");
 
+
+interface LinkStruct {
+    self: string;
+    git: string;
+    html: string;
+}
+
+interface GithubAPIStruct {
+    name: string;
+    path: string;
+    sha: string;
+    size: number;
+    url: string;
+    html_url: string;
+    git_url: string;
+    download_url: string;
+    type: string;
+    _links: LinkStruct;
+}
+
+interface APILibraryStruct {
+    owner: string;
+    repo: string;
+    language: string;
+    description: string;
+    links: any;
+    metadata: any;
+    tags: string[];
+}
+
 export default class GithubLibraries {
     private bot: Discord.Client;
     private settings: SharedSettings;
@@ -18,6 +48,24 @@ export default class GithubLibraries {
 
     onBot() {
         console.log("Github extension loaded.");
+    }
+
+    /**
+     * libraries not tagged with v3 are out of date, so we filter them out
+     * 
+     * @param object the response from the url
+     */
+    isValidLibrary(object: any): object is APILibraryStruct {
+        return (<APILibraryStruct>object).tags.some(x => x === "v3");
+    }
+
+    /**
+     * github api returns an array of files in the directory, or an error object if the path doesnt exist
+     * 
+     * @param object the response from the url
+     */
+    isValidResponse(object: any): object is GithubAPIStruct[] {
+        return (<GithubAPIStruct[]>object)[0].sha in object;
     }
 
     async onCommand(message: Discord.Message) {
@@ -37,10 +85,9 @@ export default class GithubLibraries {
         if (this.settings.githubLibraries.aliases.some(x => x === command.substr(1))) {
 
             const response = await fetch(this.settings.githubLibraries.baseURL + language);
-            const data = response.json();
+            const data = await response.json();
 
-            // github api returns an array of files in the directory, or an error object if the path doesnt exist
-            if (!Array.isArray(data)) {
+            if (this.isValidResponse(data)) {
                 message.reply(this.settings.githubLibraries.noLanguage + language);
                 return;
             }
@@ -52,15 +99,15 @@ export default class GithubLibraries {
         }
     }
 
-    async readJsonData(json: any): Promise<string> {
+    async readJsonData(json: GithubAPIStruct): Promise<string> {
         const response = await fetch(json.download_url);
-        const data = response.json();
+        const data = await response.json();
 
-        // do not return libraries that are uncompatible with v3
-        if (!json.tags.some((x: string) => x === "v3")) {
+        if (!this.isValidLibrary(data)) {
             return "";
         }
 
-        return `${json.repo} by ${json.owner}\n`;
+        const lib = data as APILibraryStruct;
+        return `${lib.repo} by ${lib.owner}\n`;
     }
 }
