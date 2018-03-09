@@ -52,9 +52,9 @@
     },
     "githubLibraries": {
         "aliases": [
-            "lib",
-            "libs",
-            "libraries"
+            "!lib",
+            "!libs",
+            "!libraries"
         ],
         "noLanguage":"No libraries found for language: ",
         "baseURL":"https://api.github.com/repos/WxWatch/riot-api-libraries/contents/libraries/"

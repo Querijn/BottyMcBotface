@@ -78,11 +78,7 @@ export default class GithubLibraries {
 
         const [command, language] = args;
 
-        if (!command.startsWith("!")) {
-            return;
-        }
-
-        if (this.settings.githubLibraries.aliases.some(x => x === command.substr(1))) {
+        if (this.settings.githubLibraries.aliases.some(x => x === command)) {
 
             if (language === "list") {
                 const response = await fetch(this.settings.githubLibraries.baseURL);
@@ -91,9 +87,9 @@ export default class GithubLibraries {
                 let printMe = "";
                 data.map(x => x.name).forEach(x => printMe += x + "\n");
                 message.reply(printMe);
+                
                 return;
             }
-
 
             const response = await fetch(this.settings.githubLibraries.baseURL + language);
             const data = await response.json();
