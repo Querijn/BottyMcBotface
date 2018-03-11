@@ -56,7 +56,8 @@
             "!libs",
             "!libraries"
         ],
-        "noLanguage":"No libraries found for language: ",
+        "noLanguage": "No libraries found for language: ",
+        "languageList": "I have libraries for one of the following languages: {languages}, choose one you like and reply with `!libs <your language>`",
         "baseURL":"https://api.github.com/repos/WxWatch/riot-api-libraries/contents/libraries/"
     },
     "autoReact": {

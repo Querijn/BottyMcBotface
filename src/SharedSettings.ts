@@ -40,6 +40,7 @@ export interface SharedSettings {
     githubLibraries: {
         aliases: string[],
         noLanguage: string,
+        languageList: string,
         baseURL: string
     },
     versionChecker: {

@@ -84,10 +84,9 @@ export default class RiotAPILibraries {
                 const response = await fetch(this.settings.githubLibraries.baseURL);
                 const data = await response.json() as GithubAPIStruct[];
 
-                let printMe = "";
-                data.map(x => x.name).forEach(x => printMe += x + "\n");
-                message.reply(printMe);
-                
+                let languages = data.map(x => x.name).join(",");
+                let reply = this.settings.githubLibraries.languageList;
+                message.channel.send(reply.replace("{languages}", languages));
                 return;
             }
 
