@@ -73,7 +73,7 @@ export default class RiotAPILibraries {
         const args = message.content.split(" ");
 
         if (args.length !== 2) {
-            return;
+            args.push("list");
         }
 
         const [command, language] = args;
