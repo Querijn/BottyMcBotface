@@ -84,15 +84,16 @@ export default class RiotAPILibraries {
 
         const [command, language] = args;
 
+        // if !libs, !libraries, etc
         if (this.settings.githubLibraries.aliases.some(x => x === command)) {
 
             if (language === "list") {
                 const response = await fetch(this.settings.githubLibraries.baseURL);
                 const data = await response.json() as GithubAPIStruct[];
 
-                let languages = data.map(x => x.name).join(",");
-                let reply = this.settings.githubLibraries.languageList;
-                message.channel.send(reply.replace("{languages}", languages));
+                let languages = "`" + data.map(x => x.name).join(", ") + "`";
+                let reply = this.settings.githubLibraries.languageList.replace("{languages}", languages);
+                message.channel.send(reply);
                 return;
             }
 
