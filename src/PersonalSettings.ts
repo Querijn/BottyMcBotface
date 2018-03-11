@@ -11,5 +11,9 @@ export interface PersonalSettings {
         token: string,
         owner: number
     },
+    github: {
+        clientId: string,
+        clientSecret: string
+    },
     isProduction: boolean
 }
