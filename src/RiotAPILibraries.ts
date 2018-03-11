@@ -55,24 +55,6 @@ export default class RiotAPILibraries {
         console.log("Github extension loaded.");
     }
 
-    /**
-     * libraries not tagged with v3 are out of date, so we filter them out
-     * 
-     * @param object the response from the url
-     */
-    isValidLibrary(object: any): object is APILibraryStruct {
-        return (<APILibraryStruct>object).tags.some(x => x === "v3");
-    }
-
-    /**
-     * github api returns an array of files in the directory, or an error object if the path doesnt exist
-     * 
-     * @param object the response from the url
-     */
-    isValidResponse(object: any): object is GithubAPIStruct[] {
-        return (<GithubAPIStruct[]>object)[0].sha in object;
-    }
-
     async onCommand(message: Discord.Message) {
 
         const args = message.content.split(" ");
@@ -98,31 +80,54 @@ export default class RiotAPILibraries {
             }
 
             const response = await fetch(this.settings.githubLibraries.baseURL + language);
-            const data = await response.json();
-
-            if (!this.isValidResponse(data)) {
-                message.reply(this.settings.githubLibraries.noLanguage + language);
+            if (response.status != 200) {
+                message.channel.send(this.settings.githubLibraries.githubError + response.status);
+                return;
+            }
+            
+            const libraryList = await response.json();
+            if (!Array.isArray(libraryList) || libraryList.length === 0 || !libraryList[0].sha) {
+                message.channel.send(this.settings.githubLibraries.noLanguage + language);
                 return;
             }
 
-            let printMe = "";
-            for (const lib of data) {
-                printMe += await this.readJsonData(lib);
+            let editMessagePromise = message.channel.send(`Found the list of libraries for ${language}, listing ${libraryList.length} libraries, this post will be edited with the result.`);
+
+            let promises: Promise<string|null>[] = [];
+            for (const libraryName in libraryList) {
+                promises.push(this.describeAPILibrary(libraryList[libraryName]));
             }
 
-            const embed = new Discord.RichEmbed().addField("`List of libraries for ${language}:`", printMe);
-            message.reply({ embed });
+            Promise.all(promises)
+            .then(async(libraryDescriptions) => { 
+                libraryDescriptions = libraryDescriptions.filter(x => x); // Filter nulls
+                const embed = new Discord.RichEmbed().addField(`List of libraries for ${language}:`, libraryDescriptions);
+                
+                let editMessage = await editMessagePromise; 
+                if (Array.isArray(editMessage)) editMessage = editMessage[0];
+                editMessage.edit({ embed });
+            });
+
         }
     }
 
-    async readJsonData(json: GithubAPIStruct): Promise<string> {
-        const response = await fetch(json.download_url);
-        const data = await response.json();
+    async describeAPILibrary(json: GithubAPIStruct): Promise<string|null> {
 
-        if (!this.isValidLibrary(data)) {
-            return "";
-        }
+        return new Promise<string|null>(async(resolve, reject) => {
+            const response = await fetch(json.download_url);
+            const libraryInfo: APILibraryStruct = await response.json();
+    
+            if (!libraryInfo.tags || libraryInfo.tags.indexOf("v3") === -1) {
+                resolve(null);
+            }
+            
+            // Make a list of the links
+            let githubLink = `https://github.com/${libraryInfo.owner}/${libraryInfo.repo}`;
+            let links = libraryInfo.links ? libraryInfo.links.map(link => `[${link.name}](${link.url})`) : []; // Can be empty array or null, sigh
+            if (links.length == 0 || links.some(l => l.indexOf(githubLink) != 0)) // Make sure there is at least the github link
+                links = [`[Github](${githubLink})`].concat(links);
 
-        return `[${data.repo} by ${data.owner}](https://github.com/${data.owner}/${data.repo})\n`;
+            resolve(`${libraryInfo.repo} by ${libraryInfo.owner}: ${links.join(", ")}\n`);
+        });        
     }
 }
