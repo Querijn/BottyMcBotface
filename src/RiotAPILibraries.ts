@@ -38,6 +38,13 @@ interface APILibraryStruct {
     tags: string[];
 }
 
+interface LibraryDescription
+{
+    valid: boolean,
+    stars: number,
+    description: string
+}
+
 export default class RiotAPILibraries {
     private bot: Discord.Client;
     private settings: SharedSettings;
@@ -93,41 +100,62 @@ export default class RiotAPILibraries {
 
             let editMessagePromise = message.channel.send(`Found the list of libraries for ${language}, listing ${libraryList.length} libraries, this post will be edited with the result.`);
 
-            let promises: Promise<string|null>[] = [];
-            for (const libraryName in libraryList) {
-                promises.push(this.describeAPILibrary(libraryList[libraryName]));
+            let promises: Promise<LibraryDescription>[] = [];
+            for (const library of libraryList) {
+                promises.push(this.describeAPILibrary(library));
             }
 
-            Promise.all(promises)
-            .then(async(libraryDescriptions) => { 
-                libraryDescriptions = libraryDescriptions.filter(x => x); // Filter nulls
-                const embed = new Discord.RichEmbed().addField(`List of libraries for ${language}:`, libraryDescriptions);
-                
-                let editMessage = await editMessagePromise; 
-                if (Array.isArray(editMessage)) editMessage = editMessage[0];
-                editMessage.edit({ embed });
-            });
+            const libraryDescriptions = (await Promise.all(promises))
+            .filter(l => l.valid) // Only valid ones
+            .sort((a, b) => b.stars - a.stars) // Sort by stars
+            .map(d => d ? d.description : ""); // Take description
+        
+            let messages = [""];
+            for (const desc of libraryDescriptions) {
+                if (messages[messages.length - 1].length + desc.length > 1024) {
+                    messages.push(desc + '\n');
+                    continue;
+                }
 
+                messages[messages.length - 1] += desc;
+            }
+
+            const embed = new Discord.RichEmbed();
+            for (let i = 0; i < messages.length; i++) 
+                embed.addField(i == 0 ? `List of libraries for ${language}:` : "📚 (List too long, continues below)", messages[i]);
+
+            let editMessage = await editMessagePromise; 
+            if (Array.isArray(editMessage)) editMessage = editMessage[0];
+            editMessage.edit({ embed });
         }
     }
 
-    async describeAPILibrary(json: GithubAPIStruct): Promise<string|null> {
+    async describeAPILibrary(json: GithubAPIStruct): Promise<LibraryDescription> {
 
-        return new Promise<string|null>(async(resolve, reject) => {
-            const response = await fetch(json.download_url);
-            const libraryInfo: APILibraryStruct = await response.json();
+        return new Promise<LibraryDescription>(async(resolve, reject) => {
+            const libraryResponse = await fetch(json.download_url);
+            const libraryInfo: APILibraryStruct = await libraryResponse.json();
     
             if (!libraryInfo.tags || libraryInfo.tags.indexOf("v3") === -1) {
-                resolve(null);
+                resolve({ stars: 0, valid: false, description: "" });
             }
             
+            const repoResponsePromise = fetch(`https://api.github.com/repos/${libraryInfo.owner}/${libraryInfo.repo}`);
+
             // Make a list of the links
             let githubLink = `https://github.com/${libraryInfo.owner}/${libraryInfo.repo}`;
             let links = libraryInfo.links ? libraryInfo.links.map(link => `[${link.name}](${link.url})`) : []; // Can be empty array or null, sigh
             if (links.length == 0 || links.some(l => l.indexOf(githubLink) != 0)) // Make sure there is at least the github link
                 links = [`[Github](${githubLink})`].concat(links);
 
-            resolve(`${libraryInfo.repo} by ${libraryInfo.owner}: ${links.join(", ")}\n`);
+            const repoResponse = await repoResponsePromise;
+            const repoInfo = await repoResponse.json();
+
+            resolve({
+                valid: true,
+                stars: repoInfo.stargazers_count,
+                description: `${libraryInfo.repo} by ${libraryInfo.owner} (⭐ ${repoInfo.stargazers_count}): ${links.join(", ")}\n`
+            });
         });        
     }
 }
