@@ -41,6 +41,7 @@ export interface SharedSettings {
         aliases: string[],
         noLanguage: string,
         languageList: string,
+        githubError: string,
         baseURL: string
     },
     versionChecker: {
