@@ -33,7 +33,7 @@ interface APILibraryStruct {
     tags: string[];
 }
 
-export default class GithubLibraries {
+export default class RiotAPILibraries {
     private bot: Discord.Client;
     private settings: SharedSettings;
 
