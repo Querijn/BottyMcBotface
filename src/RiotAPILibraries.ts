@@ -23,12 +23,17 @@ interface GithubAPIStruct {
     _links: LinkStruct;
 }
 
+interface APILibraryLink {
+    name: string,
+    url: string,
+}
+
 interface APILibraryStruct {
     owner: string;
     repo: string;
     language: string;
     description: string;
-    links: any;
+    links: APILibraryLink[];
     metadata: any;
     tags: string[];
 }
