@@ -1,4 +1,5 @@
 import { SharedSettings } from "./SharedSettings";
+import { PersonalSettings } from "./PersonalSettings";
 import fetch from "node-fetch";
 
 import Discord = require("discord.js");
@@ -42,20 +43,33 @@ interface LibraryDescription
 {
     valid: boolean,
     stars: number,
-    description: string
+    library: APILibraryStruct | null,
+    links: string[]
 }
 
 export default class RiotAPILibraries {
     private bot: Discord.Client;
     private settings: SharedSettings;
 
-    constructor(bot: Discord.Client, settings: SharedSettings) {
+    private lastCall: number;
+
+    private fetchSettings: object;
+
+    constructor(bot: Discord.Client, personalSettings: PersonalSettings, settings: SharedSettings) {
         console.log("Requested Github extension..");
         this.bot = bot;
         this.settings = settings;
 
         this.bot.on("ready", this.onBot.bind(this));
         this.bot.on("message", this.onCommand.bind(this));
+
+        this.fetchSettings = {
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                Authorization: `Basic ${new Buffer(personalSettings.github.username + ":" + personalSettings.github.password, "binary").toString("base64")}`
+            }
+        }
     }
 
     onBot() {
@@ -77,7 +91,7 @@ export default class RiotAPILibraries {
         if (this.settings.githubLibraries.aliases.some(x => x === command)) {
 
             if (language === "list") {
-                const response = await fetch(this.settings.githubLibraries.baseURL);
+                const response = await fetch(this.settings.githubLibraries.baseURL, this.fetchSettings);
                 const data = await response.json() as GithubAPIStruct[];
 
                 let languages = "`" + data.map(x => x.name).join(", ") + "`";
@@ -106,23 +120,17 @@ export default class RiotAPILibraries {
             }
 
             const libraryDescriptions = (await Promise.all(promises))
-            .filter(l => l.valid) // Only valid ones
-            .sort((a, b) => b.stars - a.stars) // Sort by stars
-            .map(d => d ? d.description : ""); // Take description
+            .filter(l => l.valid && l.library) // Only valid ones
+            .sort((a, b) => b.stars - a.stars); // Sort by stars
         
             let messages = [""];
+            const embed = new Discord.RichEmbed({
+                title: `List of libraries for ${language}:`
+            });
             for (const desc of libraryDescriptions) {
-                if (messages[messages.length - 1].length + desc.length > 1024) {
-                    messages.push(desc + '\n');
-                    continue;
-                }
-
-                messages[messages.length - 1] += desc;
+                if (!desc.library) continue;
+                embed.addField(`${desc.library.repo} (⭐ ${desc.stars ? desc.stars : "unknown"})`, desc.links.join(", "), true);
             }
-
-            const embed = new Discord.RichEmbed();
-            for (let i = 0; i < messages.length; i++) 
-                embed.addField(i == 0 ? `List of libraries for ${language}:` : "📚 (List too long, continues below)", messages[i]);
 
             let editMessage = await editMessagePromise; 
             if (Array.isArray(editMessage)) editMessage = editMessage[0];
@@ -137,16 +145,16 @@ export default class RiotAPILibraries {
             const libraryInfo: APILibraryStruct = await libraryResponse.json();
     
             if (!libraryInfo.tags || libraryInfo.tags.indexOf("v3") === -1) {
-                resolve({ stars: 0, valid: false, description: "" });
+                resolve({ stars: 0, valid: false, library: null, links: [] });
             }
             
-            const repoResponsePromise = fetch(`https://api.github.com/repos/${libraryInfo.owner}/${libraryInfo.repo}`);
+            const repoResponsePromise = fetch(`https://api.github.com/repos/${libraryInfo.owner}/${libraryInfo.repo}`, this.fetchSettings);
 
             // Make a list of the links
-            let githubLink = `https://github.com/${libraryInfo.owner}/${libraryInfo.repo}`;
+            let githubLink = `github.com/${libraryInfo.owner}/${libraryInfo.repo}`;
             let links = libraryInfo.links ? libraryInfo.links.map(link => `[${link.name}](${link.url})`) : []; // Can be empty array or null, sigh
             if (links.length == 0 || links.some(l => l.indexOf(githubLink) != 0)) // Make sure there is at least the github link
-                links = [`[Github](${githubLink})`].concat(links);
+                links = [`[Github](https://${githubLink})`].concat(links);
 
             const repoResponse = await repoResponsePromise;
             const repoInfo = await repoResponse.json();
@@ -154,7 +162,8 @@ export default class RiotAPILibraries {
             resolve({
                 valid: true,
                 stars: repoInfo.stargazers_count,
-                description: `${libraryInfo.repo} by ${libraryInfo.owner} (⭐ ${repoInfo.stargazers_count}): ${links.join(", ")}\n`
+                library: libraryInfo,
+                links: links
             });
         });        
     }

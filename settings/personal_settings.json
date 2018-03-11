@@ -12,8 +12,8 @@
         "password": ""
     },
     "github": { 
-        "clientId": "",
-        "clientSecret": ""
+        "username": "Querijn",
+        "password": ""
     },
     "isProduction": false
 }
