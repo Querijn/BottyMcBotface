@@ -129,7 +129,7 @@ export default class RiotAPILibraries {
             });
             for (const desc of libraryDescriptions) {
                 if (!desc.library) continue;
-                embed.addField(`${desc.library.repo} (⭐ ${desc.stars ? desc.stars : "unknown"})`, desc.links.join(", "), true);
+                embed.addField(`${desc.library.repo} (⭐ ${desc.stars ? desc.stars : "0"})`, desc.links.join(", "));
             }
 
             let editMessage = await editMessagePromise; 
