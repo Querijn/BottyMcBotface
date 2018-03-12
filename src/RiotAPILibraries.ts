@@ -39,8 +39,7 @@ interface APILibraryStruct {
     tags: string[];
 }
 
-interface LibraryDescription
-{
+interface LibraryDescription {
     valid: boolean,
     stars: number,
     library: APILibraryStruct | null,
