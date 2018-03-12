@@ -123,12 +123,9 @@ export default class RiotAPILibraries {
             .filter(l => l.valid && l.library) // Only valid ones
             .sort((a, b) => b.stars - a.stars); // Sort by stars
         
-            let messages = [""];
-            const embed = new Discord.RichEmbed({
-                title: `List of libraries for ${language}:`
-            });
+            const embed = new Discord.RichEmbed({ title: `List of libraries for ${language}:` });
             for (const desc of libraryDescriptions) {
-                if (!desc.library) continue;
+                if (!desc.library) continue; // https://github.com/Microsoft/TypeScript/issues/18562
                 embed.addField(`${desc.library.repo} (⭐ ${desc.stars ? desc.stars : "0"})`, desc.links.join(", "));
             }
 
