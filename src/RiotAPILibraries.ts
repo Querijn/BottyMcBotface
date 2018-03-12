@@ -108,11 +108,7 @@ export default class RiotAPILibraries {
 
             let editMessagePromise = message.channel.send(`Found the list of libraries for ${language}, listing ${libraryList.length} libraries, this post will be edited with the result.`);
 
-            let promises: Promise<LibraryDescription>[] = [];
-            for (const library of libraryList) {
-                promises.push(this.describeAPILibrary(library));
-            }
-
+            const promises = libraryList.map(lib => this.describeAPILibrary(lib));
             const libraryDescriptions = (await Promise.all(promises))
             .filter(l => l.valid && l.library) // Only valid ones
             .sort((a, b) => b.stars - a.stars); // Sort by stars
