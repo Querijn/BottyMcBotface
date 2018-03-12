@@ -79,12 +79,7 @@ export default class RiotAPILibraries {
 
         const args = message.content.split(" ");
 
-        // if it's just our command, get the list
-        if (args.length < 2) {
-            args.push("list");
-        }
-
-        const [command, language] = args;
+        const [command, language = "list"] = args;
 
         // if !libs, !libraries, etc
         if (this.settings.githubLibraries.aliases.some(x => x === command)) {
