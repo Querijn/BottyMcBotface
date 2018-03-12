@@ -116,7 +116,7 @@ export default class RiotAPILibraries {
             const embed = new Discord.RichEmbed({ title: `List of libraries for ${language}:` });
             for (const desc of libraryDescriptions) {
                 if (!desc.library) continue; // https://github.com/Microsoft/TypeScript/issues/18562
-                embed.addField(`${desc.library.repo} (⭐ ${desc.stars ? desc.stars : "0"})`, `${desc.library.description ? desc.library.description + "\n" : " "}${desc.links.join(", ")}`);
+                embed.addField(`${desc.library.repo} (★ ${desc.stars ? desc.stars : "0"})`, `${desc.library.description ? desc.library.description + "\n" : " "}${desc.links.join(", ")}`);
             }
 
             let editMessage = await editMessagePromise; 
