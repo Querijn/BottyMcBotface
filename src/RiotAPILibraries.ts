@@ -66,7 +66,7 @@ export default class RiotAPILibraries {
             headers: {
                 Accept: "application/json",
                 "Content-Type": "application/json",
-                Authorization: `Basic ${new Buffer(personalSettings.github.username + ":" + personalSettings.github.password, "binary").toString("base64")}`
+                Authorization: `Basic ${Buffer.from(personalSettings.github.username + ":" + personalSettings.github.password).toString("base64")}`
             }
         }
     }
