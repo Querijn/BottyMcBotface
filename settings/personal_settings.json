@@ -11,5 +11,9 @@
         "username": "<lowercase summoner name> (<region>)",
         "password": ""
     },
+    "github": { 
+        "username": "Querijn",
+        "password": ""
+    },
     "isProduction": false
 }
