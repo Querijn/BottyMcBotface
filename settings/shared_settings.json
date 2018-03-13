@@ -1,5 +1,8 @@
 {
     "server": "342988445498474498",
+    "botty": {
+        "prefix": "!"
+    },
     "channelAccess": {
         "forcedChannels": [
             "301148922443726870",
@@ -8,10 +11,17 @@
         ],
         "restrictedChannels": [
             "190817288507752448"
+        ],
+        "aliases":[
+            "join",
+            "leave"
         ]
     },
     "uptimeSettings": {
-        "checkInterval": 60000
+        "checkInterval": 60000,
+        "aliases": [
+            "uptime"
+        ]
     },
     "techBlog": {
         "checkInterval": 300000,
@@ -45,24 +55,37 @@
             "350692046631206912",
             "347539422943903755"
         ],
+        "aliases":[
+            "ask",
+            "ask_for",
+            "open",
+            "close",
+            "question_list",
+            "question_remove"
+        ],
         "openMessage": "OFFICE HOURS OPEN\nThis channel is not for discussion, only for questions related to your app or the API as a whole. This channel should be used instead of PMing Rioters.",
         "closeMessage": "OFFICE HOURS CLOSED\nIf you wish to ask a question to a Rioter, send {botty} a `!ask <your question>` command. You will be mentioned the next time this channel opens.\nIf you don't have a question, but you would like to be here for the next time, react with a `:raised_hand:`",
         "addedMessage": "Your question is added to the queue, I will tag you with this message the next time #office-hours opens!",
         "removedMessage": "The question has been removed."
     },
-    "githubLibraries": {
+    "riotApiLibraries": {
         "aliases": [
-            "!lib",
-            "!libs",
-            "!libraries"
+            "lib",
+            "libs",
+            "libraries"
         ],
         "noLanguage": "No libraries found for language: ",
         "languageList": "I have libraries for one of the following languages: {languages}\nChoose one you like and reply with `!libs <your language>`.",
         "githubError": "I tried to get the language from Github, but Github replied with status code ",
-        "baseURL":"https://api.github.com/repos/WxWatch/riot-api-libraries/contents/libraries/"
+        "baseURL": "https://api.github.com/repos/WxWatch/riot-api-libraries/contents/libraries/"
     },
     "autoReact": {
-        "emoji": "408527155891273738"
+        "emoji": "408527155891273738",
+        "aliases":[
+            "toggle_default_thinking",
+            "toggle_react",
+            "refresh_thinking"
+        ]
     },
     "versionChecker": {
         "checkInterval": 1800000,
@@ -79,8 +102,8 @@
         "checkInterval": 300000,
         "apiOnFireThreshold": 0.1,
         "statusUrl": "http://querijn.codes/api_status/1.1/",
-        "command": "status",
         "aliases": [
+            "status",
             "apistatus"
         ],
         "onFireImages": [

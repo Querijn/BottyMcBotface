@@ -24,20 +24,25 @@ const personalSettings = fileBackedObject<PersonalSettings>("settings/personal_s
 const bot = new Botty(personalSettings, sharedSettings);
 
 // Load extensions
+//const honeypot = new Honeypot(bot.client, sharedSettings, personalSettings);
+
+// TODO: add registerEvent for these?
+const joinMessaging = new JoinMessaging(bot.client, sharedSettings);
 const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
 const logger = new Logger(bot.client, sharedSettings);
-const uptime = new Uptime(bot.client, sharedSettings, personalSettings, "data/uptime_data.json");
 const keyFinder = new KeyFinder(bot.client, sharedSettings, "data/riot_keys.json");
 const forum = new ForumReader(bot.client, sharedSettings, personalSettings, "data/forum_data.json", keyFinder);
-//const honeypot = new Honeypot(bot.client, sharedSettings, personalSettings);
-const autoReact = new AutoReact(bot.client, sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json");
-const officeHours = new OfficeHours(bot.client, sharedSettings, "data/office_hours_data.json");
-const riotAPILibraries = new RiotAPILibraries(bot.client, personalSettings, sharedSettings);
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
-//const channelAccess = new ChannelAccess(bot.client, sharedSettings);
+
+// info seems like a pain to fix because of the .note syntax, so imma just leave it like this for now
 const info = new Info(bot.client, sharedSettings, "data/info_data.json", versionChecker);
-const apiStatus = new ApiStatus(bot.client, sharedSettings);
-const joinMessaging = new JoinMessaging(bot.client, sharedSettings);
+
+//bot.registerCommand(sharedSettings.channelAccess.aliases, new ChannelAccess(bot.client, sharedSettings));
+bot.registerCommand(sharedSettings.officehours.aliases, new OfficeHours(sharedSettings, "data/office_hours_data.json"))
+bot.registerCommand(sharedSettings.autoReact.aliases, new AutoReact(sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json"))
+bot.registerCommand(sharedSettings.uptimeSettings.aliases, new Uptime(sharedSettings, personalSettings, "data/uptime_data.json"))
+bot.registerCommand(sharedSettings.apiStatus.aliases, new ApiStatus(sharedSettings));
+bot.registerCommand(sharedSettings.riotApiLibraries.aliases, new RiotAPILibraries(personalSettings, sharedSettings));
 
 // start bot
 bot.start();

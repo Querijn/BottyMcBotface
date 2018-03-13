@@ -1,6 +1,7 @@
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
+import { CommandHandler, CommandBase } from "./CommandHandler";
 
 import Discord = require("discord.js");
 import { GuildMember } from "discord.js";
@@ -28,6 +29,7 @@ export default class Botty {
             //.on("debug", console.log)
             .on("disconnect", () => console.warn("Disconnected!"))
             .on("reconnecting", () => console.warn("Reconnecting..."))
+            .on("message", this.handleCommands.bind(this))
             .on("connect", () => console.warn("Connected."))
             .on("ready", this.onConnect.bind(this));
 
@@ -35,16 +37,15 @@ export default class Botty {
     }
 
     initListeners() {
-
-        this.client.on("guildMemberAdd", function(user: GuildMember) {
+        this.client.on("guildMemberAdd", function (user: GuildMember) {
             console.log(`${user.displayName} joined the server.`);
         }.bind(this));
 
-        this.client.on("guildMemberRemove", function(user: GuildMember) {
+        this.client.on("guildMemberRemove", function (user: GuildMember) {
             console.log(`${user.displayName} left (or was removed) from the server.`);
         }.bind(this));
 
-        this.client.on("guildMemberUpdate", function(oldMember: GuildMember, newMember: GuildMember) {
+        this.client.on("guildMemberUpdate", function (oldMember: GuildMember, newMember: GuildMember) {
 
             if (oldMember.displayName != newMember.displayName)
                 console.log(`${oldMember.displayName} changed his display name to ${newMember.displayName}.`);
@@ -65,7 +66,7 @@ export default class Botty {
             const oldStatus = (oldMember.user.presence && oldMember.user.presence.status) ? oldMember.user.presence.status : "offline (undefined)";
             const newStatus = (newMember.user.presence && newMember.user.presence.status) ? newMember.user.presence.status : "offline (undefined)";
             if (oldStatus != newStatus && (newStatus == "offline" || newStatus == "online")) console.log(`${oldMember.displayName} is now ${newStatus} (was ${oldStatus}).`);
-            
+
         }.bind(this));
         console.log("Initialised listeners.");
     }
@@ -75,7 +76,7 @@ export default class Botty {
 
         const guild = this.client.guilds.get(this.sharedSettings.server);
         if (!guild) {
-            console.error(`Botty: Incorrect setting for the server: ${this.sharedSettings.server }`);
+            console.error(`Botty: Incorrect setting for the server: ${this.sharedSettings.server}`);
             return;
         }
 
@@ -87,5 +88,33 @@ export default class Botty {
 
     start() {
         return this.client.login(this.personalSettings.discord.key);
+    }
+
+    private commands: CommandBase[] = [];
+
+    handleCommands(message: Discord.Message) {
+
+        if (message.author.bot) return;
+        if (!message.content.startsWith(this.sharedSettings.botty.prefix)) return;
+
+        const parts = message.content.split(" ");
+        const command = parts[0].substr(1);
+
+        this.commands.forEach(cmd => {
+            if (cmd.alias === command) {
+                cmd.handler.onCommand(message.author, <Discord.TextChannel>message.channel, message, command, parts.slice(1))
+            }
+        });
+    }
+
+    registerCommand(aliases: string[], commandHandler: CommandHandler) {
+        aliases.forEach(a => {
+            this.commands.push({
+                alias: a,
+                handler: commandHandler
+            });
+        });
+
+        commandHandler.onReady(this.client);
     }
 }

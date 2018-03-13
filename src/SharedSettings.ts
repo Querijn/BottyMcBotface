@@ -1,11 +1,16 @@
 export interface SharedSettings {
     server: string,
+    botty: {
+        prefix: string
+    }
     channelAccess: {
         forcedChannels: string[],
-        restrictedChannels: string[]
+        restrictedChannels: string[],
+        aliases: string[]
     },
     uptimeSettings: {
-        checkInterval: number
+        checkInterval: number,
+        aliases: string[]
     },
     techBlog: {
         checkInterval: number,
@@ -24,7 +29,8 @@ export interface SharedSettings {
         reportChannel: string;
     },
     autoReact: {
-        emoji: string;
+        emoji: string,
+        aliases: string[]
     },
     info: {
         allowedRoles: string[],
@@ -32,12 +38,13 @@ export interface SharedSettings {
     },
     officehours: {
         allowedRoles: string[],
+        aliases: string[],
         openMessage: string,
         closeMessage: string,
         addedMessage: string,
         removedMessage: string
     },
-    githubLibraries: {
+    riotApiLibraries: {
         aliases: string[],
         noLanguage: string,
         languageList: string,

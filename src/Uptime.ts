@@ -4,6 +4,7 @@ import prettyMs = require("pretty-ms");
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
+import { CommandHandler } from "./CommandHandler";
 
 export interface UptimeData {
     LastUptime: number;
@@ -11,13 +12,13 @@ export interface UptimeData {
     TotalDowntime: number;
 }
 
-export default class Uptime {
-    private bot: Discord.Client;
+export default class Uptime extends CommandHandler {
     private sharedSettings: SharedSettings;
     private personalSettings: PersonalSettings;
     private data: UptimeData;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, personalSettings: PersonalSettings, dataFile: string) {
+    constructor(sharedSettings: SharedSettings, personalSettings: PersonalSettings, dataFile: string) {
+        super();
         console.log("Requested uptime extension..");
 
         this.sharedSettings = sharedSettings;
@@ -27,18 +28,15 @@ export default class Uptime {
         this.data = fileBackedObject(dataFile);
         console.log("Successfully loaded uptime data file.");
 
-        this.bot = bot;
-        this.bot.on("ready", this.onBot.bind(this));
-        this.bot.on("message", this.onMessage.bind(this));
         setInterval(this.onUpdate.bind(this), this.sharedSettings.uptimeSettings.checkInterval);
     }
 
-    onBot() {
+    onReady(bot: Discord.Client) {
         console.log("uptime extension loaded.");
     }
 
-    onMessage(message: Discord.Message) {
-        if (!message.content.startsWith("!uptime")) return;
+
+    onCommand(sender: Discord.User, channel: Discord.TextChannel, message: Discord.Message, command: string, args: string[]) {
         message.reply(`the bot has been up for ${this.uptimePercentage}% of the time. Bot started ${this.uptime} ago.`);
     }
 

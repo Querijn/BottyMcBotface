@@ -1,8 +1,9 @@
 import { SharedSettings } from "./SharedSettings";
-import APIStatusAPI, {APIStatus} from './ApiStatusApi';
+import APIStatusAPI, { APIStatus } from './ApiStatusApi';
 import * as prettyMs from 'pretty-ms';
 
 import Discord = require("discord.js");
+import { CommandHandler } from "./CommandHandler";
 
 /**
  * Map from API name (e.g. champion-mastery-v3) to the string used in the embed field.
@@ -11,7 +12,7 @@ import Discord = require("discord.js");
  * @interface ApiStates
  */
 interface ApiStates {
-    [key: string]: string;    
+    [key: string]: string;
 }
 
 interface StatusEmbedState {
@@ -21,44 +22,32 @@ interface StatusEmbedState {
     allApisIssues: boolean;
 }
 
-export default class ApiStatus {
+export default class ApiStatus extends CommandHandler {
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
-    private command: string;
     private apiStatusAPI: APIStatusAPI;
 
     private lastCheckTime: number;
     private currentStatus: StatusEmbedState;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings) {
-        console.log("Requested API Status extension..");
-        this.bot = bot;
-        this.command = sharedSettings.apiStatus.command;
+    constructor(sharedSettings: SharedSettings) {
+        super();
 
         this.sharedSettings = sharedSettings;
         this.lastCheckTime = 0;
         this.apiStatusAPI = new APIStatusAPI(this.sharedSettings.apiStatus.statusUrl, this.sharedSettings.apiStatus.checkInterval);
-
-        this.bot.on("ready", this.onBot.bind(this));
-        this.bot.on("message", this.onInfo.bind(this));
     }
 
-    onBot() {
+    onReady(bot: Discord.Client) {
         console.log("API Status extension loaded.");
     }
 
-    async onInfo(message: Discord.Message) {
-        if (message.author.bot) return;
-
-        const content = message.cleanContent;
-        if (!this.isApiStatusCommand(content))
-            return;
-
+    async onCommand(sender: Discord.User, channel: Discord.TextChannel, message: Discord.Message, command: string, args: string[]) {
         const apiStatus = await this.getApiStatus();
 
-        const fields: {name: string, value: string, inline: boolean}[] = [];
-        for (const api in apiStatus.api){ 
-            fields.push({name: api, value: apiStatus.api[api], inline: true});
+        const fields: { name: string, value: string, inline: boolean }[] = [];
+        for (const api in apiStatus.api) {
+            fields.push({ name: api, value: apiStatus.api[api], inline: true });
         }
 
         if (!apiStatus.allApisIssues) {
@@ -72,9 +61,9 @@ export default class ApiStatus {
         // fixes formatting with empty fields
         while (fields.length % 3 != 0) {
             fields.push({
-              "name": "\u200b",
-              "value": "\u200b",
-              "inline": true
+                "name": "\u200b",
+                "value": "\u200b",
+                "inline": true
             });
         }
 
@@ -92,21 +81,21 @@ export default class ApiStatus {
             embedContent.image = { url: this.pickRandomOnFireImage() };
         }
 
-        message.channel.send({embed: embedContent});
+        channel.send({ embed: embedContent });
     }
 
     private getLastUpdate(): string {
         const timeDiff = Date.now() - this.lastCheckTime;
         return "Last refresh: " + prettyMs(Math.max(timeDiff, 1000), { verbose: true, secDecimalDigits: 0 }) + " ago";
     }
-    
+
     private async getApiStatus(): Promise<StatusEmbedState> {
         // cache embed state
         const timeDiff = Date.now() - this.lastCheckTime;
         if (timeDiff > this.sharedSettings.apiStatus.checkInterval) {
             const apiStatus = await this.apiStatusAPI.getApiStatus();
             this.currentStatus = this.parseApiStatus(apiStatus);
-            this.lastCheckTime = Date.now();            
+            this.lastCheckTime = Date.now();
         }
 
         return this.currentStatus;
@@ -120,10 +109,10 @@ export default class ApiStatus {
         let allApisIssues = false;
         let apiIssuesCounter = 0;
         let apiCounter = 0;
-        const statusEmbed: StatusEmbedState = { api: {}, onFire: false, allApisOK: true, allApisIssues: false};
+        const statusEmbed: StatusEmbedState = { api: {}, onFire: false, allApisOK: true, allApisIssues: false };
 
         for (let api in apiStatus) {
-            const regionStates: {troubled: string[], up: string[], down: string[]}  = {"troubled": [], "up": [], "down": []};
+            const regionStates: { troubled: string[], up: string[], down: string[] } = { "troubled": [], "up": [], "down": [] };
             let regionCounter = 0;
             for (let region in apiStatus[api]) {
                 const regionState = apiStatus[api][region];
@@ -168,7 +157,7 @@ export default class ApiStatus {
         for (let j = 0; j < arr.length; j++) {
             const a = arr[j];
             retStr += a + (j < arr.length - 1 ? ', ' : '');
-    
+
             if (j % 4 == 3) {
                 retStr += '\n';
             }
@@ -180,18 +169,10 @@ export default class ApiStatus {
         retStr = retStr.substring(0, pad.length);
         return retStr;
     }
-    
+
     private pickRandomOnFireImage(): string {
         // get rand in [0, number of on fire images - 1]
         const rand = Math.floor(Math.random() * this.sharedSettings.apiStatus.onFireImages.length);
         return this.sharedSettings.apiStatus.onFireImages[rand];
-    }
-
-    private startsWithAlias(msgContent: string): boolean {
-        return this.sharedSettings.apiStatus.aliases.some(x => msgContent.startsWith("!" + x));
-    }
-
-    private isApiStatusCommand(content: string): boolean {
-        return content.startsWith("!" + this.command) || this.startsWithAlias(content);
     }
 }
