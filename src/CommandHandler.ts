@@ -5,7 +5,12 @@ export abstract class CommandHandler {
     abstract onReady(bot: Discord.Client): void;
 }
 
-export interface CommandBase {
-    alias: string;
+export interface CommandHolder {
+    command: Command;
     handler: CommandHandler;
+}
+
+export interface Command {
+    aliases: string[];
+    description: string;
 }

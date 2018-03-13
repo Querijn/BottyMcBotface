@@ -2,7 +2,7 @@
     "server": "342988445498474498",
     "botty": {
         "prefix": "!",
-        "nickname":"Botty McBotface"
+        "nickname": "Botty McBotface"
     },
     "channelAccess": {
         "forcedChannels": [
@@ -13,15 +13,30 @@
         "restrictedChannels": [
             "190817288507752448"
         ],
-        "commands":[
-            "join",
-            "leave"
+        "commands": [
+            {
+                "aliases": [
+                    "join"
+                ],
+                "description": "Joins a channel"
+            },
+            {
+                "aliases": [
+                    "leave"
+                ],
+                "description": "Leaves a channel"
+            }
         ]
     },
     "uptimeSettings": {
         "checkInterval": 60000,
         "commands": [
-            "uptime"
+            {
+                "aliases": [
+                    "uptime"
+                ],
+                "description": "Checks the uptime of botty"
+            }
         ]
     },
     "techBlog": {
@@ -47,7 +62,14 @@
             "350692046631206912",
             "347539422943903755"
         ],
-        "command": "note"
+        "commands": [
+            {
+                "aliases": [
+                    "note"
+                ],
+                "description": "this hasnt been changed to use the command system yet..."
+            }
+        ]
     },
     "officehours": {
         "allowedRoles": [
@@ -56,13 +78,43 @@
             "350692046631206912",
             "347539422943903755"
         ],
-        "commands":[
-            "ask",
-            "ask_for",
-            "open",
-            "close",
-            "question_list",
-            "question_remove"
+        "commands": [
+            {
+                "aliases": [
+                    "ask"
+                ],
+                "description": "Ask a question at the next #office-hours"
+            },
+            {
+                "aliases": [
+                    "ask_for"
+                ],
+                "description": "Ask a question for someone else at the next #office-hours"
+            },
+            {
+                "aliases": [
+                    "open"
+                ],
+                "description": "Open #office-hours"
+            },
+            {
+                "aliases": [
+                    "close"
+                ],
+                "description": "Close #office-hours"
+            },
+            {
+                "aliases": [
+                    "question_list"
+                ],
+                "description": "Print the list of questions waiting for #office-hours"
+            },
+            {
+                "aliases": [
+                    "question_remove"
+                ],
+                "description": "Remove a question from the list waiting for #office-hours"
+            }
         ],
         "openMessage": "OFFICE HOURS OPEN\nThis channel is not for discussion, only for questions related to your app or the API as a whole. This channel should be used instead of PMing Rioters.",
         "closeMessage": "OFFICE HOURS CLOSED\nIf you wish to ask a question to a Rioter, send {botty} a `!ask <your question>` command. You will be mentioned the next time this channel opens.\nIf you don't have a question, but you would like to be here for the next time, react with a `:raised_hand:`",
@@ -71,9 +123,14 @@
     },
     "riotApiLibraries": {
         "commands": [
-            "lib",
-            "libs",
-            "libraries"
+            {
+                "aliases": [
+                    "lib",
+                    "libs",
+                    "libraries"
+                ],
+                "description": "Print a list of the public libraries"
+            }
         ],
         "noLanguage": "No libraries found for language: ",
         "languageList": "I have libraries for one of the following languages: {languages}\nChoose one you like and reply with `!libs <your language>`.",
@@ -82,10 +139,25 @@
     },
     "autoReact": {
         "emoji": "408527155891273738",
-        "commands":[
-            "toggle_default_thinking",
-            "toggle_react",
-            "refresh_thinking"
+        "commands": [
+            {
+                "aliases": [
+                    "toggle_default_thinking"
+                ],
+                "description": "Decides if botty reacts with the normal thingking emote, or one of the custom ones"
+            },
+            {
+                "aliases": [
+                    "toggle_react"
+                ],
+                "description": "Decides if botty should react to your messages"
+            },
+            {
+                "aliases": [
+                    "refresh_thinking"
+                ],
+                "description": "Reloads the thinking emojis"
+            }
         ]
     },
     "versionChecker": {

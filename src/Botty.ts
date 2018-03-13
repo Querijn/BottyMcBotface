@@ -1,7 +1,7 @@
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
-import { CommandHandler, CommandBase } from "./CommandHandler";
+import { CommandHandler, CommandHolder, Command } from "./CommandHandler";
 
 import Discord = require("discord.js");
 import { GuildMember } from "discord.js";
@@ -17,7 +17,7 @@ export default class Botty {
     public readonly client = new Discord.Client();
     private personalSettings: PersonalSettings;
     private sharedSettings: SharedSettings;
-    private commands: CommandBase[] = [];
+    private commands: CommandHolder[] = [];
 
     constructor(personalSettings: PersonalSettings, sharedSettings: SharedSettings) {
         this.personalSettings = personalSettings;
@@ -92,25 +92,31 @@ export default class Botty {
     }
 
     handleCommands(message: Discord.Message) {
-
         if (message.author.bot) return;
         if (!message.content.startsWith(this.sharedSettings.botty.prefix)) return;
 
         const parts = message.content.split(" ");
         const command = parts[0].substr(1);
 
+        if (command === "help") {
+            let response = "";
+            this.commands.forEach(holder => response += `${holder.command.aliases}: ${holder.command.description}\n`);
+            message.reply(response);
+            return;
+        }
+
         this.commands.forEach(cmd => {
-            if (cmd.alias === command) {
+            if (cmd.command.aliases.some(x => x === command)) {
                 cmd.handler.onCommand(message, command, parts.slice(1));
             }
         });
     }
 
-    registerCommand(aliases: string[], commandHandler: CommandHandler) {
-        aliases.forEach(a => {
+    registerCommand(newCommand: Command[], commandHandler: CommandHandler) {
+        newCommand.forEach(cmd => {
             this.commands.push({
-                alias: a,
-                handler: commandHandler
+                handler: commandHandler,
+                command: cmd
             });
         });
 
