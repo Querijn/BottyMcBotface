@@ -50,8 +50,8 @@ export default class AutoReact extends CommandHandler {
         }
     }
 
-    onCommand(sender: Discord.User, channel: Discord.TextChannel, message: Discord.Message, command: string, args: string[]) {
-        const authorId = sender.id;
+    onCommand(message: Discord.Message, command: string, args: string[]) {
+        const authorId = message.author.id;
 
         if (command === "refresh_thinking") {
             message.reply("reloading thinking emojis.")

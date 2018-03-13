@@ -71,27 +71,27 @@ export default class RiotAPILibraries extends CommandHandler {
         console.log("Github extension loaded.");
     }
 
-    onCommand(sender: Discord.User, channel: Discord.TextChannel, message: Discord.Message, command: string, args: string[]) {
+    onCommand(message: Discord.Message, command: string, args: string[]) {
 
         if (args.length === 0) {
-            return this.getList(channel);
+            return this.getList(message);
         }
 
         if (args.length > 1) {
-            return this.invalidArguments(channel, args);
+            return this.invalidArguments(message, args);
         }
 
         const param = args[0];
 
         if (param === "list") {
-            return this.getList(channel);
+            return this.getList(message);
         }
 
-        return this.getListForLanguage(channel, param);
+        return this.getListForLanguage(message, param);
     }
 
-    invalidArguments(channel: Discord.TextChannel, arg: string[]) {
-        channel.send(`unknown argument for command; ${arg}`);
+    invalidArguments(message: Discord.Message, arg: string[]) {
+        message.channel.send(`unknown argument for command; ${arg}`);
     }
 
     async describeAPILibrary(json: GithubAPIStruct): Promise<LibraryDescription> {
@@ -123,29 +123,29 @@ export default class RiotAPILibraries extends CommandHandler {
     }
 
 
-    async getList(channel: Discord.TextChannel) {
+    async getList(message: Discord.Message) {
         const response = await fetch(this.settings.riotApiLibraries.baseURL, this.fetchSettings);
         const data = await response.json() as GithubAPIStruct[];
 
         let languages = "`" + data.map(x => x.name).join(", ") + "`";
         let reply = this.settings.riotApiLibraries.languageList.replace("{languages}", languages);
-        channel.send(reply);
+        message.channel.send(reply);
     }
 
-    async getListForLanguage(channel: Discord.TextChannel, language: string) {
+    async getListForLanguage(message: Discord.Message, language: string) {
         const response = await fetch(this.settings.riotApiLibraries.baseURL + language);
         if (response.status != 200) {
-            channel.send(this.settings.riotApiLibraries.githubError + response.status);
+            message.channel.send(this.settings.riotApiLibraries.githubError + response.status);
             return;
         }
 
         const libraryList = await response.json();
         if (!Array.isArray(libraryList) || libraryList.length === 0 || !libraryList[0].sha) {
-            channel.send(this.settings.riotApiLibraries.noLanguage + language);
+            message.channel.send(this.settings.riotApiLibraries.noLanguage + language);
             return;
         }
 
-        let editMessagePromise = channel.send(`Found the list of libraries for ${language}, listing ${libraryList.length} libraries, this post will be edited with the result.`);
+        let editMessagePromise = message.channel.send(`Found the list of libraries for ${language}, listing ${libraryList.length} libraries, this post will be edited with the result.`);
 
         const promises = libraryList.map(lib => this.describeAPILibrary(lib));
         const libraryDescriptions = (await Promise.all(promises))

@@ -36,7 +36,7 @@ export default class Uptime extends CommandHandler {
     }
 
 
-    onCommand(sender: Discord.User, channel: Discord.TextChannel, message: Discord.Message, command: string, args: string[]) {
+    onCommand(message: Discord.Message, command: string, args: string[]) {
         message.reply(`the bot has been up for ${this.uptimePercentage}% of the time. Bot started ${this.uptime} ago.`);
     }
 

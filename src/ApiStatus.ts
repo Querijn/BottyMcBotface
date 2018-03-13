@@ -42,7 +42,7 @@ export default class ApiStatus extends CommandHandler {
         console.log("API Status extension loaded.");
     }
 
-    async onCommand(sender: Discord.User, channel: Discord.TextChannel, message: Discord.Message, command: string, args: string[]) {
+    async onCommand(message: Discord.Message, command: string, args: string[]) {
         const apiStatus = await this.getApiStatus();
 
         const fields: { name: string, value: string, inline: boolean }[] = [];
@@ -81,7 +81,7 @@ export default class ApiStatus extends CommandHandler {
             embedContent.image = { url: this.pickRandomOnFireImage() };
         }
 
-        channel.send({ embed: embedContent });
+        message.channel.send({ embed: embedContent });
     }
 
     private getLastUpdate(): string {

@@ -79,11 +79,11 @@ export default class OfficeHours extends CommandHandler {
         }
     }
 
-    onCommand(sender: Discord.User, channel: Discord.TextChannel, message: Discord.Message, command: string, args: string[]) {
+    onCommand(message: Discord.Message, command: string, args: string[]) {
 
         if (command === "ask") {
             const question = args.join(" ");
-            this.storeQuestion(question, message, sender.id, sender.username);
+            this.storeQuestion(question, message, message.author.id, message.author.username);
         }
 
         const isAdmin = (message.member && findOne(message.member.roles, this.sharedSettings.officehours.allowedRoles));
@@ -98,7 +98,7 @@ export default class OfficeHours extends CommandHandler {
             if (!asker) return;
 
             const question = args.slice(1).join(" ");
-            this.storeQuestion(question, message, asker.id, asker.toString(), sender.username);
+            this.storeQuestion(question, message, asker.id, asker.toString(), message.author.username);
             return;
         }
 

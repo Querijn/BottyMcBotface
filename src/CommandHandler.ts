@@ -1,7 +1,7 @@
 import Discord = require("discord.js");
 
 export abstract class CommandHandler {
-    abstract onCommand(sender: Discord.User, channel: Discord.TextChannel, message: Discord.Message, command: string, args: string[]): void;
+    abstract onCommand(message: Discord.Message, command: string, args: string[]): void;
     abstract onReady(bot: Discord.Client): void;
 }
 

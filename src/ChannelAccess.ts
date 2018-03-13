@@ -27,7 +27,7 @@ export default class ChannelAccess extends CommandHandler {
         this.guild = guild;
     }
 
-    onCommand(sender: Discord.User, channel: Discord.TextChannel, message: Discord.Message, command: string, args: string[]) {
+    onCommand(message: Discord.Message, command: string, args: string[]) {
 
         /** The specified name of the channel the user is trying to join/leave */
         let channelName: string | undefined;
@@ -57,21 +57,21 @@ export default class ChannelAccess extends CommandHandler {
             channelActor = this.guild.channels.find("name", channelName);
         }
 
-        if (!channel) {
+        if (!channelActor) {
             // TODO list available channels?
             this.reply(message, `Channel "${channelName}" does not exist`);
             return;
         }
 
-        if (channel.type !== "text") {
+        if (message.channel.type !== "text") {
             this.reply(message, "You may only join/leave text channels");
             return;
         }
 
         if (command === "join") {
-            this.joinChannel(message, <Discord.TextChannel>channel);
+            this.joinChannel(message, <Discord.TextChannel>message.channel);
         } else if (command === "leave") {
-            this.leaveChannel(message, <Discord.TextChannel>channel);
+            this.leaveChannel(message, <Discord.TextChannel>message.channel);
         }
     }
 
