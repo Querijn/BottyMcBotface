@@ -101,7 +101,7 @@ export default class Botty {
 
         this.commands.forEach(cmd => {
             if (cmd.alias === command) {
-                cmd.handler.onCommand(message, command, parts.slice(1))
+                cmd.handler.onCommand(message, command, parts.slice(1));
             }
         });
     }
