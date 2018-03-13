@@ -78,7 +78,7 @@ export default class RiotAPILibraries extends CommandHandler {
         }
 
         if (args.length > 1) {
-            return this.invalidArguments(message, args);
+            return message.channel.send(`unknown argument for command; ${args}`);
         }
 
         const param = args[0];
@@ -88,10 +88,6 @@ export default class RiotAPILibraries extends CommandHandler {
         }
 
         return this.getListForLanguage(message, param);
-    }
-
-    invalidArguments(message: Discord.Message, arg: string[]) {
-        message.channel.send(`unknown argument for command; ${arg}`);
     }
 
     async describeAPILibrary(json: GithubAPIStruct): Promise<LibraryDescription> {
