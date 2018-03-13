@@ -20,6 +20,29 @@ interface OfficeHoursData {
     nextId: number;
 }
 
+
+interface OnThisDayAPI {
+    date: string;
+    url: string;
+    data: OnThisDayAPIEvents;
+}
+
+interface OnThisDayAPIEvents {
+    Events: OnThisDayAPIEvent[];
+}
+
+interface OnThisDayAPIEvent {
+    year: string;
+    text: string;
+    html: string;
+    links: OnThisDayAPIEventLink[];
+}
+
+interface OnThisDayAPIEventLink {
+    title: string;
+    link: string;
+}
+
 export default class OfficeHours extends CommandHandler {
     private data: OfficeHoursData;
     private sharedSettings: SharedSettings;
@@ -152,15 +175,11 @@ export default class OfficeHours extends CommandHandler {
             this.close(newChannel);
     }
 
-    sendOnThisDayMessage(channel: Discord.TextChannel) {
-
-        const onThisDayMsg = fetch('https://history.muffinlabs.com/date')
-            .then(r => r.json())
-            .then(({ data: { Events } }) => Events[Math.floor(Math.random() * Events.length)])
-            .then(event => {
-                channel.send(`On this day in ${event.year}, ${event.text}`);
-            })
-            .catch(r => console.warn('Failed to fetch message of the day: ' + r));
+    async sendOnThisDayMessage(channel: Discord.TextChannel) {
+        const onThisDayFetch = await fetch('https://history.muffinlabs.com/date');
+        const onThisDayJson: OnThisDayAPI = await onThisDayFetch.json();
+        const onThisDayEvent = onThisDayJson.data.Events[Math.floor(Math.random() * onThisDayJson.data.Events.length)];
+        channel.send(`On this day in ${onThisDayEvent.year}, ${onThisDayEvent.text}`);
     }
 
     async open(channel: Discord.TextChannel) {
@@ -188,22 +207,17 @@ export default class OfficeHours extends CommandHandler {
         if (!this.data.lastCloseMessage) return;
 
         // Request last close message from Discord
-        channel.fetchMessage(this.data.lastCloseMessage)
-            .then(closeMessage => {
-                // Find all users that raised their hand
-                const reactions = closeMessage.reactions.get("✋");
-                if (reactions) {
-                    const usersToMention = reactions.users.array().filter(user => !user.bot);
-                    if (usersToMention.length > 0)
-                        channel.send(usersToMention.join(", ") + "\n");
-                }
+        const closeMessage = await channel.fetchMessage(this.data.lastCloseMessage);
 
-                this.sendOnThisDayMessage(channel);
-            })
-            .catch(reason => {
-                console.warn("Failed getting last close message: " + reason);
-                this.sendOnThisDayMessage(channel);
-            });
+        // Find all users that raised their hand
+        const reactions = closeMessage.reactions.get("✋");
+        if (reactions) {
+            const usersToMention = reactions.users.array().filter(user => !user.bot);
+            if (usersToMention.length > 0)
+                channel.send(usersToMention.join(", ") + "\n");
+        }
+
+        this.sendOnThisDayMessage(channel);
     }
 
     async close(channel: Discord.TextChannel) {
@@ -214,15 +228,13 @@ export default class OfficeHours extends CommandHandler {
         await channel.overwritePermissions(everyone, { 'SEND_MESSAGES': false });
 
 
-        channel.send(this.sharedSettings.officehours.closeMessage.replace(/{botty}/g, this.sharedSettings.botty.nickname))
-            .then(message => {
-                if (Array.isArray(message)) {
-                    message = message[0];
-                }
+        let message = await channel.send(this.sharedSettings.officehours.closeMessage.replace(/{botty}/g, this.sharedSettings.botty.nickname));
+        if (Array.isArray(message)) {
+            message = message[0];
+        }
 
-                this.data.lastCloseMessage = message.id;
-                message.react("✋");
-            });
+        this.data.lastCloseMessage = message.id;
+        message.react("✋");
     }
 }
 
