@@ -17,6 +17,7 @@ export default class Botty {
     public readonly client = new Discord.Client();
     private personalSettings: PersonalSettings;
     private sharedSettings: SharedSettings;
+    private commands: CommandBase[] = [];
 
     constructor(personalSettings: PersonalSettings, sharedSettings: SharedSettings) {
         this.personalSettings = personalSettings;
@@ -89,8 +90,6 @@ export default class Botty {
     start() {
         return this.client.login(this.personalSettings.discord.key);
     }
-
-    private commands: CommandBase[] = [];
 
     handleCommands(message: Discord.Message) {
 
