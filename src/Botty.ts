@@ -83,7 +83,7 @@ export default class Botty {
 
         // Set correct nickname
         if (this.personalSettings.isProduction)
-            guild.me.setNickname("Botty McBotface");
+            guild.me.setNickname(this.sharedSettings.botty.nickname);
         else guild.me.setNickname("");
     }
 

@@ -1,7 +1,8 @@
 export interface SharedSettings {
     server: string,
     botty: {
-        prefix: string
+        prefix: string,
+        nickname: string
     }
     channelAccess: {
         forcedChannels: string[],

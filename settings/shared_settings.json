@@ -1,7 +1,8 @@
 {
     "server": "342988445498474498",
     "botty": {
-        "prefix": "!"
+        "prefix": "!",
+        "nickname":"Botty McBotface"
     },
     "channelAccess": {
         "forcedChannels": [

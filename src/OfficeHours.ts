@@ -23,7 +23,6 @@ interface OfficeHoursData {
 export default class OfficeHours extends CommandHandler {
     private data: OfficeHoursData;
     private sharedSettings: SharedSettings;
-    private bot: Discord.Client;
 
     private guild: Discord.Guild;
 
@@ -40,7 +39,6 @@ export default class OfficeHours extends CommandHandler {
     }
 
     onReady(bot: Discord.Client) {
-        this.bot = bot;
         const mainGuild = bot.guilds.get(this.sharedSettings.server);
         if (!mainGuild) {
             console.warn(`Cannot determine main guild (${this.sharedSettings.server}), isOpen state of OfficeHours could not be determined!`);
@@ -216,7 +214,7 @@ export default class OfficeHours extends CommandHandler {
         await channel.overwritePermissions(everyone, { 'SEND_MESSAGES': false });
 
 
-        channel.send(this.sharedSettings.officehours.closeMessage.replace(/{botty}/g, this.bot.user.toString()))
+        channel.send(this.sharedSettings.officehours.closeMessage.replace(/{botty}/g, this.sharedSettings.botty.nickname))
             .then(message => {
                 if (Array.isArray(message)) {
                     message = message[0];
