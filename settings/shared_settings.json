@@ -12,14 +12,14 @@
         "restrictedChannels": [
             "190817288507752448"
         ],
-        "aliases":[
+        "commands":[
             "join",
             "leave"
         ]
     },
     "uptimeSettings": {
         "checkInterval": 60000,
-        "aliases": [
+        "commands": [
             "uptime"
         ]
     },
@@ -55,7 +55,7 @@
             "350692046631206912",
             "347539422943903755"
         ],
-        "aliases":[
+        "commands":[
             "ask",
             "ask_for",
             "open",
@@ -69,7 +69,7 @@
         "removedMessage": "The question has been removed."
     },
     "riotApiLibraries": {
-        "aliases": [
+        "commands": [
             "lib",
             "libs",
             "libraries"
@@ -81,7 +81,7 @@
     },
     "autoReact": {
         "emoji": "408527155891273738",
-        "aliases":[
+        "commands":[
             "toggle_default_thinking",
             "toggle_react",
             "refresh_thinking"
@@ -102,7 +102,7 @@
         "checkInterval": 300000,
         "apiOnFireThreshold": 0.1,
         "statusUrl": "http://querijn.codes/api_status/1.1/",
-        "aliases": [
+        "commands": [
             "status",
             "apistatus"
         ],

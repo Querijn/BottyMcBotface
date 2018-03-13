@@ -37,12 +37,12 @@ const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.js
 // info seems like a pain to fix because of the .note syntax, so imma just leave it like this for now
 const info = new Info(bot.client, sharedSettings, "data/info_data.json", versionChecker);
 
-//bot.registerCommand(sharedSettings.channelAccess.aliases, new ChannelAccess(bot.client, sharedSettings));
-bot.registerCommand(sharedSettings.officehours.aliases, new OfficeHours(sharedSettings, "data/office_hours_data.json"))
-bot.registerCommand(sharedSettings.autoReact.aliases, new AutoReact(sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json"))
-bot.registerCommand(sharedSettings.uptimeSettings.aliases, new Uptime(sharedSettings, personalSettings, "data/uptime_data.json"))
-bot.registerCommand(sharedSettings.apiStatus.aliases, new ApiStatus(sharedSettings));
-bot.registerCommand(sharedSettings.riotApiLibraries.aliases, new RiotAPILibraries(personalSettings, sharedSettings));
+//bot.registerCommand(sharedSettings.channelAccess.commands, new ChannelAccess(bot.client, sharedSettings));
+bot.registerCommand(sharedSettings.officehours.commands, new OfficeHours(sharedSettings, "data/office_hours_data.json"))
+bot.registerCommand(sharedSettings.autoReact.commands, new AutoReact(sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json"))
+bot.registerCommand(sharedSettings.uptimeSettings.commands, new Uptime(sharedSettings, personalSettings, "data/uptime_data.json"))
+bot.registerCommand(sharedSettings.apiStatus.commands, new ApiStatus(sharedSettings));
+bot.registerCommand(sharedSettings.riotApiLibraries.commands, new RiotAPILibraries(personalSettings, sharedSettings));
 
 // start bot
 bot.start();

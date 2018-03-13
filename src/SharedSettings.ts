@@ -6,11 +6,11 @@ export interface SharedSettings {
     channelAccess: {
         forcedChannels: string[],
         restrictedChannels: string[],
-        aliases: string[]
+        commands: string[]
     },
     uptimeSettings: {
         checkInterval: number,
-        aliases: string[]
+        commands: string[]
     },
     techBlog: {
         checkInterval: number,
@@ -30,7 +30,7 @@ export interface SharedSettings {
     },
     autoReact: {
         emoji: string,
-        aliases: string[]
+        commands: string[]
     },
     info: {
         allowedRoles: string[],
@@ -38,14 +38,14 @@ export interface SharedSettings {
     },
     officehours: {
         allowedRoles: string[],
-        aliases: string[],
+        commands: string[],
         openMessage: string,
         closeMessage: string,
         addedMessage: string,
         removedMessage: string
     },
     riotApiLibraries: {
-        aliases: string[],
+        commands: string[],
         noLanguage: string,
         languageList: string,
         githubError: string,
@@ -67,7 +67,7 @@ export interface SharedSettings {
         apiOnFireThreshold: number,
         statusUrl: string,
         command: string,
-        aliases: string[],
+        commands: string[],
         onFireImages: string[]
     },
     onJoin: {
