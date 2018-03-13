@@ -227,6 +227,7 @@ export default class ForumReader {
         let timeDiff = (Date.now() - this.lastCheckTime);
         if (timeDiff < this.sharedSettings.forum.checkInterval) {
             console.log(`last ForumReader.fetchForumData was ${Math.round(timeDiff * 0.001)} seconds ago, should have been ${Math.round(this.sharedSettings.forum.checkInterval * 0.001)} seconds ago.`);
+            process.exit(-1); // Let the process manager restart this application
         }
         this.lastCheckTime = Date.now();
 
