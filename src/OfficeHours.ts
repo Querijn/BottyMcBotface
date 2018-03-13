@@ -118,6 +118,7 @@ export default class OfficeHours extends CommandHandler {
                 const id = +args[0];
                 this.data.questions = this.data.questions.filter(q => q.uuid != id);
                 message.reply(this.sharedSettings.officehours.removedMessage);
+                return;
             }
 
             message.reply("Invalid use of command, use !question_remove {id}");
