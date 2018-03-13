@@ -144,13 +144,13 @@
                 "aliases": [
                     "toggle_default_thinking"
                 ],
-                "description": "Decides if botty reacts with the normal thingking emote, or one of the custom ones"
+                "description": "Changes bottys reaction from the normal thinking emote, to one of the custom ones (or opposite)"
             },
             {
                 "aliases": [
                     "toggle_react"
                 ],
-                "description": "Decides if botty should react to your messages"
+                "description": "Decides if botty reacts to your messages"
             },
             {
                 "aliases": [
