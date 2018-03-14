@@ -14,3 +14,13 @@ export interface Command {
     aliases: string[];
     description: string;
 }
+
+export interface CommandList {
+    channelAccess: Command[];
+    uptime: Command[]
+    autoReact: Command[];
+    info: Command[];
+    officeHours: Command[];
+    riotApiLibraries: Command[];
+    apiStatus: Command[];
+}

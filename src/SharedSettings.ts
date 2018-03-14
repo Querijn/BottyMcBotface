@@ -1,5 +1,3 @@
-import { Command } from "./CommandHandler";
-
 export interface SharedSettings {
     server: string,
     botty: {
@@ -9,11 +7,9 @@ export interface SharedSettings {
     channelAccess: {
         forcedChannels: string[],
         restrictedChannels: string[],
-        commands: string[]
     },
     uptimeSettings: {
         checkInterval: number,
-        commands: Command[],
     },
     techBlog: {
         checkInterval: number,
@@ -33,22 +29,19 @@ export interface SharedSettings {
     },
     autoReact: {
         emoji: string,
-        commands: Command[]
     },
     info: {
         allowedRoles: string[],
-        commands: Command[]
+        command: string
     },
     officehours: {
         allowedRoles: string[],
-        commands: Command[],
         openMessage: string,
         closeMessage: string,
         addedMessage: string,
         removedMessage: string
     },
     riotApiLibraries: {
-        commands: Command[],
         noLanguage: string,
         languageList: string,
         githubError: string,
@@ -69,7 +62,6 @@ export interface SharedSettings {
         checkInterval: number,
         apiOnFireThreshold: number,
         statusUrl: string,
-        commands: Command[],
         onFireImages: string[]
     },
     onJoin: {

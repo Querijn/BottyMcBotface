@@ -32,7 +32,7 @@ export default class Info {
     constructor(bot: Discord.Client, sharedSettings: SharedSettings, userFile: string, versionChecker: VersionChecker) {
         console.log("Requested Info extension..");
         this.bot = bot;
-        this.command = sharedSettings.info.commands[0].aliases[0];
+        this.command = sharedSettings.info.command;
         this.versionChecker = versionChecker;
 
         this.infos = fileBackedObject(userFile);
