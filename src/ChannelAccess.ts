@@ -1,6 +1,7 @@
+import { CommandHandler } from "./CommandHandler";
 import { fileBackedObject } from "./FileBackedObject";
-import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
+import { SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
 
@@ -20,7 +21,7 @@ export default class ChannelAccess {
     }
 
     private onBotReady(): void {
-        let guild = this.bot.guilds.get(this.sharedSettings.server);
+        const guild = this.bot.guilds.get(this.sharedSettings.server);
         if (!guild) {
             console.error(`ChannelAccess: Invalid settings for guild ID ${this.sharedSettings.server}`);
             return;
@@ -31,16 +32,16 @@ export default class ChannelAccess {
     }
 
     private processMessage(message: Discord.Message) {
-        if (message.author.id === this.bot.user.id) return;
+        if (message.author.id === this.bot.user.id) { return; }
 
         /** The message contents, split at spaces */
         const split: string[] = message.cleanContent.split(" ");
 
         let action: "join" | "leave" | undefined;
-        if (split[0].match(/^(!|\/)join$/gi)) action = "join";
-        if (split[0].match(/^(!|\/)leave$/gi)) action = "leave";
+        if (split[0].match(/^(!|\/)join$/gi)) { action = "join"; }
+        if (split[0].match(/^(!|\/)leave$/gi)) { action = "leave"; }
 
-        if (!action) return;
+        if (!action) { return; }
 
         /** The specified name of the channel the user is trying to join/leave */
         let channelName: string | undefined;
@@ -82,9 +83,9 @@ export default class ChannelAccess {
         }
 
         if (action === "join") {
-            this.joinChannel(message, <Discord.TextChannel>channel);
+            this.joinChannel(message, channel as Discord.TextChannel);
         } else if (action === "leave") {
-            this.leaveChannel(message, <Discord.TextChannel>channel);
+            this.leaveChannel(message, channel as Discord.TextChannel);
         }
     }
 

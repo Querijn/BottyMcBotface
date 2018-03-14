@@ -1,5 +1,5 @@
-import { SharedSettings } from "./SharedSettings";
 import { fileBackedObject } from "./FileBackedObject";
+import { SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
 
@@ -27,37 +27,28 @@ export default class AutoReact {
         this.bot.on("message", this.onThinking.bind(this));
     }
 
-    onBot() {
+    private onBot() {
         console.log("Thinking extension loaded.");
 
         this.refreshThinkingEmojis();
 
-        let emoji = this.bot.emojis.get(this.sharedSettings.autoReact.emoji);
+        const emoji = this.bot.emojis.get(this.sharedSettings.autoReact.emoji);
         if (emoji instanceof Discord.Emoji) {
             this.greetingEmoji = emoji;
             this.bot.on("message", this.onGreeting.bind(this));
             console.log("Bot has succesfully loaded greetings.");
-        }
-        else {
+        } else {
             console.error(`Unable to find the greeting emoji '${this.sharedSettings.autoReact.emoji}'.`);
         }
     }
 
-    refreshThinkingEmojis() {
-        const guilds = this.bot.guilds.array();
-        for (let i = 0; i < guilds.length; i++) {
-            const emojiSet = guilds[i].emojis.filter((x: Discord.Emoji) => x.name.includes("thinking"));
-            this.thinkingEmojis = this.thinkingEmojis.concat(emojiSet.array());
-        }
-    }
+    private onThinking(message: Discord.Message) {
 
-    onThinking(message: Discord.Message) {
-
-        if (message.author.bot) return;
+        if (message.author.bot) { return; }
         const authorId = message.author.id;
 
         if (message.content.startsWith("!refresh_thinking")) {
-            message.reply("reloading thinking emojis.")
+            message.reply("reloading thinking emojis.");
             this.refreshThinkingEmojis();
             return;
         }
@@ -67,7 +58,10 @@ export default class AutoReact {
             return;
         }
 
-        if (this.ignoreUsers.indexOf(authorId) !== -1) return; // Only react to people not on list
+        if (this.ignoreUsers.indexOf(authorId) !== -1) {
+            // Only react to people not on list
+            return;
+        }
 
         if (message.content.startsWith("!toggle_default_thinking")) {
             this.onToggleThinkingRequest(message, authorId);
@@ -77,22 +71,22 @@ export default class AutoReact {
         if (!message.content.includes("🤔")) {
 
             // If it's not the regular thinking emoji, maybe it's one of our custom ones?
-            let emojiIds = /<:(.*?):([0-9]+)>/g.exec(message.content);
-            if (!emojiIds) return;
+            const emojiIds = /<:(.*?):([0-9]+)>/g.exec(message.content);
+            if (!emojiIds) { return; }
 
             let found = false;
             for (let i = 2; i < emojiIds.length; i += 3) {
-                const emoji = emojiIds[i];
-                if (!this.thinkingEmojis.some((e: Discord.Emoji) => e.id == emoji))
+                const emojiFound = emojiIds[i];
+                if (!this.thinkingEmojis.some((e: Discord.Emoji) => e.id === emojiFound)) {
                     continue;
-                
+                }
+
                 found = true;
                 break;
             }
-            
-            if (!found) return;
+
+            if (!found) { return; }
         }
-        
 
         // If original thinking user
         if (this.thinkingUsers.indexOf(authorId) !== -1) {
@@ -108,57 +102,61 @@ export default class AutoReact {
         }
     }
 
-    onToggleReactRequest(message: Discord.Message, authorId: string) {
-        
+    private onToggleReactRequest(message: Discord.Message, authorId: string) {
+
         const reactIndex = this.ignoreUsers.indexOf(authorId);
 
-        // Add 
+        // Add
         if (reactIndex === -1) {
             this.ignoreUsers.push(authorId);
             message.reply("I will no longer react to your messages");
             return;
-        } 
+        }
 
         // Remove
         this.ignoreUsers.splice(reactIndex, 1);
         message.reply("I will now react to your messages");
     }
 
-    onToggleThinkingRequest(message: Discord.Message, authorId: string) {
-        
+    private onToggleThinkingRequest(message: Discord.Message, authorId: string) {
+
         const thinkIndex = this.thinkingUsers.indexOf(authorId);
 
-        // Add 
+        // Add
         if (thinkIndex === -1) {
             this.thinkingUsers.push(authorId);
             message.reply("I will now only reply with default thinking emojis.");
             return;
-        } 
+        }
 
         // Remove
         this.thinkingUsers.splice(thinkIndex, 1);
         message.reply("I will no longer only reply with default thinking emojis.");
     }
 
-    onGreeting(message: Discord.Message) {
+    private onGreeting(message: Discord.Message) {
 
-        if (message.author.bot) return;
-        let greeting = message.content.toLowerCase();
-        
+        if (message.author.bot) { return; }
+        const greeting = message.content.toLowerCase();
+
         const words = [
             "hello", "hi", "hey",
             "good morning", "goodmorning",
             "good evening", "goodevening",
             "good night", "goodnight",
-            "good day", "goodday"
+            "good day", "goodday",
+        ];
+
+        const endChars = [
+            " ", "!", ",", ".",
         ];
 
         // Determine if the greeting is just the greeting, or ends in punctuation and not "his"
         const shouldReact = words.some(x => {
-            if (greeting === x) return true;
-            
-            const endChar = greeting.charAt(x.length);            
-            return greeting.startsWith(x) && (endChar == " " || endChar == "!" || endChar == "." || endChar == ",");
+            if (greeting === x) { return true; }
+
+            const endChar = greeting.slice(-1);
+            return greeting.startsWith(x) && endChars.findIndex(y => y === endChar) !== -1;
         });
 
         if (!shouldReact) {
@@ -170,5 +168,13 @@ export default class AutoReact {
         }
 
         message.react(this.greetingEmoji);
+    }
+
+    private refreshThinkingEmojis() {
+        const guilds = this.bot.guilds.array();
+        for (const guild of guilds) {
+            const emojiSet = guild.emojis.filter((x: Discord.Emoji) => x.name.includes("thinking"));
+            this.thinkingEmojis = this.thinkingEmojis.concat(emojiSet.array());
+        }
     }
 }

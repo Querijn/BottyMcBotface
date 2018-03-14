@@ -14,26 +14,41 @@ export default class AnswerHubAPI {
         this.auth = `Basic ${new Buffer(username + ":" + password, "binary").toString("base64")}`;
     }
 
-    /**
-     * Makes a request to the AnswerHub AnswerHubAPI
-     * @param url The url to make a request to, relative to the base AnswerHubAPI url
-     * @async
-     * @throws {any} Thrown if an error is received from the AnswerHubAPI
-     * @returns The parsed body of the response from the AnswerHubAPI
-     */
-    private async makeRequest<T>(url: string): Promise<T> {
-        const resp = await fetch(`${this.baseURL}services/v2/${url}`, {
-            method: "POST",
-            headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-                Authorization: this.auth
-            }
-        });
+    public getQuestions(page = 1, sort = "active"): Promise<NodeList<Question>> {
+        return this.makeRequest(`question.json?page=${page}&sort=${sort}`);
+    }
 
-        if (resp.status !== 200) throw new Error(`Received status code ${resp.status}`);
+    public getAnswers(page = 1, sort = "active"): Promise<NodeList<Answer>> {
+        return this.makeRequest(`answer.json?page=${page}&sort=${sort}`);
+    }
 
-        return resp.json();
+    public getComments(page = 1, sort = "active"): Promise<NodeList<Comment>> {
+        return this.makeRequest(`comment.json?page=${page}&sort=${sort}`);
+    }
+
+    public getArticles(page = 1, sort = "active"): Promise<NodeList<Article>> {
+        return this.makeRequest(`article.json?page=${page}&sort=${sort}`);
+    }
+
+    public getQuestion(id: number): Promise<Question> {
+        return this.makeRequest(`question/${id}.json`);
+    }
+
+    public getArticle(id: number): Promise<Article> {
+        return this.makeRequest(`article/${id}.json`);
+    }
+
+    public getAnswer(id: number): Promise<Answer> {
+        return this.makeRequest(`answer/${id}.json`);
+    }
+
+    public getComment(id: number): Promise<Comment> {
+        return this.makeRequest(`comment/${id}.json`);
+    }
+
+    public getNode(id: number): Promise<Node> {
+        // '/services/v2/article/[articleId].json' works for questions, answers, comments, and articles
+        return this.makeRequest(`article/${id}.json`);
     }
 
     public formatQuestionBody(body: string): string {
@@ -52,41 +67,28 @@ export default class AnswerHubAPI {
         return clamped + (clamped.length === 1021 ? "..." : "");
     }
 
-    getQuestions(page = 1, sort = "active"): Promise<NodeList<Question>> {
-        return this.makeRequest(`question.json?page=${page}&sort=${sort}`);
-    }
+    /**
+     * Makes a request to the AnswerHub AnswerHubAPI
+     * @param url The url to make a request to, relative to the base AnswerHubAPI url
+     * @async
+     * @throws {any} Thrown if an error is received from the AnswerHubAPI
+     * @returns The parsed body of the response from the AnswerHubAPI
+     */
+    private async makeRequest<T>(url: string): Promise<T> {
+        const resp = await fetch(`${this.baseURL}services/v2/${url}`, {
+            headers: {
+                "Accept": "application/json",
+                "Authorization": this.auth,
+                "Content-Type": "application/json",
+            },
+            method: "POST",
+        });
 
-    getAnswers(page = 1, sort = "active"): Promise<NodeList<Answer>> {
-        return this.makeRequest(`answer.json?page=${page}&sort=${sort}`);
-    }
+        if (resp.status !== 200) {
+            throw new Error(`Received status code ${resp.status}`);
+        }
 
-    getComments(page = 1, sort = "active"): Promise<NodeList<Comment>> {
-        return this.makeRequest(`comment.json?page=${page}&sort=${sort}`);
-    }
-
-    getArticles(page = 1, sort = "active"): Promise<NodeList<Article>> {
-        return this.makeRequest(`article.json?page=${page}&sort=${sort}`);
-    }
-
-    getQuestion(id: number): Promise<Question> {
-        return this.makeRequest(`question/${id}.json`);
-    }
-
-    getArticle(id: number): Promise<Article> {
-        return this.makeRequest(`article/${id}.json`);
-    }
-
-    getAnswer(id: number): Promise<Answer> {
-        return this.makeRequest(`answer/${id}.json`);
-    }
-
-    getComment(id: number): Promise<Comment> {
-        return this.makeRequest(`comment/${id}.json`);
-    }
-
-    getNode(id: number): Promise<Node> {
-        // '/services/v2/article/[articleId].json' works for questions, answers, comments, and articles
-        return this.makeRequest(`article/${id}.json`);
+        return resp.json();
     }
 }
 
@@ -113,13 +115,13 @@ export interface Node {
     slug: string;
 }
 
-export interface Question extends Node {}
+export interface Question extends Node { }
 
-export interface Answer extends Node {}
+export interface Answer extends Node { }
 
-export interface Comment extends Node {}
+export interface Comment extends Node { }
 
-export interface Article extends Node {}
+export interface Article extends Node { }
 
 export interface NodeList<T extends Node> {
     list: T[];

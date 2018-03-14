@@ -1,12 +1,12 @@
 import { fileBackedObject } from "./FileBackedObject";
-import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
+import { SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
 
 /**
  * Log handler.
- * 
+ *
  * @export
  * @class AutoReact
  */
@@ -30,13 +30,12 @@ export default class AutoReact {
         this.bot.on("ready", this.onBot.bind(this));
     }
 
-    onBot() {
-        let guild = this.bot.guilds.get(this.sharedSettings.logger.server);
+    private onBot() {
+        const guild = this.bot.guilds.get(this.sharedSettings.logger.server);
         if (!guild) {
             console.error(`Logger: Incorrect settings for guild ID ${this.sharedSettings.logger.server}`);
             return;
         }
-
 
         const errorChannel = guild.channels.find("name", this.sharedSettings.logger.errorChannel);
         if (!errorChannel || !(errorChannel instanceof Discord.TextChannel)) {
@@ -56,23 +55,23 @@ export default class AutoReact {
         console.log("Logger extension loaded.");
     }
 
-    onLoad() { 
-        if (this.loaded) return;
-        
+    private onLoad() {
+        if (this.loaded) { return; }
+
         this.oldLog = console.log;
         this.oldError = console.error;
         this.oldWarning = console.warn;
-        
+
         console.log = this.onLog.bind(this);
         console.error = this.onError.bind(this);
         console.warn = this.onWarning.bind(this);
 
         this.loaded = true;
     }
-    
-    onUnload() { 
-        if (!this.loaded) return;
-        
+
+    private onUnload() {
+        if (!this.loaded) { return; }
+
         console.log = this.oldLog;
         console.error = this.oldError;
         console.warn = this.oldWarning;
@@ -80,44 +79,41 @@ export default class AutoReact {
         this.loaded = false;
     }
 
-    onLog(message?:any, ...optionalParams: any[]) {
+    private onLog(message?: any, ...optionalParams: any[]) {
         this.oldLog(message, ...optionalParams);
-        
+
         try {
             this.logChannel.send(`[${(new Date()).toUTCString()}] Log: ${message.toString()}`);
-            for(let i = 0; i < optionalParams.length; i++) {
-                this.logChannel.send(`[${(new Date()).toUTCString()}] Log param ${(i+1)}: {optionalParams.toString()}`);
+            for (let i = 0; i < optionalParams.length; i++) {
+                this.logChannel.send(`[${(new Date()).toUTCString()}] Log param ${(i + 1)}: {optionalParams.toString()}`);
             }
-        }
-        catch (e) {
+        } catch (e) {
             this.oldError(`Error trying to send a log message: ${e.toString()}`);
         }
     }
-    
-    onWarning(message?:any, ...optionalParams: any[]) {
+
+    private onWarning(message?: any, ...optionalParams: any[]) {
         this.oldWarning(message, ...optionalParams);
-        
+
         try {
             this.errorChannel.send(`[${(new Date()).toUTCString()}] Warning: ${message.toString()}`);
-            for(let i = 0; i < optionalParams.length; i++) {
-                this.errorChannel.send(`[${(new Date()).toUTCString()}] Warning param ${(i+1)}: ${optionalParams.toString()}`);
+            for (let i = 0; i < optionalParams.length; i++) {
+                this.errorChannel.send(`[${(new Date()).toUTCString()}] Warning param ${(i + 1)}: ${optionalParams.toString()}`);
             }
-        }
-        catch (e) {
+        } catch (e) {
             this.oldError(`Error trying to send a warning message: ${e.toString()}`);
         }
     }
-    
-    onError(message?:any, ...optionalParams: any[]) {
+
+    private onError(message?: any, ...optionalParams: any[]) {
         this.oldError(message, ...optionalParams);
-        
+
         try {
             this.errorChannel.send(`[${(new Date()).toUTCString()}] Error: ${message.toString()}`);
-            for(let i = 0; i < optionalParams.length; i++) {
-                this.errorChannel.send(`[${(new Date()).toUTCString()}] Error param ${(i+1)}: ${optionalParams.toString()}`);
+            for (let i = 0; i < optionalParams.length; i++) {
+                this.errorChannel.send(`[${(new Date()).toUTCString()}] Error param ${(i + 1)}: ${optionalParams.toString()}`);
             }
-        }
-        catch (e) {
+        } catch (e) {
             this.oldError(`Error trying to send an error message: ${e.toString()}`);
         }
     }
