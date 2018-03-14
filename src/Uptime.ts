@@ -1,10 +1,10 @@
 import Discord = require("discord.js");
 import prettyMs = require("pretty-ms");
 
-import { fileBackedObject } from "./FileBackedObject";
-import { SharedSettings } from "./SharedSettings";
-import { PersonalSettings } from "./PersonalSettings";
 import { CommandHandler } from "./CommandHandler";
+import { fileBackedObject } from "./FileBackedObject";
+import { PersonalSettings } from "./PersonalSettings";
+import { SharedSettings } from "./SharedSettings";
 
 export interface UptimeData {
     LastUptime: number;
@@ -31,16 +31,15 @@ export default class Uptime extends CommandHandler {
         setInterval(this.onUpdate.bind(this), this.sharedSettings.uptimeSettings.checkInterval);
     }
 
-    onReady(bot: Discord.Client) {
+    public onReady(bot: Discord.Client) {
         console.log("uptime extension loaded.");
     }
 
-
-    onCommand(message: Discord.Message, command: string, args: string[]) {
+    public onCommand(message: Discord.Message, command: string, args: string[]) {
         message.reply(`the bot has been up for ${this.uptimePercentage}% of the time. Bot started ${this.uptime} ago.`);
     }
 
-    onUpdate() {
+    private onUpdate() {
         let timeDiff = Date.now() - this.data.LastUptime;
 
         // To restart, basically set either of these values to 0

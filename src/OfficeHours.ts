@@ -1,15 +1,15 @@
-import { SharedSettings } from "./SharedSettings";
+import { CommandHandler } from "./CommandHandler";
 import { fileBackedObject } from "./FileBackedObject";
-import fetch from "node-fetch";
+import { SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
-import { CommandHandler } from "./CommandHandler";
+import fetch from "node-fetch";
 
 interface QuestionData {
     uuid: number;
-    requester: string | null,
+    requester: string | null;
     authorId: string;
-    authorName: string,
+    authorName: string;
     question: string;
 }
 
@@ -19,7 +19,6 @@ interface OfficeHoursData {
     lastCloseMessage: string;
     nextId: number;
 }
-
 
 interface OnThisDayAPI {
     date: string;
@@ -57,11 +56,10 @@ export default class OfficeHours extends CommandHandler {
         console.log("Successfully question file.");
 
         this.sharedSettings = sharedSettings;
-
         // this.bot.on("channelUpdate", this.onChannelUpdate.bind(this));
     }
 
-    onReady(bot: Discord.Client) {
+    public onReady(bot: Discord.Client) {
         const mainGuild = bot.guilds.get(this.sharedSettings.server);
         if (!mainGuild) {
             console.warn(`Cannot determine main guild (${this.sharedSettings.server}), isOpen state of OfficeHours could not be determined!`);
@@ -76,31 +74,12 @@ export default class OfficeHours extends CommandHandler {
         }
 
         const everyone = mainGuild.roles.find("name", "@everyone");
-        let randomUser = mainGuild.members.find(x => x.roles.has(everyone.id) && x.roles.size === 1);
+        const randomUser = mainGuild.members.find(x => x.roles.has(everyone.id) && x.roles.size === 1);
         this.data.isOpen = officeHoursChannel.permissionsFor(randomUser).has("SEND_MESSAGES");
         console.log(`OfficeHours extension loaded (${this.data.isOpen ? "open" : "closed"}).`);
     }
 
-    storeQuestion(question: string, message: Discord.Message, authorId: string, authorName: string, requester: string | null = null) {
-
-        const questionData = {
-            requester: requester,
-            authorId: authorId,
-            authorName: authorName,
-            question: question,
-            uuid: ++this.data.nextId
-        };
-
-        this.data.questions.push(questionData);
-        message.reply(this.sharedSettings.officehours.addedMessage);
-
-        const moderatorChannel = this.guild.channels.find("name", "moderators");
-        if (moderatorChannel instanceof Discord.TextChannel) {
-            moderatorChannel.send(`${authorName} just asked a question: \`${question}\`, you can remove it with \`!question_remove ${questionData.uuid}\``);
-        }
-    }
-
-    onCommand(message: Discord.Message, command: string, args: string[]) {
+    public onCommand(message: Discord.Message, command: string, args: string[]) {
 
         if (command === "ask") {
             const question = args.join(" ");
@@ -116,13 +95,12 @@ export default class OfficeHours extends CommandHandler {
 
             const asker = message.mentions.members.first();
 
-            if (!asker) return;
+            if (!asker) { return; }
 
             const question = args.slice(1).join(" ");
             this.storeQuestion(question, message, asker.id, asker.toString(), message.author.username);
             return;
         }
-
 
         if (command === "question_list") {
 
@@ -133,11 +111,10 @@ export default class OfficeHours extends CommandHandler {
             return;
         }
 
-
         if (command === "question_remove") {
             if (args.length === 1) {
                 const id = +args[0];
-                this.data.questions = this.data.questions.filter(q => q.uuid != id);
+                this.data.questions = this.data.questions.filter(q => q.uuid !== id);
                 message.reply(this.sharedSettings.officehours.removedMessage);
                 return;
             }
@@ -146,14 +123,14 @@ export default class OfficeHours extends CommandHandler {
             return;
         }
 
-        if (!(message.channel instanceof Discord.TextChannel) || message.channel.name !== "office-hours")
+        if (!(message.channel instanceof Discord.TextChannel) || message.channel.name !== "office-hours") {
             return;
+        }
 
         if (command === "open") {
             message.delete();
             this.open(message.channel);
         }
-
 
         if (command === "close") {
             message.delete();
@@ -161,34 +138,54 @@ export default class OfficeHours extends CommandHandler {
         }
     }
 
-    onChannelUpdate(oldChannel: Discord.TextChannel, newChannel: Discord.TextChannel) {
+    private storeQuestion(question: string, message: Discord.Message, authorId: string, authorName: string, requester: string | null = null) {
 
-        if (newChannel.name !== "office-hours")
-            return;
+        const questionData = {
+            authorId,
+            authorName,
+            question,
+            requester,
+            uuid: ++this.data.nextId,
+        };
 
-        const everyone = newChannel.guild.roles.find("name", "@everyone");
-        let randomUser = newChannel.guild.members.find(x => x.roles.has(everyone.id) && x.roles.size === 1);
-        const canSendMessages = newChannel.permissionsFor(randomUser).has("SEND_MESSAGES");
-        if (canSendMessages && !this.data.isOpen)
-            this.open(newChannel);
-        else if (canSendMessages && this.data.isOpen)
-            this.close(newChannel);
+        this.data.questions.push(questionData);
+        message.reply(this.sharedSettings.officehours.addedMessage);
+
+        const moderatorChannel = this.guild.channels.find("name", "moderators");
+        if (moderatorChannel instanceof Discord.TextChannel) {
+            moderatorChannel.send(`${authorName} just asked a question: \`${question}\`, you can remove it with \`!question_remove ${questionData.uuid}\``);
+        }
     }
 
-    async sendOnThisDayMessage(channel: Discord.TextChannel) {
-        const onThisDayFetch = await fetch('https://history.muffinlabs.com/date');
+    private onChannelUpdate(oldChannel: Discord.TextChannel, newChannel: Discord.TextChannel) {
+
+        if (newChannel.name !== "office-hours") {
+            return;
+        }
+
+        const everyone = newChannel.guild.roles.find("name", "@everyone");
+        const randomUser = newChannel.guild.members.find(x => x.roles.has(everyone.id) && x.roles.size === 1);
+        const canSendMessages = newChannel.permissionsFor(randomUser).has("SEND_MESSAGES");
+        if (canSendMessages && !this.data.isOpen) {
+            this.open(newChannel);
+        } else if (canSendMessages && this.data.isOpen) {
+            this.close(newChannel);
+        }
+    }
+
+    private async sendOnThisDayMessage(channel: Discord.TextChannel) {
+        const onThisDayFetch = await fetch("https://history.muffinlabs.com/date");
         const onThisDayJson: OnThisDayAPI = await onThisDayFetch.json();
         const onThisDayEvent = onThisDayJson.data.Events[Math.floor(Math.random() * onThisDayJson.data.Events.length)];
         channel.send(`On this day in ${onThisDayEvent.year}, ${onThisDayEvent.text}`);
     }
 
-    async open(channel: Discord.TextChannel) {
-        if (this.data.isOpen) return;
+    private async open(channel: Discord.TextChannel) {
+        if (this.data.isOpen) { return; }
         this.data.isOpen = true;
 
         const everyone = channel.guild.roles.find("name", "@everyone");
-        await channel.overwritePermissions(everyone, { 'SEND_MESSAGES': true });
-
+        await channel.overwritePermissions(everyone, { SEND_MESSAGES: true });
 
         // Start with open message
         channel.send(this.sharedSettings.officehours.openMessage);
@@ -204,7 +201,7 @@ export default class OfficeHours extends CommandHandler {
         this.data.questions = [];
         this.data.nextId = 0;
 
-        if (!this.data.lastCloseMessage) return;
+        if (!this.data.lastCloseMessage) { return; }
 
         // Request last close message from Discord
         const closeMessage = await channel.fetchMessage(this.data.lastCloseMessage);
@@ -213,20 +210,20 @@ export default class OfficeHours extends CommandHandler {
         const reactions = closeMessage.reactions.get("✋");
         if (reactions) {
             const usersToMention = reactions.users.array().filter(user => !user.bot);
-            if (usersToMention.length > 0)
+            if (usersToMention.length > 0) {
                 channel.send(usersToMention.join(", ") + "\n");
+            }
         }
 
         this.sendOnThisDayMessage(channel);
     }
 
-    async close(channel: Discord.TextChannel) {
-        if (!this.data.isOpen) return;
+    private async close(channel: Discord.TextChannel) {
+        if (!this.data.isOpen) { return; }
         this.data.isOpen = false;
 
         const everyone = channel.guild.roles.find("name", "@everyone");
-        await channel.overwritePermissions(everyone, { 'SEND_MESSAGES': false });
-
+        await channel.overwritePermissions(everyone, { SEND_MESSAGES: false });
 
         let message = await channel.send(this.sharedSettings.officehours.closeMessage.replace(/{botty}/g, this.sharedSettings.botty.nickname));
         if (Array.isArray(message)) {
@@ -238,7 +235,6 @@ export default class OfficeHours extends CommandHandler {
     }
 }
 
-
-const findOne = (arr1: Discord.Collection<string, Discord.Role>, arr2: Array<any>) => {
+const findOne = (arr1: Discord.Collection<string, Discord.Role>, arr2: any[]) => {
     return arr2.some(x => arr1.has(x));
 };

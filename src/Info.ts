@@ -10,7 +10,7 @@ import Discord = require("discord.js");
  * @param {Array} arr1
  * @param {Array} arr2
  */
-const findOne = (arr1: Discord.Collection<string, Discord.Role>, arr2: Array<any>) => {
+const findOne = (arr1: Discord.Collection<string, Discord.Role>, arr2: any[]) => {
     return arr2.some(v => {
         return !!arr1.get(v);
     });
@@ -44,55 +44,55 @@ export default class Info {
         this.bot.on("message", this.onInfo.bind(this));
     }
 
-    onBot() {
+    public onBot() {
         console.log("Info extension loaded.");
     }
 
-    onInfo(message: Discord.Message) {
-        if (message.author.bot) return;
+    public onInfo(message: Discord.Message) {
+        if (message.author.bot) { return; }
 
         // if using .syntax we can only read notes
         let commandIsFetch = false;
 
         // Needs to start with '/' or '!' or in separate cases '.'
         const split = message.cleanContent.split(" ");
-        if (split[0][0] === '.') commandIsFetch = true;
-        else if (split[0][0] !== '!' && split[0][0] !== '/') return;
-        
+        if (split[0][0] === ".") {
+            commandIsFetch = true;
+        } else if (split[0][0] !== "!" && split[0][0] !== "/") { return; }
+
         // needs to start with command unless we are reading a note
         let command = split[0].substr(1);
         let nextIndex = 1;
-        
+
         if (!commandIsFetch && command.startsWith(this.command)) {
             // !info <command>
             if (command.length === this.command.length) {
                 command = split[1];
                 nextIndex++;
+            } else {
+                // !info<command>
+                command = command.substr(this.command.length);
             }
-
-            // !info<command>
-            else command = command.substr(this.command.length);
-        } 
-
-        // Things we can't fetch
-        else if (command === "add" || command === "remove" || command === "list") 
+        } else if (command === "add" || command === "remove" || command === "list") {
+            // Things we can't fetch
             return;
+        }
 
         let response: string | undefined;
         switch (command) {
             case "add":
                 // Only admins
-                if (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) return;
-                
-                if (split.length <= nextIndex + 1) return;
+                if (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) { return; }
+
+                if (split.length <= nextIndex + 1) { return; }
                 response = this.addInfo(split[nextIndex], split.slice(nextIndex + 1).join(" "));
                 break;
 
             case "remove":
                 // Only admins
-                if (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) return;
-                
-                if (split.length <= nextIndex) return;
+                if (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) { return; }
+
+                if (split.length <= nextIndex) { return; }
                 response = this.removeInfo(split[nextIndex]);
                 break;
 
@@ -102,12 +102,11 @@ export default class Info {
 
             default: // Retrieve or just !info
 
-                let infoData: InfoData|null;
+                let infoData: InfoData | null;
                 if (!commandIsFetch) {
-                    if (split.length <= 1) return;
+                    if (split.length <= 1) { return; }
                     infoData = this.fetchInfo(split[1]);
-                }
-                else {
+                } else {
                     infoData = this.fetchInfo(command);
                 }
 
@@ -120,20 +119,19 @@ export default class Info {
                 break;
         }
 
-        if (!response) return;
-
+        if (!response) { return; }
 
         message.channel.send(response);
     }
 
     private addInfo(command: string, message: string) {
         const alreadyExists = this.infos.some(info => info.command === command);
-        if (alreadyExists) return;
+        if (alreadyExists) { return; }
 
         const newInfo: InfoData = {
-            command: command,
-            message: message,
-            counter: 0
+            command,
+            counter: 0,
+            message,
         };
 
         this.infos.push(newInfo);
@@ -145,7 +143,7 @@ export default class Info {
             return info.command === command;
         });
 
-        if (index === -1) return;
+        if (index === -1) { return; }
 
         this.infos.splice(index, 1);
         return `Successfully removed ${command}`;
@@ -156,23 +154,24 @@ export default class Info {
 
         let message = `The available info commands are: \n`;
 
-        for (let i = 0; i < this.infos.length; i++) {
-            message += `- \`!${this.command} ${this.infos[i].command}\`\n`;
+        for (const info of this.infos) {
+            message += `- \`!${this.command} ${info.command}\`\n`;
         }
 
         return message;
     }
 
     private fetchInfo(command: string): InfoData | null {
-        const info = this.infos.find(info => {
-            return info.command === command;
+        const info = this.infos.find(inf => {
+            return inf.command === command;
         });
 
-        if (!info) return null;
+        if (!info) { return null; }
 
         // Backwards compatibility
-        if (info.counter === undefined || info.counter === null) 
+        if (info.counter === undefined || info.counter === null) {
             info.counter = 0;
+        }
 
         info.counter++;
         return info;

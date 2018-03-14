@@ -1,10 +1,9 @@
-import { SharedSettings } from "./SharedSettings";
+import { CommandHandler } from "./CommandHandler";
 import { PersonalSettings } from "./PersonalSettings";
-import fetch from "node-fetch";
+import { SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
-import { CommandHandler } from "./CommandHandler";
-
+import fetch from "node-fetch";
 
 interface LinkStruct {
     self: string;
@@ -26,8 +25,8 @@ interface GithubAPIStruct {
 }
 
 interface APILibraryLink {
-    name: string,
-    url: string,
+    name: string;
+    url: string;
 }
 
 interface APILibraryStruct {
@@ -41,10 +40,10 @@ interface APILibraryStruct {
 }
 
 interface LibraryDescription {
-    valid: boolean,
-    stars: number,
-    library: APILibraryStruct | null,
-    links: string[]
+    valid: boolean;
+    stars: number;
+    library: APILibraryStruct | null;
+    links: string[];
 }
 
 export default class RiotAPILibraries extends CommandHandler {
@@ -60,18 +59,18 @@ export default class RiotAPILibraries extends CommandHandler {
         this.settings = settings;
         this.fetchSettings = {
             headers: {
-                Accept: "application/json",
+                "Accept": "application/json",
+                "Authorization": `Basic ${Buffer.from(personalSettings.github.username + ":" + personalSettings.github.password).toString("base64")}`,
                 "Content-Type": "application/json",
-                Authorization: `Basic ${Buffer.from(personalSettings.github.username + ":" + personalSettings.github.password).toString("base64")}`
-            }
-        }
+            },
+        };
     }
 
-    onReady(bot: Discord.Client) {
+    public onReady(bot: Discord.Client) {
         console.log("Github extension loaded.");
     }
 
-    onCommand(message: Discord.Message, command: string, args: string[]) {
+    public onCommand(message: Discord.Message, command: string, args: string[]) {
 
         if (args.length === 0) {
             return this.getList(message);
@@ -90,7 +89,7 @@ export default class RiotAPILibraries extends CommandHandler {
         return this.getListForLanguage(message, param);
     }
 
-    async describeAPILibrary(json: GithubAPIStruct): Promise<LibraryDescription> {
+    private async describeAPILibrary(json: GithubAPIStruct): Promise<LibraryDescription> {
 
         const libraryResponse = await fetch(json.download_url);
         const libraryInfo: APILibraryStruct = await libraryResponse.json();
@@ -104,33 +103,34 @@ export default class RiotAPILibraries extends CommandHandler {
         // Make a list of the links
         const githubLink = `github.com/${libraryInfo.owner}/${libraryInfo.repo}`;
         let links = libraryInfo.links ? libraryInfo.links.map(link => `[${link.name}](${link.url})`) : []; // Can be empty array or null, sigh
-        if (links.length === 0 || links.some(l => l.indexOf(githubLink) !== 0)) // Make sure there is at least the github link
+        if (links.length === 0 || links.some(l => l.indexOf(githubLink) !== 0)) {
+            // Make sure there is at least the github link
             links = [`[Github](https://${githubLink})`].concat(links);
+        }
 
         const repoResponse = await repoResponsePromise;
         const repoInfo = await repoResponse.json();
 
         return {
-            valid: true,
-            stars: repoInfo.stargazers_count,
             library: libraryInfo,
-            links: links
+            links,
+            stars: repoInfo.stargazers_count,
+            valid: true,
         };
     }
 
-
-    async getList(message: Discord.Message) {
+    private async getList(message: Discord.Message) {
         const response = await fetch(this.settings.riotApiLibraries.baseURL, this.fetchSettings);
         const data = await response.json() as GithubAPIStruct[];
 
-        let languages = "`" + data.map(x => x.name).join(", ") + "`";
-        let reply = this.settings.riotApiLibraries.languageList.replace("{languages}", languages);
+        const languages = "`" + data.map(x => x.name).join(", ") + "`";
+        const reply = this.settings.riotApiLibraries.languageList.replace("{languages}", languages);
         message.channel.send(reply);
     }
 
-    async getListForLanguage(message: Discord.Message, language: string) {
+    private async getListForLanguage(message: Discord.Message, language: string) {
         const response = await fetch(this.settings.riotApiLibraries.baseURL + language);
-        if (response.status != 200) {
+        if (response.status !== 200) {
             message.channel.send(this.settings.riotApiLibraries.githubError + response.status);
             return;
         }
@@ -150,12 +150,15 @@ export default class RiotAPILibraries extends CommandHandler {
 
         const embed = new Discord.RichEmbed({ title: `List of libraries for ${language}:` });
         for (const desc of libraryDescriptions) {
-            if (!desc.library) continue; // https://github.com/Microsoft/TypeScript/issues/18562
+            if (!desc.library) {
+                // https://github.com/Microsoft/TypeScript/issues/18562
+                continue;
+            }
             embed.addField(`${desc.library.repo} (★ ${desc.stars ? desc.stars : "0"})`, `${desc.library.description ? desc.library.description + "\n" : " "}${desc.links.join(", ")}`);
         }
 
         let editMessage = await editMessagePromise;
-        if (Array.isArray(editMessage)) editMessage = editMessage[0];
+        if (Array.isArray(editMessage)) { editMessage = editMessage[0]; }
         editMessage.edit({ embed });
     }
 }

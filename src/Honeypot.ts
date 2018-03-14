@@ -1,6 +1,6 @@
 import { fileBackedObject } from "./FileBackedObject";
-import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
+import { SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
 
@@ -26,7 +26,7 @@ export default class Honeypot {
             .on("guildCreate", this.onJoin.bind(this))
             .on("error", console.error)
             .on("warn", console.warn)
-            //.on("debug", console.log)
+            // .on("debug", console.log)
             .on("disconnect", () => console.warn("Honeypot disconnected!"))
             .on("reconnecting", () => console.warn("Honeypot is reconnecting..."))
             .on("connect", () => console.warn("Honeypot is connected."))
@@ -38,37 +38,41 @@ export default class Honeypot {
         });
     }
 
-    onJoin(guild: Discord.Guild) {
+    private onJoin(guild: Discord.Guild) {
         console.error(`Joined '${guild}'`);
         this.joinTime = Date.now();
     }
 
     get joinedTime() {
         const timeDiff = Date.now() - this.joinTime;
-        if (timeDiff > 1000) return Math.round(timeDiff * 0.001) + " seconds";
+        if (timeDiff > 1000) {
+            return Math.round(timeDiff * 0.001) + " seconds";
+        }
 
         return timeDiff + " milliseconds";
     }
 
-    onMessage(message: Discord.Message) {
-        if (message.channel.type !== "dm") return;
+    private onMessage(message: Discord.Message) {
+        if (message.channel.type !== "dm") { return; }
 
         const catchMessage = `Got a direct message ${this.joinedTime} after joining from ${message.author.toString()}: \`\`\`${message.content}\`\`\``;
         this.reportHoneypotCatch(catchMessage);
     }
 
-    onMessageUpdate(oldMessage: Discord.Message, newMessage: Discord.Message) {
-        if (newMessage.channel.type !== "dm") return;
+    private onMessageUpdate(oldMessage: Discord.Message, newMessage: Discord.Message) {
+        if (newMessage.channel.type !== "dm") {
+            return;
+        }
 
         const catchMessage = `User updated a direct message ${this
             .joinedTime} after joining from ${newMessage.author.toString()}: \`\`\`${newMessage.content}\`\`\` Old message was: \`\`\`${oldMessage.content}\`\`\``;
         this.reportHoneypotCatch(catchMessage);
     }
 
-    reportHoneypotCatch(message: string) {
+    private reportHoneypotCatch(message: string) {
         console.warn(message);
         const channel = this.channel;
-        if (!channel) return;
+        if (!channel) { return; }
 
         channel.send(message);
     }

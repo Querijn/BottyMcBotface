@@ -1,6 +1,6 @@
+import * as prettyMs from "pretty-ms";
+import APIStatusAPI, { APIStatus } from "./ApiStatusApi";
 import { SharedSettings } from "./SharedSettings";
-import APIStatusAPI, { APIStatus } from './ApiStatusApi';
-import * as prettyMs from 'pretty-ms';
 
 import Discord = require("discord.js");
 import { CommandHandler } from "./CommandHandler";
@@ -38,43 +38,48 @@ export default class ApiStatus extends CommandHandler {
         this.apiStatusAPI = new APIStatusAPI(this.sharedSettings.apiStatus.statusUrl, this.sharedSettings.apiStatus.checkInterval);
     }
 
-    onReady(bot: Discord.Client) {
+    public onReady(bot: Discord.Client) {
         console.log("API Status extension loaded.");
     }
 
-    async onCommand(message: Discord.Message, command: string, args: string[]) {
+    public async onCommand(message: Discord.Message, command: string, args: string[]) {
         const apiStatus = await this.getApiStatus();
 
-        const fields: { name: string, value: string, inline: boolean }[] = [];
+        const fields: Array<{
+            name: string,
+            value: string,
+            inline: boolean,
+        }> = [];
+
         for (const api in apiStatus.api) {
             fields.push({ name: api, value: apiStatus.api[api], inline: true });
         }
 
         if (!apiStatus.allApisIssues) {
             fields.push({
-                "name": apiStatus.allApisOK ? "All APIs" : "All other APIs",
-                "value": ":white_check_mark:",
-                "inline": true
+                inline: true,
+                name: apiStatus.allApisOK ? "All APIs" : "All other APIs",
+                value: ":white_check_mark:",
             });
         }
 
         // fixes formatting with empty fields
-        while (fields.length % 3 != 0) {
+        while (fields.length % 3 !== 0) {
             fields.push({
-                "name": "\u200b",
-                "value": "\u200b",
-                "inline": true
+                inline: true,
+                name: "\u200b",
+                value: "\u200b",
             });
         }
 
         const embedContent: any = {
-            color: 0xe74c3c,
             author: {
                 icon_url: "http://ddragon.leagueoflegends.com/cdn/7.20.2/img/champion/Heimerdinger.png",
                 name: "API Status (" + this.getLastUpdate() + ")",
-                url: "https://developer.riotgames.com/api-status/"
+                url: "https://developer.riotgames.com/api-status/",
             },
-            fields: fields
+            color: 0xe74c3c,
+            fields,
         };
 
         if (apiStatus.onFire) {
@@ -111,10 +116,10 @@ export default class ApiStatus extends CommandHandler {
         let apiCounter = 0;
         const statusEmbed: StatusEmbedState = { api: {}, onFire: false, allApisOK: true, allApisIssues: false };
 
-        for (let api in apiStatus) {
-            const regionStates: { troubled: string[], up: string[], down: string[] } = { "troubled": [], "up": [], "down": [] };
+        for (const api in apiStatus) {
+            const regionStates: { troubled: string[], up: string[], down: string[] } = { troubled: [], up: [], down: [] };
             let regionCounter = 0;
-            for (let region in apiStatus[api]) {
+            for (const region in apiStatus.api) {
                 const regionState = apiStatus[api][region];
                 regionStates[regionState.state].push(region);
                 regionCounter++;
@@ -142,24 +147,25 @@ export default class ApiStatus extends CommandHandler {
             }
 
             // only add api if it has issues
-            if (regionStates.troubled.length + regionStates.down.length > 0)
+            if (regionStates.troubled.length + regionStates.down.length > 0) {
                 statusEmbed.api[api] = retStr;
+            }
         }
 
-        statusEmbed["onFire"] = onFire || (apiIssuesCounter / apiCounter) > this.sharedSettings.apiStatus.apiOnFireThreshold;
-        statusEmbed["allApisOK"] = allApisOK;
-        statusEmbed["allApisIssues"] = allApisIssues;
+        statusEmbed.onFire = onFire || (apiIssuesCounter / apiCounter) > this.sharedSettings.apiStatus.apiOnFireThreshold;
+        statusEmbed.allApisOK = allApisOK;
+        statusEmbed.allApisIssues = allApisIssues;
         return statusEmbed;
     }
 
     private joinArray(arr: string[]): string {
-        let retStr = '';
+        let retStr = "";
         for (let j = 0; j < arr.length; j++) {
             const a = arr[j];
-            retStr += a + (j < arr.length - 1 ? ', ' : '');
+            retStr += a + (j < arr.length - 1 ? ", " : "");
 
-            if (j % 4 == 3) {
-                retStr += '\n';
+            if (j % 4 === 3) {
+                retStr += "\n";
             }
         }
 

@@ -1,6 +1,6 @@
 import { fileBackedObject } from "./FileBackedObject";
-import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
+import { SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
 import feedReader = require("feed-read");
@@ -24,9 +24,11 @@ export default class Techblog {
         this.bot = bot;
 
         this.bot.on("ready", () => {
-            if (!this.data.Last) this.data.Last = Date.now();
+            if (!this.data.Last) {
+                this.data.Last = Date.now();
+            }
 
-            let guild = this.bot.guilds.get(this.sharedSettings.server);
+            const guild = this.bot.guilds.get(this.sharedSettings.server);
             if (!guild) {
                 console.error(`TechBlog: Invalid settings for guild ID ${this.sharedSettings.server}`);
                 return;
@@ -46,7 +48,7 @@ export default class Techblog {
         });
     }
 
-    checkFeed() {
+    private checkFeed() {
         feedReader(this.sharedSettings.techBlog.url, (error, articles) => {
             if (error) {
                 console.error("Error reading tech blog RSS feed:", error);

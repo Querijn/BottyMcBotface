@@ -1,8 +1,8 @@
 import Discord = require("discord.js");
 
 export abstract class CommandHandler {
-    abstract onCommand(message: Discord.Message, command: string, args: string[]): void;
-    abstract onReady(bot: Discord.Client): void;
+    public abstract onReady(bot: Discord.Client): void;
+    public abstract onCommand(message: Discord.Message, command: string, args: string[]): void;
 }
 
 export interface CommandHolder {
@@ -17,7 +17,7 @@ export interface Command {
 
 export interface CommandList {
     channelAccess: Command[];
-    uptime: Command[]
+    uptime: Command[];
     autoReact: Command[];
     info: Command[];
     officeHours: Command[];
