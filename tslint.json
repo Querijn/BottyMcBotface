@@ -8,8 +8,18 @@
         "interface-name": false,
         "no-empty-interface": false,
         "no-console": false,
-        "forin":false,
-        "arrow-parens":false,
+        "forin": false,
+        "arrow-parens": false,
+        "array-type": {
+            "options": [
+                "array"
+            ]
+        },
+        "curly": {
+            "options": [
+                "ignore-same-line"
+            ]
+        },
         "max-line-length": {
             "options": [
                 280

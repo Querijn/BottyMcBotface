@@ -1,4 +1,3 @@
-import { CommandHandler } from "./CommandHandler";
 import { fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";
@@ -32,7 +31,7 @@ export default class ChannelAccess {
     }
 
     private processMessage(message: Discord.Message) {
-        if (message.author.id === this.bot.user.id) { return; }
+        if (message.author.id === this.bot.user.id) return;
 
         /** The message contents, split at spaces */
         const split: string[] = message.cleanContent.split(" ");
@@ -41,7 +40,7 @@ export default class ChannelAccess {
         if (split[0].match(/^(!|\/)join$/gi)) { action = "join"; }
         if (split[0].match(/^(!|\/)leave$/gi)) { action = "leave"; }
 
-        if (!action) { return; }
+        if (!action) return;
 
         /** The specified name of the channel the user is trying to join/leave */
         let channelName: string | undefined;

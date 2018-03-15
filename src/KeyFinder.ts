@@ -86,14 +86,14 @@ export default class KeyFinder {
     }
 
     private onMessage(incomingMessage: Discord.Message) {
-        if (incomingMessage.author.id === this.bot.user.id) { return; }
+        if (incomingMessage.author.id === this.bot.user.id) return;
 
         this.findKey(`<@${incomingMessage.author.id}>`, incomingMessage.content, `<#${incomingMessage.channel.id}>`, incomingMessage.createdTimestamp);
 
         // Check if the reporting channel is enabled, the message was sent in the reporting channel, and the command to view active keys was used
-        if (!this.channel) { return; }
-        if (incomingMessage.channel.id !== this.channel.id) { return; }
-        if (!(incomingMessage.content.startsWith("!active_keys") || incomingMessage.content.startsWith("!activekeys"))) { return; }
+        if (!this.channel) return;
+        if (incomingMessage.channel.id !== this.channel.id) return;
+        if (!(incomingMessage.content.startsWith("!active_keys") || incomingMessage.content.startsWith("!activekeys"))) return;
 
         if (this.keys.length === 0) {
             incomingMessage.reply("I haven't found any keys.");

@@ -1,4 +1,3 @@
-import { CommandHandler } from "./CommandHandler";
 import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";
 

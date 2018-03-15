@@ -1,7 +1,6 @@
 import Discord = require("discord.js");
 import prettyMs = require("pretty-ms");
 
-import { CommandHandler } from "./CommandHandler";
 import { fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";
@@ -39,7 +38,7 @@ export default class Uptime {
     }
 
     private onMessage(message: Discord.Message) {
-        if (!message.content.startsWith("!uptime")) { return; }
+        if (!message.content.startsWith("!uptime")) return;
         message.reply(`the bot has been up for ${this.uptimePercentage}% of the time. Bot started ${this.uptime} ago.`);
     }
 

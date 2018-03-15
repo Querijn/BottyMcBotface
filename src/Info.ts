@@ -49,7 +49,7 @@ export default class Info {
     }
 
     public onInfo(message: Discord.Message) {
-        if (message.author.bot) { return; }
+        if (message.author.bot) return;
 
         // if using .syntax we can only read notes
         let commandIsFetch = false;
@@ -58,7 +58,7 @@ export default class Info {
         const split = message.cleanContent.split(" ");
         if (split[0][0] === ".") {
             commandIsFetch = true;
-        } else if (split[0][0] !== "!" && split[0][0] !== "/") { return; }
+        } else if (split[0][0] !== "!" && split[0][0] !== "/") return;
 
         // needs to start with command unless we are reading a note
         let command = split[0].substr(1);
@@ -82,17 +82,17 @@ export default class Info {
         switch (command) {
             case "add":
                 // Only admins
-                if (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) { return; }
+                if (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) return;
 
-                if (split.length <= nextIndex + 1) { return; }
+                if (split.length <= nextIndex + 1) return;
                 response = this.addInfo(split[nextIndex], split.slice(nextIndex + 1).join(" "));
                 break;
 
             case "remove":
                 // Only admins
-                if (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) { return; }
+                if (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) return;
 
-                if (split.length <= nextIndex) { return; }
+                if (split.length <= nextIndex) return;
                 response = this.removeInfo(split[nextIndex]);
                 break;
 
@@ -104,7 +104,7 @@ export default class Info {
 
                 let infoData: InfoData | null;
                 if (!commandIsFetch) {
-                    if (split.length <= 1) { return; }
+                    if (split.length <= 1) return;
                     infoData = this.fetchInfo(split[1]);
                 } else {
                     infoData = this.fetchInfo(command);
@@ -119,14 +119,14 @@ export default class Info {
                 break;
         }
 
-        if (!response) { return; }
+        if (!response) return;
 
         message.channel.send(response);
     }
 
     private addInfo(command: string, message: string) {
         const alreadyExists = this.infos.some(info => info.command === command);
-        if (alreadyExists) { return; }
+        if (alreadyExists) return;
 
         const newInfo: InfoData = {
             command,
@@ -143,7 +143,7 @@ export default class Info {
             return info.command === command;
         });
 
-        if (index === -1) { return; }
+        if (index === -1) return;
 
         this.infos.splice(index, 1);
         return `Successfully removed ${command}`;

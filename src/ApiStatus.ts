@@ -48,14 +48,14 @@ export default class ApiStatus {
     }
 
     private async onInfo(message: Discord.Message) {
-        if (message.author.bot) { return; }
+        if (message.author.bot) return;
 
         const content = message.cleanContent;
-        if (!this.isApiStatusCommand(content)) { return; }
+        if (!this.isApiStatusCommand(content)) return;
 
         const apiStatus = await this.getApiStatus();
 
-        const fields: Array<{ name: string, value: string, inline: boolean }> = [];
+        const fields: { name: string, value: string, inline: boolean }[] = [];
         for (const api in apiStatus.api) {
             fields.push({ name: api, value: apiStatus.api[api], inline: true });
         }

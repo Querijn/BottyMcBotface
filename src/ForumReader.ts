@@ -28,7 +28,7 @@ export default class ForumReader {
     private answerHub: AnswerHubAPI;
     private cachedNodes: Map<number, Node> = new Map();
     /** Activities that could not be successfully parsed and will be retried */
-    private erroredActivities: Array<{ activity: Node; /** How many attempts have been made to process this activity */ attempts: number }> = [];
+    private erroredActivities: { activity: Node; /** How many attempts have been made to process this activity */ attempts: number }[] = [];
     private keyFinder: KeyFinder;
     private sharedSettings: SharedSettings;
     private personalSettings: PersonalSettings;
@@ -155,7 +155,7 @@ export default class ForumReader {
             default:
                 console.error(`Unknown activity type: ${activity.type}`);
         }
-        if (!embed) { return; }
+        if (!embed) return;
 
         this.keyFinder.findKey(username, activity.body, embed.url as string, activity.creationDate);
         embed.setTimestamp(new Date(activity.creationDate)).setThumbnail(avatar);

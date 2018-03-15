@@ -1,4 +1,3 @@
-import { Command, CommandHandler, CommandHolder } from "./CommandHandler";
 import { fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";

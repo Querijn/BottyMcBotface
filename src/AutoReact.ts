@@ -44,7 +44,7 @@ export default class AutoReact {
 
     private onThinking(message: Discord.Message) {
 
-        if (message.author.bot) { return; }
+        if (message.author.bot) return;
         const authorId = message.author.id;
 
         if (message.content.startsWith("!refresh_thinking")) {
@@ -72,7 +72,7 @@ export default class AutoReact {
 
             // If it's not the regular thinking emoji, maybe it's one of our custom ones?
             const emojiIds = /<:(.*?):([0-9]+)>/g.exec(message.content);
-            if (!emojiIds) { return; }
+            if (!emojiIds) return;
 
             let found = false;
             for (let i = 2; i < emojiIds.length; i += 3) {
@@ -85,7 +85,7 @@ export default class AutoReact {
                 break;
             }
 
-            if (!found) { return; }
+            if (!found) return;
         }
 
         // If original thinking user
@@ -136,7 +136,7 @@ export default class AutoReact {
 
     private onGreeting(message: Discord.Message) {
 
-        if (message.author.bot) { return; }
+        if (message.author.bot) return;
         const greeting = message.content.toLowerCase();
 
         const words = [

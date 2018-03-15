@@ -1,4 +1,3 @@
-import { CommandHandler } from "./CommandHandler";
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 
@@ -79,7 +78,7 @@ export default class OfficeHours {
             const content = message.content.split(" ");
             const asker = message.mentions.members.first();
 
-            if (!asker) { return; }
+            if (!asker) return;
 
             const question = content.slice(2).join(" ");
             this.storeQuestion(question, message, asker.id, asker.toString(), message.author.username);
@@ -167,7 +166,7 @@ export default class OfficeHours {
     }
 
     private async open(channel: Discord.TextChannel) {
-        if (this.data.isOpen) { return; }
+        if (this.data.isOpen) return;
         this.data.isOpen = true;
 
         const everyone = channel.guild.roles.find("name", "@everyone");
@@ -187,7 +186,7 @@ export default class OfficeHours {
         this.data.questions = [];
         this.data.nextId = 0;
 
-        if (!this.data.lastCloseMessage) { return; }
+        if (!this.data.lastCloseMessage) return;
 
         // Request last close message from Discord
         channel.fetchMessage(this.data.lastCloseMessage)
@@ -210,7 +209,7 @@ export default class OfficeHours {
     }
 
     private async close(channel: Discord.TextChannel) {
-        if (!this.data.isOpen) { return; }
+        if (!this.data.isOpen) return;
         this.data.isOpen = false;
 
         const everyone = channel.guild.roles.find("name", "@everyone");

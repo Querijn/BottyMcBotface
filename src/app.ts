@@ -15,7 +15,6 @@ import Techblog from "./Techblog";
 import Uptime from "./Uptime";
 import VersionChecker from "./VersionChecker";
 
-import { CommandList } from "./CommandHandler";
 import { fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";
