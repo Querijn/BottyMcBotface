@@ -162,11 +162,34 @@ export default class Info {
     }
 
     private fetchInfo(command: string): InfoData | null {
+
         const info = this.infos.find(inf => {
             return inf.command === command;
         });
 
-        if (!info) { return null; }
+        if (!info) {
+            const similarity = this.infos.slice().map(i => {
+                return {
+                    command: i.command,
+                    score: this.levenshteinDistance(command, i.command),
+                };
+            });
+
+            let message = "Did you mean: ";
+            let found = false;
+            similarity.forEach(s => {
+                if (s.score < 2) {
+                    message += "`" + s.command + "`, ";
+                    found = true;
+                }
+            });
+
+            if (found) {
+                return { message: message.slice(0, -2) + "?", counter: 0 } as InfoData;
+            }
+
+            return { message: `No note with the name ${command} was found.`, counter: 0 } as InfoData;
+        }
 
         // Backwards compatibility
         if (info.counter === undefined || info.counter === null) {
@@ -175,5 +198,41 @@ export default class Info {
 
         info.counter++;
         return info;
+    }
+
+    private levenshteinDistance(a: string, b: string): number {
+        if (a === b) {
+            return 0;
+        }
+
+        if (a.length === 0) {
+            return b.length;
+        }
+
+        if (b.length === 0) {
+            return a.length;
+        }
+
+        let v0 = [];
+        const v1 = [];
+
+        for (let i = 0; i < b.length + 1; i++) {
+            v0[i] = i;
+            v1[i] = 0;
+        }
+
+        for (let i = 0; i < a.length; i++) {
+
+            v1[0] = i + 1;
+
+            for (let j = 0; j < b.length; j++) {
+                const cost = a[i] === b[j] ? 0 : 1;
+                const min1 = Math.min(v1[j] + 1, v0[j + 1] + 1);
+                v1[j + 1] = Math.min(min1, v0[j] + cost);
+            }
+            v0 = v1.slice();
+        }
+
+        return v1[b.length];
     }
 }
