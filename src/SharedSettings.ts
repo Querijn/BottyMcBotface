@@ -1,69 +1,83 @@
 export interface SharedSettings {
-    server: string,
+    server: string;
+
     channelAccess: {
         forcedChannels: string[],
-        restrictedChannels: string[]
-    },
+        restrictedChannels: string[],
+    };
+
     uptimeSettings: {
-        checkInterval: number
-    },
+        checkInterval: number,
+    };
+
     techBlog: {
         checkInterval: number,
         channel: string,
-        url: string
-    },
+        url: string,
+    };
+
     keyFinder: {
-        reportChannel: string
-    },
+        reportChannel: string,
+    };
+
     forum: {
         checkInterval: number,
         channel: string,
-        url: string
-    }
+        url: string,
+    };
+
     honeypot: {
-        reportChannel: string;
-    },
+        reportChannel: string,
+    };
+
     autoReact: {
-        emoji: string;
-    },
+        emoji: string,
+    };
+
     info: {
         allowedRoles: string[],
-        command: string
-    },
+        command: string,
+    };
+
     officehours: {
         allowedRoles: string[],
         openMessage: string,
         closeMessage: string,
         addedMessage: string,
-        removedMessage: string
-    },
+        removedMessage: string,
+    };
+
     githubLibraries: {
         aliases: string[],
         noLanguage: string,
         languageList: string,
         githubError: string,
-        baseURL: string
-    },
+        baseURL: string,
+    };
+
     versionChecker: {
         checkInterval: number,
         channel: string,
         gameThumbnail: string,
-        dataDragonThumbnail: string
-    },
+        dataDragonThumbnail: string,
+    };
+
     logger: {
         server: string,
-        errorChannel: string
-        logChannel: string
-    },
+        errorChannel: string,
+        logChannel: string,
+    };
+
     apiStatus: {
         checkInterval: number,
         apiOnFireThreshold: number,
         statusUrl: string,
         command: string,
         aliases: string[],
-        onFireImages: string[]
-    },
+        onFireImages: string[],
+    };
+
     onJoin: {
-        messageFile: string
-    }
+        messageFile: string,
+    };
 }
