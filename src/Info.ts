@@ -180,10 +180,10 @@ export default class Info {
 
             if (data.length !== 0) {
                 message += data.map(s => "`" + s.command + "`").join(", ") + "?";
-                return { message, counter: 0 } as InfoData;
+                return { message, counter: 0, command };
             }
 
-            return { message: `No note with the name ${command} was found.`, counter: 0 } as InfoData;
+            return { message: `No note with the name ${command} was found.`, counter: 0, command };
         }
 
         // Backwards compatibility
