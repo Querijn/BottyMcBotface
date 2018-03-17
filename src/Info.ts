@@ -168,24 +168,19 @@ export default class Info {
         });
 
         if (!info) {
-            const similarity = this.infos.slice().map(i => {
-                return {
-                    command: i.command,
-                    score: this.levenshteinDistance(command, i.command),
-                };
-            });
-
             let message = "Did you mean: ";
-            let found = false;
-            similarity.forEach(s => {
-                if (s.score < 2) {
-                    message += "`" + s.command + "`, ";
-                    found = true;
-                }
-            });
 
-            if (found) {
-                return { message: message.slice(0, -2) + "?", counter: 0 } as InfoData;
+            const data = this.infos.slice()
+                .map(i => {
+                    return {
+                        command: i.command,
+                        score: this.levenshteinDistance(command, i.command),
+                    };
+                }).filter(s => s.score < 2);
+
+            if (data.length !== 0) {
+                message += data.map(s => "`" + s.command + "`").join(", ") + "?";
+                return { message, counter: 0 } as InfoData;
             }
 
             return { message: `No note with the name ${command} was found.`, counter: 0 } as InfoData;
@@ -200,6 +195,12 @@ export default class Info {
         return info;
     }
 
+    /**
+     * Counts the substitutions needed to transform a into b
+     * source adapted from: https://en.wikipedia.org/wiki/Levenshtein_distance#Iterative_with_two_matrix_rows
+     * @param a first string
+     * @param b seconds string
+     */
     private levenshteinDistance(a: string, b: string): number {
         if (a === b) {
             return 0;
@@ -222,13 +223,17 @@ export default class Info {
         }
 
         for (let i = 0; i < a.length; i++) {
-
             v1[0] = i + 1;
 
             for (let j = 0; j < b.length; j++) {
                 const cost = a[i] === b[j] ? 0 : 1;
-                const min1 = Math.min(v1[j] + 1, v0[j + 1] + 1);
-                v1[j + 1] = Math.min(min1, v0[j] + cost);
+
+                const deletionCost = v0[j + 1] + 1;
+                const insertCost = v1[j] + 1;
+                const substituteCost = v0[j] + cost;
+                const minCost = Math.min(Math.min(deletionCost, insertCost), substituteCost);
+
+                v1[j + 1] = minCost;
             }
             v0 = v1.slice();
         }
