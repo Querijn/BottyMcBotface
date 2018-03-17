@@ -95,7 +95,7 @@ export default class OfficeHours extends CommandHandler {
 
             const asker = message.mentions.members.first();
 
-            if (!asker) { return; }
+            if (!asker) return;
 
             const question = args.slice(1).join(" ");
             this.storeQuestion(question, message, asker.id, asker.toString(), message.author.username);
@@ -181,7 +181,7 @@ export default class OfficeHours extends CommandHandler {
     }
 
     private async open(channel: Discord.TextChannel) {
-        if (this.data.isOpen) { return; }
+        if (this.data.isOpen) return;
         this.data.isOpen = true;
 
         const everyone = channel.guild.roles.find("name", "@everyone");
@@ -201,7 +201,7 @@ export default class OfficeHours extends CommandHandler {
         this.data.questions = [];
         this.data.nextId = 0;
 
-        if (!this.data.lastCloseMessage) { return; }
+        if (!this.data.lastCloseMessage) return;
 
         // Request last close message from Discord
         const closeMessage = await channel.fetchMessage(this.data.lastCloseMessage);
@@ -219,7 +219,7 @@ export default class OfficeHours extends CommandHandler {
     }
 
     private async close(channel: Discord.TextChannel) {
-        if (!this.data.isOpen) { return; }
+        if (!this.data.isOpen) return;
         this.data.isOpen = false;
 
         const everyone = channel.guild.roles.find("name", "@everyone");

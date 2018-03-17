@@ -105,8 +105,8 @@ export default class Botty {
     }
 
     private handleCommands(message: Discord.Message) {
-        if (message.author.bot) { return; }
-        if (!message.content.startsWith(this.sharedSettings.botty.prefix)) { return; }
+        if (message.author.bot) return;
+        if (!message.content.startsWith(this.sharedSettings.botty.prefix)) return;
 
         const parts = message.content.split(" ");
         const command = parts[0].substr(1);

@@ -56,7 +56,7 @@ export default class AutoReact {
     }
 
     private onLoad() {
-        if (this.loaded) { return; }
+        if (this.loaded) return;
 
         this.oldLog = console.log;
         this.oldError = console.error;
@@ -70,7 +70,7 @@ export default class AutoReact {
     }
 
     private onUnload() {
-        if (!this.loaded) { return; }
+        if (!this.loaded) return;
 
         console.log = this.oldLog;
         console.error = this.oldError;

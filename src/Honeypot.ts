@@ -53,7 +53,7 @@ export default class Honeypot {
     }
 
     private onMessage(message: Discord.Message) {
-        if (message.channel.type !== "dm") { return; }
+        if (message.channel.type !== "dm") return;
 
         const catchMessage = `Got a direct message ${this.joinedTime} after joining from ${message.author.toString()}: \`\`\`${message.content}\`\`\``;
         this.reportHoneypotCatch(catchMessage);
@@ -72,7 +72,7 @@ export default class Honeypot {
     private reportHoneypotCatch(message: string) {
         console.warn(message);
         const channel = this.channel;
-        if (!channel) { return; }
+        if (!channel)  return;
 
         channel.send(message);
     }

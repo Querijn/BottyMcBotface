@@ -60,13 +60,13 @@ export default class AutoReact extends CommandHandler {
             return;
         }
 
-        if (this.ignoreUsers.indexOf(authorId) !== -1) { return; } // Only react to people not on list
+        if (this.ignoreUsers.indexOf(authorId) !== -1)  return;  // Only react to people not on list
 
         if (!message.content.includes("🤔")) {
 
             // If it's not the regular thinking emoji, maybe it's one of our custom ones?
             const emojiIds = /<:(.*?):([0-9]+)>/g.exec(message.content);
-            if (!emojiIds) { return; }
+            if (!emojiIds) return;
 
             let found = false;
             for (let i = 2; i < emojiIds.length; i += 3) {
@@ -79,7 +79,7 @@ export default class AutoReact extends CommandHandler {
                 break;
             }
 
-            if (!found) { return; }
+            if (!found) return;
         }
 
         // If original thinking user
@@ -130,7 +130,7 @@ export default class AutoReact extends CommandHandler {
 
     private onGreeting(message: Discord.Message) {
 
-        if (message.author.bot) { return; }
+        if (message.author.bot) return;
         const greeting = message.content.toLowerCase();
 
         const words = [

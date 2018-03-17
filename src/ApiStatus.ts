@@ -45,11 +45,11 @@ export default class ApiStatus extends CommandHandler {
     public async onCommand(message: Discord.Message, command: string, args: string[]) {
         const apiStatus = await this.getApiStatus();
 
-        const fields: Array<{
+        const fields: {
             name: string,
             value: string,
             inline: boolean,
-        }> = [];
+        }[] = [];
 
         for (const api in apiStatus.api) {
             fields.push({ name: api, value: apiStatus.api[api], inline: true });
