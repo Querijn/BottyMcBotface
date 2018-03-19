@@ -81,7 +81,7 @@ export default class Info extends CommandHandler {
                     }
                 case "remove":
                     {
-                        // we need 2 arguments to add a note.
+                        // we need 2 arguments to remove a note.
                         //   cmd    1     2
                         // (!note remove name)
                         if (args.length !== 2) {

@@ -131,7 +131,7 @@ export default class Botty extends CommandHandler {
         this.commands.forEach(holder => {
             if (holder.prefix === prefix) {
 
-                // handlers that register the "*" command will get all commands with that prefix
+                // handlers that register the "*" command will get all commands with that prefix (unless they already have gotten it once)
                 if (holder.command.aliases.some(x => x === command)) {
                     holder.handler.onCommand(message, command, parts.slice(1));
                     return;
