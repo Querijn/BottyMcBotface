@@ -13,13 +13,14 @@ export interface BottySettings {
     };
 }
 
-export default class Botty {
+export default class Botty extends CommandHandler {
     public readonly client = new Discord.Client();
     private personalSettings: PersonalSettings;
     private sharedSettings: SharedSettings;
     private commands: CommandHolder[] = [];
 
     constructor(personalSettings: PersonalSettings, sharedSettings: SharedSettings) {
+        super();
         this.personalSettings = personalSettings;
         this.sharedSettings = sharedSettings;
         console.log("Successfully loaded bot settings.");
@@ -41,11 +42,27 @@ export default class Botty {
         return this.client.login(this.personalSettings.discord.key);
     }
 
+    public onReady(bot: Discord.Client) {
+        console.log("Successfully loaded botty commands.");
+        return;
+    }
+
+    public onCommand(message: Discord.Message, command: string, args: string[]) {
+        let response = "\n";
+
+        // ignore "*" commands
+        this.commands.filter(holder => holder.command.aliases.some(a => a !== "*"))
+            .forEach(holder => response += `\`${holder.prefix}${holder.command.aliases}\`: ${holder.command.description}\n`);
+
+        message.reply(response);
+    }
+
     public registerCommand(newCommand: Command[], commandHandler: CommandHandler) {
         newCommand.forEach(cmd => {
             this.commands.push({
                 command: cmd,
                 handler: commandHandler,
+                prefix: cmd.prefix || this.sharedSettings.botty.prefix,
             });
         });
 
@@ -106,21 +123,23 @@ export default class Botty {
 
     private handleCommands(message: Discord.Message) {
         if (message.author.bot) return;
-        if (!message.content.startsWith(this.sharedSettings.botty.prefix)) return;
 
         const parts = message.content.split(" ");
+        const prefix = parts[0][0];
         const command = parts[0].substr(1);
 
-        if (command === "help") {
-            let response = "";
-            this.commands.forEach(holder => response += `${holder.command.aliases}: ${holder.command.description}\n`);
-            message.reply(response);
-            return;
-        }
-
         this.commands.forEach(holder => {
-            if (holder.command.aliases.some(x => x === command)) {
-                holder.handler.onCommand(message, command, parts.slice(1));
+            if (holder.prefix === prefix) {
+
+                // handlers that register the "*" command will get all commands with that prefix
+                if (holder.command.aliases.some(x => x === command)) {
+                    holder.handler.onCommand(message, command, parts.slice(1));
+                    return;
+                }
+
+                if (holder.command.aliases.some(x => x === "*")) {
+                    holder.handler.onCommand(message, "*", Array<string>().concat(command, parts.slice(1)));
+                }
             }
         });
     }

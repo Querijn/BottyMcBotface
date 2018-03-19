@@ -8,14 +8,17 @@ export abstract class CommandHandler {
 export interface CommandHolder {
     command: Command;
     handler: CommandHandler;
+    prefix: string;
 }
 
 export interface Command {
     aliases: string[];
     description: string;
+    prefix: string;
 }
 
 export interface CommandList {
+    botty: Command[];
     channelAccess: Command[];
     uptime: Command[];
     autoReact: Command[];

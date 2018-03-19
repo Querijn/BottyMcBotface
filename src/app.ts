@@ -37,10 +37,9 @@ const keyFinder = new KeyFinder(bot.client, sharedSettings, "data/riot_keys.json
 const forum = new ForumReader(bot.client, sharedSettings, personalSettings, "data/forum_data.json", keyFinder);
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
 
-// info seems like a pain to fix because of the .note syntax, so imma just leave it like this for now
-const info = new Info(bot.client, sharedSettings, "data/info_data.json", versionChecker);
-
 // bot.registerCommand(commandList.channelAccess, new ChannelAccess(bot.client, sharedSettings));
+bot.registerCommand(commandList.botty, bot);
+bot.registerCommand(commandList.info, new Info(sharedSettings, "data/info_data.json", versionChecker));
 bot.registerCommand(commandList.officeHours, new OfficeHours(sharedSettings, "data/office_hours_data.json"));
 bot.registerCommand(commandList.autoReact, new AutoReact(sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json"));
 bot.registerCommand(commandList.uptime, new Uptime(sharedSettings, personalSettings, "data/uptime_data.json"));
