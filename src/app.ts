@@ -15,6 +15,7 @@ import Techblog from "./Techblog";
 import Uptime from "./Uptime";
 import VersionChecker from "./VersionChecker";
 
+import { CommandList } from "./CommandHandler";
 import { fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";
@@ -22,6 +23,7 @@ import { SharedSettings } from "./SharedSettings";
 // Load and initialise settings
 const sharedSettings = fileBackedObject<SharedSettings>("settings/shared_settings.json");
 const personalSettings = fileBackedObject<PersonalSettings>("settings/personal_settings.json");
+const commandList = fileBackedObject<CommandList>("settings/command_list.json");
 const bot = new Botty(personalSettings, sharedSettings);
 
 // Load extensions
@@ -31,17 +33,18 @@ const bot = new Botty(personalSettings, sharedSettings);
 const joinMessaging = new JoinMessaging(bot.client, sharedSettings);
 const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
 const logger = new Logger(bot.client, sharedSettings);
-const uptime = new Uptime(bot.client, sharedSettings, personalSettings, "data/uptime_data.json");
 const keyFinder = new KeyFinder(bot.client, sharedSettings, "data/riot_keys.json");
 const forum = new ForumReader(bot.client, sharedSettings, personalSettings, "data/forum_data.json", keyFinder);
-// const honeypot = new Honeypot(bot.client, sharedSettings, personalSettings);
-const autoReact = new AutoReact(bot.client, sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json");
-const officeHours = new OfficeHours(bot.client, sharedSettings, "data/office_hours_data.json");
-const riotAPILibraries = new RiotAPILibraries(bot.client, personalSettings, sharedSettings);
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
-// const channelAccess = new ChannelAccess(bot.client, sharedSettings);
-const info = new Info(bot.client, sharedSettings, "data/info_data.json", versionChecker);
-const apiStatus = new ApiStatus(bot.client, sharedSettings);
+
+// bot.registerCommand(commandList.channelAccess, new ChannelAccess(bot.client, sharedSettings));
+bot.registerCommand(commandList.botty, bot);
+bot.registerCommand(commandList.info, new Info(sharedSettings, "data/info_data.json", versionChecker));
+bot.registerCommand(commandList.officeHours, new OfficeHours(sharedSettings, "data/office_hours_data.json"));
+bot.registerCommand(commandList.autoReact, new AutoReact(sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json"));
+bot.registerCommand(commandList.uptime, new Uptime(sharedSettings, personalSettings, "data/uptime_data.json"));
+bot.registerCommand(commandList.apiStatus, new ApiStatus(sharedSettings));
+bot.registerCommand(commandList.riotApiLibraries, new RiotAPILibraries(personalSettings, sharedSettings));
 
 // start bot
 bot.start();

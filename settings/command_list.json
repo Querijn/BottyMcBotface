@@ -1,0 +1,125 @@
+{
+    "botty": [
+        {
+            "aliases": [
+                "help"
+            ],
+            "description": "Prints all the commands"
+        }
+    ],
+    "channelAccess": [
+        {
+            "aliases": [
+                "join"
+            ],
+            "description": "Joins a channel"
+        },
+        {
+            "aliases": [
+                "leave"
+            ],
+            "description": "Leaves a channel"
+        }
+    ],
+    "info": [
+        {
+            "aliases": [
+                "note",
+                "notes"
+            ],
+            "description": "Prints all the notes, or the content of a note if used with a parameter"
+        },
+        {
+            "aliases": [
+                "*"
+            ],
+            "description": "Prints all the notes, or the content of a note if used with a parameter",
+            "prefix": "."
+        }
+    ],
+    "uptime": [
+        {
+            "aliases": [
+                "uptime"
+            ],
+            "description": "Checks the uptime of botty"
+        }
+    ],
+    "officeHours": [
+        {
+            "aliases": [
+                "ask"
+            ],
+            "description": "Ask a question at the next #office-hours"
+        },
+        {
+            "aliases": [
+                "ask_for"
+            ],
+            "description": "Ask a question for someone else at the next #office-hours"
+        },
+        {
+            "aliases": [
+                "open"
+            ],
+            "description": "Open #office-hours"
+        },
+        {
+            "aliases": [
+                "close"
+            ],
+            "description": "Close #office-hours"
+        },
+        {
+            "aliases": [
+                "question_list"
+            ],
+            "description": "Print the list of questions waiting for #office-hours"
+        },
+        {
+            "aliases": [
+                "question_remove"
+            ],
+            "description": "Remove a question from the list waiting for #office-hours"
+        }
+    ],
+    "riotApiLibraries": [
+        {
+            "aliases": [
+                "lib",
+                "libs",
+                "libraries"
+            ],
+            "description": "Print a list of the public libraries"
+        }
+    ],
+    "autoReact": [
+        {
+            "aliases": [
+                "toggle_default_thinking"
+            ],
+            "description": "Changes bottys reaction from the normal thinking emote, to one of the custom ones (or opposite)"
+        },
+        {
+            "aliases": [
+                "toggle_react"
+            ],
+            "description": "Decides if botty reacts to your messages"
+        },
+        {
+            "aliases": [
+                "refresh_thinking"
+            ],
+            "description": "Reloads the thinking emojis"
+        }
+    ],
+    "apiStatus": [
+        {
+            "aliases": [
+                "status",
+                "apistatus"
+            ],
+            "description": "Prints the status of the Riot Games API"
+        }
+    ]
+}

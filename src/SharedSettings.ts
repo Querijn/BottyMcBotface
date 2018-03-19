@@ -1,5 +1,9 @@
 export interface SharedSettings {
     server: string;
+    botty: {
+        prefix: string,
+        nickname: string,
+    };
 
     channelAccess: {
         forcedChannels: string[],
@@ -47,8 +51,7 @@ export interface SharedSettings {
         removedMessage: string,
     };
 
-    githubLibraries: {
-        aliases: string[],
+    riotApiLibraries: {
         noLanguage: string,
         languageList: string,
         githubError: string,
@@ -72,8 +75,6 @@ export interface SharedSettings {
         checkInterval: number,
         apiOnFireThreshold: number,
         statusUrl: string,
-        command: string,
-        aliases: string[],
         onFireImages: string[],
     };
 

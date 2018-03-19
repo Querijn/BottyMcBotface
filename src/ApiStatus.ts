@@ -3,6 +3,7 @@ import APIStatusAPI, { APIStatus } from "./ApiStatusApi";
 import { SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
+import { CommandHandler } from "./CommandHandler";
 
 /**
  * Map from API name (e.g. champion-mastery-v3) to the string used in the embed field.
@@ -21,41 +22,35 @@ interface StatusEmbedState {
     allApisIssues: boolean;
 }
 
-export default class ApiStatus {
+export default class ApiStatus extends CommandHandler {
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
-    private command: string;
     private apiStatusAPI: APIStatusAPI;
 
     private lastCheckTime: number;
     private currentStatus: StatusEmbedState;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings) {
-        console.log("Requested API Status extension..");
-        this.bot = bot;
-        this.command = sharedSettings.apiStatus.command;
+    constructor(sharedSettings: SharedSettings) {
+        super();
 
         this.sharedSettings = sharedSettings;
         this.lastCheckTime = 0;
         this.apiStatusAPI = new APIStatusAPI(this.sharedSettings.apiStatus.statusUrl, this.sharedSettings.apiStatus.checkInterval);
-
-        this.bot.on("ready", this.onBot.bind(this));
-        this.bot.on("message", this.onInfo.bind(this));
     }
 
-    private onBot() {
+    public onReady(bot: Discord.Client) {
         console.log("API Status extension loaded.");
     }
 
-    private async onInfo(message: Discord.Message) {
-        if (message.author.bot) return;
-
-        const content = message.cleanContent;
-        if (!this.isApiStatusCommand(content)) return;
-
+    public async onCommand(message: Discord.Message, command: string, args: string[]) {
         const apiStatus = await this.getApiStatus();
 
-        const fields: { name: string, value: string, inline: boolean }[] = [];
+        const fields: {
+            name: string,
+            value: string,
+            inline: boolean,
+        }[] = [];
+
         for (const api in apiStatus.api) {
             fields.push({ name: api, value: apiStatus.api[api], inline: true });
         }
@@ -185,13 +180,5 @@ export default class ApiStatus {
         // get rand in [0, number of on fire images - 1]
         const rand = Math.floor(Math.random() * this.sharedSettings.apiStatus.onFireImages.length);
         return this.sharedSettings.apiStatus.onFireImages[rand];
-    }
-
-    private startsWithAlias(msgContent: string): boolean {
-        return this.sharedSettings.apiStatus.aliases.some(x => msgContent.startsWith("!" + x));
-    }
-
-    private isApiStatusCommand(content: string): boolean {
-        return content.startsWith("!" + this.command) || this.startsWithAlias(content);
     }
 }

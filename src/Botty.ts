@@ -1,3 +1,4 @@
+import { Command, CommandHandler, CommandHolder } from "./CommandHandler";
 import { fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";
@@ -12,12 +13,14 @@ export interface BottySettings {
     };
 }
 
-export default class Botty {
+export default class Botty extends CommandHandler {
     public readonly client = new Discord.Client();
     private personalSettings: PersonalSettings;
     private sharedSettings: SharedSettings;
+    private commands: CommandHolder[] = [];
 
     constructor(personalSettings: PersonalSettings, sharedSettings: SharedSettings) {
+        super();
         this.personalSettings = personalSettings;
         this.sharedSettings = sharedSettings;
         console.log("Successfully loaded bot settings.");
@@ -28,6 +31,7 @@ export default class Botty {
             // .on("debug", console.log)
             .on("disconnect", () => console.warn("Disconnected!"))
             .on("reconnecting", () => console.warn("Reconnecting..."))
+            .on("message", this.handleCommands.bind(this))
             .on("connect", () => console.warn("Connected."))
             .on("ready", this.onConnect.bind(this));
 
@@ -36,6 +40,33 @@ export default class Botty {
 
     public start() {
         return this.client.login(this.personalSettings.discord.key);
+    }
+
+    public onReady(bot: Discord.Client) {
+        console.log("Successfully loaded botty commands.");
+        return;
+    }
+
+    public onCommand(message: Discord.Message, command: string, args: string[]) {
+        let response = "\n";
+
+        // ignore "*" commands
+        this.commands.filter(holder => holder.command.aliases.some(a => a !== "*"))
+            .forEach(holder => response += `\`${holder.prefix}${holder.command.aliases}\`: ${holder.command.description}\n`);
+
+        message.reply(response);
+    }
+
+    public registerCommand(newCommand: Command[], commandHandler: CommandHandler) {
+        newCommand.forEach(cmd => {
+            this.commands.push({
+                command: cmd,
+                handler: commandHandler,
+                prefix: cmd.prefix || this.sharedSettings.botty.prefix,
+            });
+        });
+
+        commandHandler.onReady(this.client);
     }
 
     private initListeners() {
@@ -87,8 +118,30 @@ export default class Botty {
         }
 
         // Set correct nickname
-        if (this.personalSettings.isProduction) {
-            guild.me.setNickname("Botty McBotface");
-        } else { guild.me.setNickname(""); }
+        guild.me.setNickname(this.sharedSettings.botty.nickname);
     }
+
+    private handleCommands(message: Discord.Message) {
+        if (message.author.bot) return;
+
+        const parts = message.content.split(" ");
+        const prefix = parts[0][0];
+        const command = parts[0].substr(1);
+
+        this.commands.forEach(holder => {
+            if (holder.prefix === prefix) {
+
+                // handlers that register the "*" command will get all commands with that prefix (unless they already have gotten it once)
+                if (holder.command.aliases.some(x => x === command)) {
+                    holder.handler.onCommand(message, command, parts.slice(1));
+                    return;
+                }
+
+                if (holder.command.aliases.some(x => x === "*")) {
+                    holder.handler.onCommand(message, "*", Array<string>().concat(command, parts.slice(1)));
+                }
+            }
+        });
+    }
+
 }

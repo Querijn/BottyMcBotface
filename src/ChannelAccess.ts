@@ -1,55 +1,42 @@
+import { CommandHandler } from "./CommandHandler";
 import { fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
 
-export default class ChannelAccess {
+export default class ChannelAccess extends CommandHandler {
     private sharedSettings: SharedSettings;
     private bot: Discord.Client;
     private guild: Discord.Guild;
 
     constructor(bot: Discord.Client, sharedSettings: SharedSettings) {
+        super();
         console.log("Requested ChannelAccess extension..");
 
         this.sharedSettings = sharedSettings;
         console.log("Successfully loaded ChannelAccess settings file.");
-
-        this.bot = bot;
-        this.bot.on("ready", () => this.onBotReady());
     }
 
-    private onBotReady(): void {
+    public onReady(bot: Discord.Client): void {
         const guild = this.bot.guilds.get(this.sharedSettings.server);
         if (!guild) {
             console.error(`ChannelAccess: Invalid settings for guild ID ${this.sharedSettings.server}`);
             return;
         }
         this.guild = guild;
-
-        this.bot.on("message", message => this.processMessage(message));
     }
 
-    private processMessage(message: Discord.Message) {
-        if (message.author.id === this.bot.user.id) return;
-
-        /** The message contents, split at spaces */
-        const split: string[] = message.cleanContent.split(" ");
-
-        let action: "join" | "leave" | undefined;
-        if (split[0].match(/^(!|\/)join$/gi)) { action = "join"; }
-        if (split[0].match(/^(!|\/)leave$/gi)) { action = "leave"; }
-
-        if (!action) return;
+    public onCommand(message: Discord.Message, command: string, args: string[]) {
 
         /** The specified name of the channel the user is trying to join/leave */
         let channelName: string | undefined;
         /** The channel the user is trying to join/leave */
-        let channel: Discord.Channel | undefined;
+        let channelActor: Discord.Channel | undefined;
 
         // "!leave" (with no argument) will leave the channel the user sent the message in
-        if (split.length === 1) {
-            if (action === "join") {
+        if (args.length === 0) {
+            if (command === "join") {
                 this.reply(message, "You must specify a channel to join");
                 return;
             }
@@ -59,32 +46,32 @@ export default class ChannelAccess {
                 return;
             }
 
-            channel = message.channel;
+            channelActor = message.channel;
         } else {
-            channelName = split[1];
+            channelName = args[0];
             // Remove "#" if the user prefixed the channel name with one
             if (channelName.startsWith("#")) {
                 channelName = channelName.slice(1);
             }
 
-            channel = this.guild.channels.find("name", channelName);
+            channelActor = this.guild.channels.find("name", channelName);
         }
 
-        if (!channel) {
+        if (!channelActor) {
             // TODO list available channels?
             this.reply(message, `Channel "${channelName}" does not exist`);
             return;
         }
 
-        if (channel.type !== "text") {
+        if (message.channel.type !== "text") {
             this.reply(message, "You may only join/leave text channels");
             return;
         }
 
-        if (action === "join") {
-            this.joinChannel(message, channel as Discord.TextChannel);
-        } else if (action === "leave") {
-            this.leaveChannel(message, channel as Discord.TextChannel);
+        if (command === "join") {
+            this.joinChannel(message, message.channel as Discord.TextChannel);
+        } else if (command === "leave") {
+            this.leaveChannel(message, message.channel as Discord.TextChannel);
         }
     }
 

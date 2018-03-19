@@ -2,18 +2,19 @@ import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
+import { CommandHandler } from "./CommandHandler";
 
-export default class AutoReact {
-    private bot: Discord.Client;
+export default class AutoReact extends CommandHandler {
     private thinkingUsers: string[];
     private ignoreUsers: string[];
     private thinkingEmojis: Discord.Emoji[] = [];
     private greetingEmoji: Discord.Emoji;
     private sharedSettings: SharedSettings;
+    private bot: Discord.Client;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, userFile: string, ignoreFile: string) {
+    constructor(sharedSettings: SharedSettings, userFile: string, ignoreFile: string) {
+        super();
         console.log("Requested Thinking extension..");
-        this.bot = bot;
 
         this.sharedSettings = sharedSettings;
 
@@ -22,17 +23,15 @@ export default class AutoReact {
 
         this.ignoreUsers = fileBackedObject(ignoreFile);
         console.log("Successfully loaded ignore reaction file.");
-
-        this.bot.on("ready", this.onBot.bind(this));
-        this.bot.on("message", this.onThinking.bind(this));
     }
 
-    private onBot() {
+    public onReady(bot: Discord.Client) {
+        this.bot = bot;
         console.log("Thinking extension loaded.");
 
         this.refreshThinkingEmojis();
 
-        const emoji = this.bot.emojis.get(this.sharedSettings.autoReact.emoji);
+        const emoji = bot.emojis.get(this.sharedSettings.autoReact.emoji);
         if (emoji instanceof Discord.Emoji) {
             this.greetingEmoji = emoji;
             this.bot.on("message", this.onGreeting.bind(this));
@@ -42,31 +41,26 @@ export default class AutoReact {
         }
     }
 
-    private onThinking(message: Discord.Message) {
-
-        if (message.author.bot) return;
+    public onCommand(message: Discord.Message, command: string, args: string[]) {
         const authorId = message.author.id;
 
-        if (message.content.startsWith("!refresh_thinking")) {
+        if (command === "refresh_thinking") {
             message.reply("reloading thinking emojis.");
             this.refreshThinkingEmojis();
             return;
         }
 
-        if (message.content.startsWith("!toggle_react")) {
+        if (command === "toggle_react") {
             this.onToggleReactRequest(message, authorId);
             return;
         }
 
-        if (this.ignoreUsers.indexOf(authorId) !== -1) {
-            // Only react to people not on list
-            return;
-        }
-
-        if (message.content.startsWith("!toggle_default_thinking")) {
+        if (command === "toggle_default_thinking") {
             this.onToggleThinkingRequest(message, authorId);
             return;
         }
+
+        if (this.ignoreUsers.indexOf(authorId) !== -1)  return;  // Only react to people not on list
 
         if (!message.content.includes("🤔")) {
 
