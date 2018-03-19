@@ -168,8 +168,6 @@ export default class Info {
         });
 
         if (!info) {
-            let message = "Did you mean: ";
-
             const data = this.infos.slice()
                 .map(i => {
                     return {
@@ -179,6 +177,7 @@ export default class Info {
                 }).filter(s => s.score < 2);
 
             if (data.length !== 0) {
+                let message = "Did you mean: ";
                 message += data.map(s => "`" + s.command + "`").join(", ") + "?";
                 return { message, counter: 0, command };
             }
