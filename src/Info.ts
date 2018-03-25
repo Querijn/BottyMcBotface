@@ -3,18 +3,7 @@ import { SharedSettings } from "./SharedSettings";
 import VersionChecker from "./VersionChecker";
 
 import Discord = require("discord.js");
-
-/**
- * Check if Collection contains anything in the other array.
- *
- * @param {Array} arr1
- * @param {Array} arr2
- */
-const findOne = (arr1: Discord.Collection<string, Discord.Role>, arr2: Array<any>) => {
-    return arr2.some(v => {
-        return !!arr1.get(v);
-    });
-};
+import { CommandHandler } from "./CommandHandler";
 
 export interface InfoData {
     command: string;
@@ -22,106 +11,107 @@ export interface InfoData {
     counter: number;
 }
 
-export default class Info {
-    private bot: Discord.Client;
+const findOne = (arr1: Discord.Collection<string, Discord.Role>, arr2: any[]) => {
+    return arr2.some(x => arr1.has(x));
+};
+
+export default class Info extends CommandHandler {
     private infos: InfoData[];
     private sharedSettings: SharedSettings;
     private command: string;
     private versionChecker: VersionChecker;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, userFile: string, versionChecker: VersionChecker) {
+    constructor(sharedSettings: SharedSettings, userFile: string, versionChecker: VersionChecker) {
+        super();
         console.log("Requested Info extension..");
-        this.bot = bot;
         this.command = sharedSettings.info.command;
         this.versionChecker = versionChecker;
+        this.sharedSettings = sharedSettings;
 
         this.infos = fileBackedObject(userFile);
         console.log("Successfully loaded info file.");
 
-        this.sharedSettings = sharedSettings;
-
-        this.bot.on("ready", this.onBot.bind(this));
-        this.bot.on("message", this.onInfo.bind(this));
     }
 
-    onBot() {
+    public onReady(bot: Discord.Client) {
         console.log("Info extension loaded.");
     }
 
-    onInfo(message: Discord.Message) {
-        if (message.author.bot) return;
-
-        // if using .syntax we can only read notes
-        let commandIsFetch = false;
-
-        // Needs to start with '/' or '!' or in separate cases '.'
-        const split = message.cleanContent.split(" ");
-        if (split[0][0] === '.') commandIsFetch = true;
-        else if (split[0][0] !== '!' && split[0][0] !== '/') return;
-        
-        // needs to start with command unless we are reading a note
-        let command = split[0].substr(1);
-        let nextIndex = 1;
-        
-        if (!commandIsFetch && command.startsWith(this.command)) {
-            // !info <command>
-            if (command.length === this.command.length) {
-                command = split[1];
-                nextIndex++;
-            }
-
-            // !info<command>
-            else command = command.substr(this.command.length);
-        } 
-
-        // Things we can't fetch
-        else if (command === "add" || command === "remove" || command === "list") 
-            return;
+    public onCommand(message: Discord.Message, command: string, args: string[]) {
 
         let response: string | undefined;
-        switch (command) {
-            case "add":
-                // Only admins
-                if (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) return;
-                
-                if (split.length <= nextIndex + 1) return;
-                response = this.addInfo(split[nextIndex], split.slice(nextIndex + 1).join(" "));
-                break;
 
-            case "remove":
-                // Only admins
-                if (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) return;
-                
-                if (split.length <= nextIndex) return;
-                response = this.removeInfo(split[nextIndex]);
-                break;
+        // the note we are trying to fetch (or the sub-command)
+        const action = args[0];
 
-            case "list":
-                response = this.listInfo();
-                break;
+        // if its not a .note command
+        if (command !== "*") {
 
-            default: // Retrieve or just !info
+            // if no params, we print the list
+            if (args.length === 0) {
+                message.channel.send(this.listInfo());
+                return;
+            }
+            // Things we can't fetch
+            const badWords = ["add", "remove", "list"];
 
-                let infoData: InfoData|null;
-                if (!commandIsFetch) {
-                    if (split.length <= 1) return;
-                    infoData = this.fetchInfo(split[1]);
+            // check admin status of account
+            const isAdmin = (message.member && findOne(message.member.roles, this.sharedSettings.info.allowedRoles));
+
+            // a non-admin account tried to use one of the sub-commands, so we stop
+            if (!isAdmin && badWords.some(x => x === action)) {
+                return;
+            }
+
+            switch (action) {
+                case "add":
+                    {
+                        // we need atleast 3 arguments to add a note.
+                        //   cmd   1   2     3
+                        // (!note add name message)
+                        if (args.length < 3) {
+                            return;
+                        }
+
+                        const name = args[1];
+                        const text = args.splice(2).join(" ");
+
+                        message.channel.send(this.addInfo(name, text));
+                        return;
+                    }
+                case "remove":
+                    {
+                        // we need 2 arguments to remove a note.
+                        //   cmd    1     2
+                        // (!note remove name)
+                        if (args.length !== 2) {
+                            return;
+                        }
+
+                        message.channel.send(this.removeInfo(args[1]));
+                        return;
+                    }
+
+                case "list": {
+                    message.channel.send(this.listInfo());
+                    return;
                 }
-                else {
-                    infoData = this.fetchInfo(command);
-                }
-
-                if (infoData) {
-                    response = infoData.message;
-                    response = response.replace(/{ddragonVersion}/g, this.versionChecker.ddragonVersion);
-                    response = response.replace(/{gameVersion}/g, this.versionChecker.gameVersion);
-                    response = response.replace(/{counter}/g, infoData.counter.toString());
-                }
-                break;
+            }
         }
 
-        if (!response) return;
+        // Retrieve note
+        const infoData = this.fetchInfo(action);
 
+        // if we got a valid note, replace variables
+        if (infoData) {
+            response = infoData.message;
+            response = response.replace(/{ddragonVersion}/g, this.versionChecker.ddragonVersion);
+            response = response.replace(/{gameVersion}/g, this.versionChecker.gameVersion);
+            response = response.replace(/{counter}/g, infoData.counter.toString());
+        }
+
+        // if we didnt get a valid note from fetchInfo, we return;
+        if (!response) return;
 
         message.channel.send(response);
     }
@@ -131,9 +121,9 @@ export default class Info {
         if (alreadyExists) return;
 
         const newInfo: InfoData = {
-            command: command,
-            message: message,
-            counter: 0
+            command,
+            counter: 0,
+            message,
         };
 
         this.infos.push(newInfo);
@@ -156,23 +146,24 @@ export default class Info {
 
         let message = `The available info commands are: \n`;
 
-        for (let i = 0; i < this.infos.length; i++) {
-            message += `- \`!${this.command} ${this.infos[i].command}\`\n`;
+        for (const info of this.infos) {
+            message += `- \`!${this.command} ${info.command}\`\n`;
         }
 
         return message;
     }
 
     private fetchInfo(command: string): InfoData | null {
-        const info = this.infos.find(info => {
-            return info.command === command;
+        const info = this.infos.find(inf => {
+            return inf.command === command;
         });
 
-        if (!info) return null;
+        if (!info) { return null; }
 
         // Backwards compatibility
-        if (info.counter === undefined || info.counter === null) 
+        if (info.counter === undefined || info.counter === null) {
             info.counter = 0;
+        }
 
         info.counter++;
         return info;

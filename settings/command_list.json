@@ -1,4 +1,12 @@
 {
+    "botty": [
+        {
+            "aliases": [
+                "help"
+            ],
+            "description": "Prints all the commands"
+        }
+    ],
     "channelAccess": [
         {
             "aliases": [
@@ -11,6 +19,22 @@
                 "leave"
             ],
             "description": "Leaves a channel"
+        }
+    ],
+    "info": [
+        {
+            "aliases": [
+                "note",
+                "notes"
+            ],
+            "description": "Prints all the notes, or the content of a note if used with a parameter"
+        },
+        {
+            "aliases": [
+                "*"
+            ],
+            "description": "Prints all the notes, or the content of a note if used with a parameter",
+            "prefix": "."
         }
     ],
     "uptime": [

@@ -68,7 +68,7 @@ export default class Honeypot {
     reportHoneypotCatch(message: string) {
         console.warn(message);
         const channel = this.channel;
-        if (!channel) return;
+        if (!channel)  return;
 
         channel.send(message);
     }

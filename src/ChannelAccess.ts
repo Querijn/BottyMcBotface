@@ -1,9 +1,9 @@
+import { CommandHandler } from "./CommandHandler";
 import { fileBackedObject } from "./FileBackedObject";
-import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
+import { SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
-import { CommandHandler } from "./CommandHandler";
 
 export default class ChannelAccess extends CommandHandler {
     private sharedSettings: SharedSettings;
@@ -18,8 +18,8 @@ export default class ChannelAccess extends CommandHandler {
         console.log("Successfully loaded ChannelAccess settings file.");
     }
 
-    onReady(bot: Discord.Client): void {
-        let guild = this.bot.guilds.get(this.sharedSettings.server);
+    public onReady(bot: Discord.Client): void {
+        const guild = this.bot.guilds.get(this.sharedSettings.server);
         if (!guild) {
             console.error(`ChannelAccess: Invalid settings for guild ID ${this.sharedSettings.server}`);
             return;
@@ -27,7 +27,7 @@ export default class ChannelAccess extends CommandHandler {
         this.guild = guild;
     }
 
-    onCommand(message: Discord.Message, command: string, args: string[]) {
+    public onCommand(message: Discord.Message, command: string, args: string[]) {
 
         /** The specified name of the channel the user is trying to join/leave */
         let channelName: string | undefined;
@@ -69,9 +69,9 @@ export default class ChannelAccess extends CommandHandler {
         }
 
         if (command === "join") {
-            this.joinChannel(message, <Discord.TextChannel>message.channel);
+            this.joinChannel(message, message.channel as Discord.TextChannel);
         } else if (command === "leave") {
-            this.leaveChannel(message, <Discord.TextChannel>message.channel);
+            this.leaveChannel(message, message.channel as Discord.TextChannel);
         }
     }
 
