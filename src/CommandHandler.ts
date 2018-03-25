@@ -15,6 +15,7 @@ export interface Command {
     aliases: string[];
     description: string;
     prefix: string;
+    admin: boolean;
 }
 
 export interface CommandList {

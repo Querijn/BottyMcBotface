@@ -46,14 +46,18 @@ export default class Botty extends CommandHandler {
         console.log("Successfully loaded botty commands.");
         return;
     }
+    
+    public isAdmin(user: Discord.GuildMember) {
+        return this.sharedSettings.info.allowedRoles.some(x => user.roles.has(x));
+    };
 
     // Help command
     public onCommand(message: Discord.Message, command: string, args: string[]) {
-        let response = "\n";
+        const isAdmin = (message.member && this.isAdmin(message.member));
 
-        // ignore "*" commands
-        this.commands.filter(holder => holder.command.aliases.some(a => a !== "*"))
-            .forEach(holder => response += `**${holder.prefix}${holder.command.aliases}**: ${holder.command.description}\n`);
+        // ignore "*" commands, output info about the rest of the commands
+        let response = this.commands.filter(holder => holder.command.aliases.some(a => a !== "*") && (isAdmin || holder.command.admin == false))
+            .map(holder => `**${holder.prefix}${holder.command.aliases}**: ${holder.command.description}`).join("\n");
 
         message.channel.send(response);
     }

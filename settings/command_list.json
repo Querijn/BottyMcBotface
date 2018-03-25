@@ -4,7 +4,8 @@
             "aliases": [
                 "help"
             ],
-            "description": "Prints all the commands"
+            "description": "Prints all the commands",
+            "admin": false
         }
     ],
     "channelAccess": [
@@ -12,13 +13,15 @@
             "aliases": [
                 "join"
             ],
-            "description": "Joins a channel"
+            "description": "Joins a channel",
+            "admin": false
         },
         {
             "aliases": [
                 "leave"
             ],
-            "description": "Leaves a channel"
+            "description": "Leaves a channel",
+            "admin": false
         }
     ],
     "info": [
@@ -27,14 +30,16 @@
                 "note",
                 "notes"
             ],
-            "description": "Prints all the notes, or the content of a note if used with a parameter"
+            "description": "Prints all the notes, or the content of a note if used with a parameter",
+            "admin": false
         },
         {
             "aliases": [
                 "*"
             ],
             "description": "Prints all the notes, or the content of a note if used with a parameter",
-            "prefix": "."
+            "prefix": ".",
+            "admin": false
         }
     ],
     "uptime": [
@@ -42,7 +47,8 @@
             "aliases": [
                 "uptime"
             ],
-            "description": "Checks the uptime of botty"
+            "description": "Checks the uptime of botty",
+            "admin": false
         }
     ],
     "officeHours": [
@@ -50,37 +56,43 @@
             "aliases": [
                 "ask"
             ],
-            "description": "Ask a question at the next #office-hours"
+            "description": "Ask a question at the next #office-hours",
+            "admin": false
         },
         {
             "aliases": [
                 "ask_for"
             ],
-            "description": "Ask a question for someone else at the next #office-hours"
+            "description": "Ask a question for someone else at the next #office-hours",
+            "admin": true
         },
         {
             "aliases": [
                 "open"
             ],
-            "description": "Open #office-hours"
+            "description": "Open #office-hours",
+            "admin": true
         },
         {
             "aliases": [
                 "close"
             ],
-            "description": "Close #office-hours"
+            "description": "Close #office-hours",
+            "admin": true
         },
         {
             "aliases": [
                 "question_list"
             ],
-            "description": "Print the list of questions waiting for #office-hours"
+            "description": "Print the list of questions waiting for #office-hours", 
+            "admin": true
         },
         {
             "aliases": [
                 "question_remove"
             ],
-            "description": "Remove a question from the list waiting for #office-hours"
+            "description": "Remove a question from the list waiting for #office-hours",
+            "admin": true
         }
     ],
     "riotApiLibraries": [
@@ -90,7 +102,8 @@
                 "libs",
                 "libraries"
             ],
-            "description": "Print a list of the public libraries"
+            "description": "Print a list of the public libraries",
+            "admin": false
         }
     ],
     "autoReact": [
@@ -98,19 +111,22 @@
             "aliases": [
                 "toggle_default_thinking"
             ],
-            "description": "Changes bottys reaction from the normal thinking emote, to one of the custom ones (or opposite)"
+            "description": "Changes bottys reaction from the normal thinking emote, to one of the custom ones (or opposite)",
+            "admin": false
         },
         {
             "aliases": [
                 "toggle_react"
             ],
-            "description": "Decides if botty reacts to your messages"
+            "description": "Decides if botty reacts to your messages",
+            "admin": false
         },
         {
             "aliases": [
                 "refresh_thinking"
             ],
-            "description": "Reloads the thinking emojis"
+            "description": "Reloads the thinking emojis",
+            "admin": true
         }
     ],
     "apiStatus": [
@@ -119,7 +135,8 @@
                 "status",
                 "apistatus"
             ],
-            "description": "Prints the status of the Riot Games API"
+            "description": "Prints the status of the Riot Games API",
+            "admin": false
         }
     ]
 }
