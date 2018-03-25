@@ -26,9 +26,9 @@ export default class Botty {
             .on("error", console.error)
             .on("warn", console.warn)
             // .on("debug", console.log)
-            .on("disconnect", () => console.warn("Disconnected!"))
-            .on("reconnecting", () => console.warn("Reconnecting..."))
-            .on("connect", () => console.warn("Connected."))
+            .on("disconnect", () => console.log("Disconnected!"))
+            .on("reconnecting", () => console.log("Reconnecting..."))
+            .on("connect", () => console.log("Connected."))
             .on("ready", this.onConnect.bind(this));
 
         this.initListeners();
