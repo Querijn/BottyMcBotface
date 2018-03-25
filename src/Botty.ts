@@ -119,7 +119,8 @@ export default class Botty extends CommandHandler {
         }
 
         // Set correct nickname
-        guild.me.setNickname(this.sharedSettings.botty.nickname);
+        if (this.personalSettings.isProduction) guild.me.setNickname(this.sharedSettings.botty.nickname);
+        else guild.me.setNickname("");
     }
 
     private handleCommands(message: Discord.Message) {
