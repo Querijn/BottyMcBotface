@@ -55,7 +55,7 @@ export default class Botty extends CommandHandler {
         this.commands.filter(holder => holder.command.aliases.some(a => a !== "*"))
             .forEach(holder => response += `**${holder.prefix}${holder.command.aliases}**: ${holder.command.description}\n`);
 
-        message.reply(response);
+        message.channel.send(response);
     }
 
     public registerCommand(newCommand: Command[], commandHandler: CommandHandler) {
