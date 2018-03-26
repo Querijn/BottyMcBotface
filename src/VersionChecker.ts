@@ -161,8 +161,12 @@ export default class VersionChecker {
     }
 
     private async onUpdate() {
-        await this.updateDataDragonVersion();
-        await this.updateGameVersion();
+        try {
+            await this.updateDataDragonVersion();
+            await this.updateGameVersion();
+        } catch (error) {
+            console.error(`Error occurred while fetching versions: ${error}`);
+        }
 
         setTimeout(this.onUpdate.bind(this), this.sharedSettings.versionChecker.checkInterval);
     }

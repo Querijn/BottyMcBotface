@@ -75,20 +75,24 @@ export default class AnswerHubAPI {
      * @returns The parsed body of the response from the AnswerHubAPI
      */
     private async makeRequest<T>(url: string): Promise<T> {
-        const resp = await fetch(`${this.baseURL}services/v2/${url}`, {
-            headers: {
-                "Accept": "application/json",
-                "Authorization": this.auth,
-                "Content-Type": "application/json",
-            },
-            method: "POST",
-        });
+        try {
+            const resp = await fetch(`${this.baseURL}services/v2/${url}`, {
+                headers: {
+                    "Accept": "application/json",
+                    "Authorization": this.auth,
+                    "Content-Type": "application/json",
+                },
+                method: "POST",
+            });
 
-        if (resp.status !== 200) {
-            throw new Error(`Received status code ${resp.status}`);
+            if (resp.status !== 200) {
+                throw new Error(`Received status code ${resp.status}`);
+            }
+
+            return resp.json();
+        } catch (error) {
+            console.error(`Error occurred while making a request to the answerhub api: ${error}`);
         }
-
-        return resp.json();
     }
 }
 
