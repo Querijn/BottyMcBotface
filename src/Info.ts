@@ -181,7 +181,7 @@ export default class Info {
                         command: i.command,
                         score: this.levenshteinDistance(command, i.command),
                     };
-                }).filter(s => s.score < 2);
+                }).filter(s => s.score < this.sharedSettings.info.maxScore);
 
             if (data.length !== 0) {
                 let message = "Did you mean: ";
