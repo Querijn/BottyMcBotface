@@ -48,7 +48,7 @@ export default class ApiStatusApi {
             this.cached = await resp.json();
             this.lastUpdate = Date.now();
         } catch (error) {
-            console.error(`Error occurred while making a request to the apistatus api: ${error}`);
+            throw new Error(`Error occurred while making a request to the apistatus api: ${error}`);
         }
 
         return this.cached;

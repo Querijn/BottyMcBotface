@@ -118,22 +118,19 @@ export default class KeyFinder {
      * @param key The AnswerHubAPI key to test
      * @async
      * @returns The value of the "X-App-Rate-Limit" header ('undefined' if a header is not included in the response) if the key yields a non-403 response code, or 'null' if the key yields a 403 response code
-     * @throws {Error} Thrown if the AnswerHubAPI call cannot be completed or results in a status code other than 200 or 403
+     * @throws {Error} Thrown if the API call cannot be completed or results in a status code other than 200 or 403
      */
     private async testKey(key: string): Promise<string | null> {
-        let resp;
         try {
-            resp = await fetch("https://euw1.api.riotgames.com/lol/summoner/v3/summoners/22929336", {
+            const resp = await fetch("https://euw1.api.riotgames.com/lol/summoner/v3/summoners/22929336", {
                 headers: {
                     "X-Riot-Token": key,
                 },
             });
+            return resp.status === 403 ? null : resp.headers.get("x-app-rate-limit");
         } catch (error) {
-            console.error(`Error occurred while making a request to the riot games api: ${error}`);
-            return null;
+            throw new Error(`Error occurred while making a request to the riot games api: ${error}`);
         }
-
-        return resp.status === 403 ? null : resp.headers.get("x-app-rate-limit");
     }
 
     /**
@@ -150,6 +147,7 @@ export default class KeyFinder {
                 }
             } catch (error) {
                 console.error(`Error occurred while making a request to the riot games api: ${error}`);
+                return;
             }
 
             this.keys.splice(i, 1);

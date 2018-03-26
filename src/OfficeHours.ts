@@ -227,10 +227,10 @@ export default class OfficeHours {
                     channel.send(usersToMention.join(", ") + "\n");
                 }
             }
-            this.sendOnThisDayMessage(channel);
         } catch (error) {
             console.error(`Error occurred while fetching last close message: ${error}`);
         }
+        await this.sendOnThisDayMessage(channel);
     }
 
     private async close(channel: Discord.TextChannel) {
@@ -254,6 +254,7 @@ export default class OfficeHours {
             message.react("✋");
         } catch (error) {
             console.error(`Error occurred while sending close message: ${error}`);
+            delete this.data.lastCloseMessage;
         }
     }
 }

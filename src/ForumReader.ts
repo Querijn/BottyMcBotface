@@ -82,7 +82,7 @@ export default class ForumReader {
      * @returns The node with the specified ID
      * @throws {Error} Thrown if an AnswerHubAPI error occurs
      */
-    private async getNode(id: number): Promise<Node | undefined> {
+    private async getNode(id: number): Promise<Node> {
         if (this.cachedNodes.has(id)) {
             return this.cachedNodes.get(id)!;
         } else {
@@ -91,7 +91,7 @@ export default class ForumReader {
                 this.cachedNodes.set(id, node);
                 return node;
             } catch (error) {
-                console.error(`Error occurred while making a request to the answerhub api: ${error}`);
+                throw new Error(`Error occurred while making a request to the answerhub api: ${error}`);
             }
         }
     }
@@ -167,7 +167,7 @@ export default class ForumReader {
         try {
             await this.channel.send({ embed });
         } catch (error) {
-            console.error(`Error occurred while making a request to the answerhub api: ${error}`);
+            console.error(`Error occurred while sending message: ${error}`);
         }
     }
 

@@ -93,8 +93,8 @@ export default class RiotAPILibraries {
                     message.channel.send(reply);
                 } catch (error) {
                     console.error(`Error occurred while fetching from github: ${error}`);
+                    message.channel.send("Failed to fetch languages from github, try again later");
                 }
-
                 return;
             }
             try {
@@ -131,6 +131,7 @@ export default class RiotAPILibraries {
                 editMessage.edit({ embed });
             } catch (error) {
                 console.error(`Error occurred fetching from github: ${error}`);
+                message.channel.send("Failed to fetch libraries from github, try again later");
             }
         }
     }
@@ -171,7 +172,7 @@ export default class RiotAPILibraries {
                 library: null,
                 links: [],
                 stars: -1,
-                valid: true,
+                valid: false,
             };
         }
     }
