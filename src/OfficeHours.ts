@@ -19,6 +19,28 @@ interface OfficeHoursData {
     nextId: number;
 }
 
+interface OnThisDayAPI {
+    date: string;
+    url: string;
+    data: OnThisDayAPIEvents;
+}
+
+interface OnThisDayAPIEvents {
+    Events: OnThisDayAPIEvent[];
+}
+
+interface OnThisDayAPIEvent {
+    year: string;
+    text: string;
+    html: string;
+    links: OnThisDayAPIEventLink[];
+}
+
+interface OnThisDayAPIEventLink {
+    title: string;
+    link: string;
+}
+
 export default class OfficeHours {
     private bot: Discord.Client;
     private data: OfficeHoursData;
@@ -155,22 +177,27 @@ export default class OfficeHours {
         }
     }
 
-    private sendOnThisDayMessage(channel: Discord.TextChannel) {
-        const onThisDayMsg = fetch("https://history.muffinlabs.com/date")
-            .then(r => r.json())
-            .then(({ data: { Events } }) => Events[Math.floor(Math.random() * Events.length)])
-            .then(event => {
-                channel.send(`On this day in ${event.year}, ${event.text}`);
-            })
-            .catch(r => console.warn("Failed to fetch message of the day: " + r));
+    private async sendOnThisDayMessage(channel: Discord.TextChannel) {
+        try {
+            const onThisDayFetch = await fetch("https://history.muffinlabs.com/date");
+            const onThisDayJson: OnThisDayAPI = await onThisDayFetch.json();
+            const onThisDayEvent = onThisDayJson.data.Events[Math.floor(Math.random() * onThisDayJson.data.Events.length)];
+            channel.send(`On this day in ${onThisDayEvent.year}, ${onThisDayEvent.text}`);
+        } catch (error) {
+            console.error(`Error occurred while making a request to the "on this day" api: ${error}`);
+        }
     }
 
     private async open(channel: Discord.TextChannel) {
         if (this.data.isOpen) return;
         this.data.isOpen = true;
 
-        const everyone = channel.guild.roles.find("name", "@everyone");
-        await channel.overwritePermissions(everyone, { SEND_MESSAGES: true });
+        try {
+            const everyone = channel.guild.roles.find("name", "@everyone");
+            await channel.overwritePermissions(everyone, { SEND_MESSAGES: true });
+        } catch (error) {
+            console.error(`Error occurred while overwriting permissions: ${error}`);
+        }
 
         // Start with open message
         channel.send(this.sharedSettings.officehours.openMessage);
@@ -188,42 +215,47 @@ export default class OfficeHours {
 
         if (!this.data.lastCloseMessage) return;
 
-        // Request last close message from Discord
-        channel.fetchMessage(this.data.lastCloseMessage)
-            .then(closeMessage => {
-                // Find all users that raised their hand
-                const reactions = closeMessage.reactions.get("✋");
-                if (reactions) {
-                    const usersToMention = reactions.users.array().filter(user => !user.bot);
-                    if (usersToMention.length > 0) {
-                        channel.send(usersToMention.join(", ") + "\n");
-                    }
-                }
+        try {
+            // Request last close message from Discord
+            const closeMessage = await channel.fetchMessage(this.data.lastCloseMessage);
 
-                this.sendOnThisDayMessage(channel);
-            })
-            .catch(reason => {
-                console.warn("Failed getting last close message: " + reason);
-                this.sendOnThisDayMessage(channel);
-            });
+            // Find all users that raised their hand
+            const reactions = closeMessage.reactions.get("✋");
+            if (reactions) {
+                const usersToMention = reactions.users.array().filter(user => !user.bot);
+                if (usersToMention.length > 0) {
+                    channel.send(usersToMention.join(", ") + "\n");
+                }
+            }
+        } catch (error) {
+            console.error(`Error occurred while fetching last close message: ${error}`);
+        }
+        await this.sendOnThisDayMessage(channel);
     }
 
     private async close(channel: Discord.TextChannel) {
         if (!this.data.isOpen) return;
         this.data.isOpen = false;
 
-        const everyone = channel.guild.roles.find("name", "@everyone");
-        await channel.overwritePermissions(everyone, { SEND_MESSAGES: false });
+        try {
+            const everyone = channel.guild.roles.find("name", "@everyone");
+            await channel.overwritePermissions(everyone, { SEND_MESSAGES: false });
+        } catch (error) {
+            console.error(`Error occurred while overwriting permissions: ${error}`);
+        }
 
-        channel.send(this.sharedSettings.officehours.closeMessage.replace(/{botty}/g, this.bot.user.toString()))
-            .then(message => {
-                if (Array.isArray(message)) {
-                    message = message[0];
-                }
+        try {
+            let message = await channel.send(this.sharedSettings.officehours.closeMessage.replace(/{botty}/g, this.bot.user.toString()));
+            if (Array.isArray(message)) {
+                message = message[0];
+            }
 
-                this.data.lastCloseMessage = message.id;
-                message.react("✋");
-            });
+            this.data.lastCloseMessage = message.id;
+            message.react("✋");
+        } catch (error) {
+            console.error(`Error occurred while sending close message: ${error}`);
+            delete this.data.lastCloseMessage;
+        }
     }
 }
 

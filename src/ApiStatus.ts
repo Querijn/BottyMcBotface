@@ -100,12 +100,11 @@ export default class ApiStatus {
     }
 
     private async getApiStatus(): Promise<StatusEmbedState> {
-        // cache embed state
-        const timeDiff = Date.now() - this.lastCheckTime;
-        if (timeDiff > this.sharedSettings.apiStatus.checkInterval) {
+        try {
             const apiStatus = await this.apiStatusAPI.getApiStatus();
             this.currentStatus = this.parseApiStatus(apiStatus);
-            this.lastCheckTime = Date.now();
+        } catch (error) {
+            console.error(`Error occurred while making a request to the apistatus api: ${error}`);
         }
 
         return this.currentStatus;

@@ -28,24 +28,29 @@ export default class ApiStatusApi {
     }
 
     public async getApiStatus(): Promise<APIStatus> {
-        if (Date.now() - this.lastUpdate < this.cacheDuration) {
-            return this.cached;
+        try {
+            if (Date.now() - this.lastUpdate < this.cacheDuration) {
+                return this.cached;
+            }
+
+            const resp = await fetch(this.apiUrl, {
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                },
+                method: "GET",
+            });
+
+            if (resp.status !== 200) {
+                throw new Error(`[ApiStatus] Received status code ${resp.status}`);
+            }
+
+            this.cached = await resp.json();
+            this.lastUpdate = Date.now();
+        } catch (error) {
+            throw new Error(`Error occurred while making a request to the apistatus api: ${error}`);
         }
 
-        const resp = await fetch(this.apiUrl, {
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            },
-            method: "GET",
-        });
-
-        if (resp.status !== 200) {
-            throw new Error(`[ApiStatus] Received status code ${resp.status}`);
-        }
-
-        this.cached = await resp.json();
-        this.lastUpdate = Date.now();
         return this.cached;
     }
 }

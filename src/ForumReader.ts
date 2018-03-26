@@ -86,9 +86,13 @@ export default class ForumReader {
         if (this.cachedNodes.has(id)) {
             return this.cachedNodes.get(id)!;
         } else {
-            const node = await this.answerHub.getNode(id);
-            this.cachedNodes.set(id, node);
-            return node;
+            try {
+                const node = await this.answerHub.getNode(id);
+                this.cachedNodes.set(id, node);
+                return node;
+            } catch (error) {
+                throw new Error(`Error occurred while making a request to the answerhub api: ${error}`);
+            }
         }
     }
 
@@ -119,7 +123,7 @@ export default class ForumReader {
             }
 
             case "answer": {
-                const question: Question = await this.getNode(activity.originalParentId);
+                const question = await this.getNode(activity.originalParentId) as Question;
                 embed = new Discord.RichEmbed()
                     .setColor(0xd1f442)
                     .setTitle(`${activity.author.username} posted an answer on "${question.title}"`)
@@ -132,7 +136,7 @@ export default class ForumReader {
 
             case "comment": {
                 /* The root question or article of the comment */
-                const rootNode: Article | Question = await this.getNode(activity.originalParentId);
+                const rootNode = await this.getNode(activity.originalParentId) as Article | Question;
                 embed = new Discord.RichEmbed()
                     .setColor(0x4fb9f7)
                     .setTitle(`${activity.author.username} posted a comment on "${rootNode.title}"`)
@@ -160,7 +164,11 @@ export default class ForumReader {
         this.keyFinder.findKey(username, activity.body, embed.url as string, activity.creationDate);
         embed.setTimestamp(new Date(activity.creationDate)).setThumbnail(avatar);
 
-        await this.channel.send({ embed });
+        try {
+            await this.channel.send({ embed });
+        } catch (error) {
+            console.error(`Error occurred while sending message: ${error}`);
+        }
     }
 
     /**
@@ -227,11 +235,16 @@ export default class ForumReader {
         }
         this.lastCheckTime = Date.now();
 
-        await this.readActivities(this.answerHub.getQuestions());
-        await this.readActivities(this.answerHub.getAnswers());
-        await this.readActivities(this.answerHub.getComments());
-        await this.readActivities(this.answerHub.getArticles());
-        await this.retryErroredActivities();
+        try {
+            await this.readActivities(this.answerHub.getQuestions());
+            await this.readActivities(this.answerHub.getAnswers());
+            await this.readActivities(this.answerHub.getComments());
+            await this.readActivities(this.answerHub.getArticles());
+            await this.retryErroredActivities();
+        } catch (error) {
+            console.error(`Error occurred while making a request to the answerhub api: ${error}`);
+        }
+
         setTimeout(this.fetchForumData.bind(this), this.sharedSettings.forum.checkInterval);
     }
 }
