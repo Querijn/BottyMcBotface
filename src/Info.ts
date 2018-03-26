@@ -64,6 +64,8 @@ export default class Info {
         let command = split[0].substr(1);
         let nextIndex = 1;
 
+        if (!commandIsFetch && command !== this.command) return;
+
         if (!commandIsFetch && command.startsWith(this.command)) {
             if (command.length === this.command.length) {
                 // !info <command>
