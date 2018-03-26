@@ -168,6 +168,8 @@ export default class Info {
 
     private fetchInfo(command: string): InfoData | null {
 
+        if (command.length == 0) return null;
+
         const info = this.infos.find(inf => {
             return inf.command === command;
         });
