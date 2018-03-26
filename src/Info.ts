@@ -55,7 +55,7 @@ export default class Info {
         let commandIsFetch = false;
 
         // Needs to start with '/' / '!' or '.'
-        const contentPrefix = message.cleanContent;
+        const contentPrefix = message.cleanContent[0];
         const split = message.cleanContent.split(" ");
         commandIsFetch = (contentPrefix === ".");
         if (!commandIsFetch && !["!", "/"].includes(contentPrefix)) return;
