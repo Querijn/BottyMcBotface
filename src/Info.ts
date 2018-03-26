@@ -168,7 +168,7 @@ export default class Info {
     private fetchInfo(command: string): InfoData | null {
 
         if (command.length == 0) return null;
-        if (command.length > 1999) return { message: `Stop it. Get some help.`, counter: 0, command };
+        if (command.length > 300) return { message: `Stop it. Get some help.`, counter: 0, command };
 
         const info = this.infos.find(inf => {
             return inf.command === command;
