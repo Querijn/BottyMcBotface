@@ -59,7 +59,7 @@ export default class KeyFinder {
         for (const match of matches) {
             let limit;
             try {
-                limit = this.testKey(match);
+                limit = await this.testKey(match);
             } catch (error) {
                 console.error(`Error occurred while making a request to the riot games api: ${error}`);
             }

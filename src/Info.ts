@@ -55,7 +55,7 @@ export default class Info {
         let commandIsFetch = false;
 
         // Needs to start with '/' or '!' or in separate cases '.'
-        const split = message.cleanContent.split(" ");
+        const split = message.cleanContent.split(/[\n\r\s]/);
         if (split[0][0] === ".") {
             commandIsFetch = true;
         } else if (split[0][0] !== "!" && split[0][0] !== "/") return;
@@ -106,7 +106,6 @@ export default class Info {
                 break;
 
             default: // Retrieve or just !info
-
                 let infoData: InfoData | null;
                 if (!commandIsFetch) {
                     if (split.length <= 1) return;
@@ -167,6 +166,9 @@ export default class Info {
     }
 
     private fetchInfo(command: string): InfoData | null {
+
+        if (command.length == 0) return null;
+        if (command.length > 300) return { message: `Stop it. Get some help.`, counter: 0, command };
 
         const info = this.infos.find(inf => {
             return inf.command === command;

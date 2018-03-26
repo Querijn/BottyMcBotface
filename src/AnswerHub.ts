@@ -91,7 +91,7 @@ export default class AnswerHubAPI {
 
             return resp.json();
         } catch (error) {
-            console.error(`Error occurred while making a request to the answerhub api: ${error}`);
+            throw new Error(`Error occurred while making a request to the answerhub api: ${error}`);
         }
     }
 }
