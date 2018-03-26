@@ -54,11 +54,11 @@ export default class Info {
         // if using .syntax we can only read notes
         let commandIsFetch = false;
 
-        // Needs to start with '/' or '!' or in separate cases '.'
-        const split = message.cleanContent.split(/[\n\r\s]/);
-        if (split[0][0] === ".") {
-            commandIsFetch = true;
-        } else if (split[0][0] !== "!" && split[0][0] !== "/") return;
+        // Needs to start with '/' / '!' or '.'
+        const contentPrefix = message.cleanContent[0];
+        const split = message.cleanContent.split(" ");
+        commandIsFetch = (contentPrefix === ".");
+        if (!commandIsFetch && !["!", "/"].includes(contentPrefix)) return;
 
         // needs to start with command unless we are reading a note
         let command = split[0].substr(1);
