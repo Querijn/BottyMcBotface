@@ -53,7 +53,15 @@ export default class ApiStatus {
         const content = message.cleanContent;
         if (!this.isApiStatusCommand(content)) return;
 
-        const apiStatus = await this.getApiStatus();
+        let apiStatus: StatusEmbedState;
+        try {
+            apiStatus = await this.getApiStatus();
+        } catch (error) {
+            console.error(error);
+            // fake status so we dont need to wrap the entire block
+            apiStatus = { api: {}, onFire: true, allApisOK: false, allApisIssues: true };
+            console.error(`Error occurred while making a request to the apistatus api: ${error}`);
+        }
 
         const fields: { name: string, value: string, inline: boolean }[] = [];
         for (const api in apiStatus.api) {
@@ -100,15 +108,20 @@ export default class ApiStatus {
     }
 
     private async getApiStatus(): Promise<StatusEmbedState> {
-        // cache embed state
-        const timeDiff = Date.now() - this.lastCheckTime;
-        if (timeDiff > this.sharedSettings.apiStatus.checkInterval) {
-            const apiStatus = await this.apiStatusAPI.getApiStatus();
-            this.currentStatus = this.parseApiStatus(apiStatus);
-            this.lastCheckTime = Date.now();
-        }
+        try {
+            // cache embed state
+            const timeDiff = Date.now() - this.lastCheckTime;
+            if (timeDiff > this.sharedSettings.apiStatus.checkInterval) {
+                const apiStatus = await this.apiStatusAPI.getApiStatus();
+                this.currentStatus = this.parseApiStatus(apiStatus);
+                this.lastCheckTime = Date.now();
+            }
+            return this.currentStatus;
 
-        return this.currentStatus;
+        } catch (error) {
+            console.error(`Error occurred while making a request to the apistatus api: ${error}`);
+            return this.currentStatus;
+        }
     }
 
     private parseApiStatus(apiStatus: APIStatus): StatusEmbedState {
