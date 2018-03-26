@@ -65,10 +65,15 @@ export default class Info {
         let nextIndex = 1;
 
         if (!commandIsFetch && command.startsWith(this.command)) {
-            // !info <command>
             if (command.length === this.command.length) {
-                command = split[1];
-                nextIndex++;
+                // !info <command>
+                if (split.length === 1) {
+                    message.channel.send(this.listInfo());
+                    return;
+                } else {
+                    command = split[1];
+                    nextIndex++;
+                }
             } else {
                 // !info<command>
                 command = command.substr(this.command.length);
