@@ -56,9 +56,9 @@ export default class Info {
 
         // Needs to start with '/' / '!' or '.'
         const contentPrefix = message.cleanContent[0];
-        const split = message.cleanContent.split(" ");
+        const split = message.cleanContent.split(/[\n\r\s]/);
         commandIsFetch = (contentPrefix === ".");
-        if (!commandIsFetch && !["!", "/"].includes(contentPrefix)) return;
+        if (!commandIsFetch && ["!", "/"].indexOf(contentPrefix) !== -1) return;
 
         // needs to start with command unless we are reading a note
         let command = split[0].substr(1);
