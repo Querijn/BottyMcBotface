@@ -51,14 +51,15 @@ export default class Info {
     public onInfo(message: Discord.Message) {
         if (message.author.bot) return;
 
-        // if using .syntax we can only read notes
-        let commandIsFetch = false;
-
-        // Needs to start with '/' or '!' or in separate cases '.'
+        // Needs to start with '/' / '!' or '.'
         const split = message.cleanContent.split(/[\n\r\s]/);
-        if (split[0][0] === ".") {
-            commandIsFetch = true;
-        } else if (split[0][0] !== "!" && split[0][0] !== "/") return;
+        const contentPrefix = split[0][0];
+        
+        // if using .syntax we can only read notes
+        const commandIsFetch = (contentPrefix === ".");
+        
+        // if it's not fetching a note, nor starts with a command char, return
+        if (!commandIsFetch && ["!", "/"].indexOf(contentPrefix) === -1) return;
 
         // needs to start with command unless we are reading a note
         let command = split[0].substr(1);
