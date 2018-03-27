@@ -51,8 +51,6 @@ export default class Info {
     public onInfo(message: Discord.Message) {
         if (message.author.bot) return;
 
-        let commandIsFetch = false;
-
         // Needs to start with '/' / '!' or '.'
         const split = message.cleanContent.split(/[\n\r\s]/);
         const contentPrefix = split[0][0];
