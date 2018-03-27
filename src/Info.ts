@@ -64,23 +64,25 @@ export default class Info {
         let command = split[0].substr(1);
         let nextIndex = 1;
 
-        if (!commandIsFetch && command.startsWith(this.command)) {
-            if (command.length === this.command.length) {
-                // !info <command>
-                if (split.length === 1) {
-                    message.channel.send(this.listInfo());
-                    return;
+        if (!commandIsFetch) {
+            if (command.startsWith(this.command)) {
+                if (command.length === this.command.length) {
+                    // !info <command>
+                    if (split.length === 1) {
+                        message.channel.send(this.listInfo());
+                        return;
+                    } else {
+                        command = split[1];
+                        nextIndex++;
+                    }
                 } else {
-                    command = split[1];
-                    nextIndex++;
+                    // !info<command>
+                    command = command.substr(this.command.length);
                 }
             } else {
-                // !info<command>
-                command = command.substr(this.command.length);
+                // Things we can't fetch
+                return;
             }
-        } else if (command === "add" || command === "remove" || command === "list") {
-            // Things we can't fetch
-            return;
         }
 
         let response: string | undefined;
