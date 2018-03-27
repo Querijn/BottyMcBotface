@@ -2,9 +2,7 @@ import Botty from "./Botty";
 
 import ApiStatus from "./ApiStatus";
 import AutoReact from "./AutoReact";
-//import ChannelAccess from "./ChannelAccess";
 import ForumReader from "./ForumReader";
-//import Honeypot from "./Honeypot";
 import Info from "./Info";
 import JoinMessaging from "./JoinMessaging";
 import KeyFinder from "./KeyFinder";
