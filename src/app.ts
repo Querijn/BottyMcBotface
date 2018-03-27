@@ -25,7 +25,6 @@ const personalSettings = fileBackedObject<PersonalSettings>("settings/personal_s
 const bot = new Botty(personalSettings, sharedSettings);
 
 // Load extensions
-// const honeypot = new Honeypot(bot.client, sharedSettings, personalSettings);
 const joinMessaging = new JoinMessaging(bot.client, sharedSettings);
 const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
 const logger = new Logger(bot.client, sharedSettings);
