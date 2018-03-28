@@ -37,7 +37,7 @@ export default class Info extends CommandHandler {
         console.log("Info extension loaded.");
     }
 
-    public onCommand(message: Discord.Message, command: string, args: string[]) {
+    public onCommand(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
 
         let response: string | undefined;
 
@@ -54,9 +54,6 @@ export default class Info extends CommandHandler {
             }
             // Things we can't fetch
             const badWords = ["add", "remove", "list"];
-
-            // check admin status of account
-            const isAdmin = (message.member && findOne(message.member.roles, this.sharedSettings.info.allowedRoles));
 
             // a non-admin account tried to use one of the sub-commands, so we stop
             if (!isAdmin && badWords.some(x => x === action)) {

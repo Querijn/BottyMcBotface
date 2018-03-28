@@ -42,7 +42,7 @@ export default class ApiStatus extends CommandHandler {
         console.log("API Status extension loaded.");
     }
 
-    public async onCommand(message: Discord.Message, command: string, args: string[]) {
+    public async onCommand(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         const apiStatus = await this.getApiStatus();
 
         const fields: {

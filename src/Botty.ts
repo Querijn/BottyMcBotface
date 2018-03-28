@@ -47,17 +47,20 @@ export default class Botty extends CommandHandler {
         return;
     }
 
-    public onCommand(message: Discord.Message, command: string, args: string[]) {
+    public onCommand(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         let response = "\n";
 
-        // ignore "*" commands
-        this.commands.filter(holder => holder.command.aliases.some(a => a !== "*"))
+        this.commands
+            // ignore "*" commands
+            .filter(holder => holder.command.aliases.some(a => a !== "*"))
+            // hide admin commands
+            .filter(holder => isAdmin || !holder.command.admin)
             .forEach(holder => response += `\`${holder.prefix}${holder.command.aliases}\`: ${holder.command.description}\n`);
 
         message.reply(response);
     }
 
-    public registerCommand(newCommand: Command[], commandHandler: CommandHandler) {
+    public registerCommand(newCommand: Command[], commandHandler: (CommandHandler)) {
         newCommand.forEach(cmd => {
             this.commands.push({
                 command: cmd,
@@ -131,18 +134,19 @@ export default class Botty extends CommandHandler {
         const parts = message.content.split(" ");
         const prefix = parts[0][0];
         const command = parts[0].substr(1);
+        const isAdmin = (message.member && this.sharedSettings.commands.adminRoles.some(x => message.member.roles.has(x)));
 
         this.commands.forEach(holder => {
             if (holder.prefix === prefix) {
 
                 // handlers that register the "*" command will get all commands with that prefix (unless they already have gotten it once)
                 if (holder.command.aliases.some(x => x === command)) {
-                    holder.handler.onCommand(message, command, parts.slice(1));
+                    holder.handler.onCommand(message, isAdmin, command, parts.slice(1));
                     return;
                 }
 
                 if (holder.command.aliases.some(x => x === "*")) {
-                    holder.handler.onCommand(message, "*", Array<string>().concat(command, parts.slice(1)));
+                    holder.handler.onCommand(message, isAdmin, "*", Array<string>().concat(command, parts.slice(1)));
                 }
             }
         });

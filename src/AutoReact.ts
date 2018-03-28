@@ -41,7 +41,7 @@ export default class AutoReact extends CommandHandler {
         }
     }
 
-    public onCommand(message: Discord.Message, command: string, args: string[]) {
+    public onCommand(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         const authorId = message.author.id;
 
         if (command === "refresh_thinking") {

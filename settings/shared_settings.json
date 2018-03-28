@@ -4,14 +4,12 @@
         "prefix": "!",
         "nickname": "Botty McBotface"
     },
-    "channelAccess": {
-        "forcedChannels": [
-            "301148922443726870",
-            "187961895049756672",
-            "190817288507752448"
-        ],
-        "restrictedChannels": [
-            "190817288507752448"
+    "commands": {
+        "adminRoles": [
+            "187653195038720000",
+            "187653430372728833",
+            "350692046631206912",
+            "347539422943903755"
         ]
     },
     "uptimeSettings": {
@@ -29,9 +27,6 @@
         "checkInterval": 10000,
         "channel": "external-activity",
         "url": "http://discussion.developer.riotgames.com/"
-    },
-    "honeypot": {
-        "reportChannel": "moderators"
     },
     "info": {
         "allowedRoles": [

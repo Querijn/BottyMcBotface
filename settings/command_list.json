@@ -7,20 +7,6 @@
             "description": "Prints all the commands"
         }
     ],
-    "channelAccess": [
-        {
-            "aliases": [
-                "join"
-            ],
-            "description": "Joins a channel"
-        },
-        {
-            "aliases": [
-                "leave"
-            ],
-            "description": "Leaves a channel"
-        }
-    ],
     "info": [
         {
             "aliases": [
@@ -53,30 +39,35 @@
             "description": "Ask a question at the next #office-hours"
         },
         {
+            "admin": true,
             "aliases": [
                 "ask_for"
             ],
             "description": "Ask a question for someone else at the next #office-hours"
         },
         {
+            "admin": true,
             "aliases": [
                 "open"
             ],
             "description": "Open #office-hours"
         },
         {
+            "admin": true,
             "aliases": [
                 "close"
             ],
             "description": "Close #office-hours"
         },
         {
+            "admin": true,
             "aliases": [
                 "question_list"
             ],
             "description": "Print the list of questions waiting for #office-hours"
         },
         {
+            "admin": true,
             "aliases": [
                 "question_remove"
             ],
@@ -107,6 +98,7 @@
             "description": "Decides if botty reacts to your messages"
         },
         {
+            "admin": true,
             "aliases": [
                 "refresh_thinking"
             ],

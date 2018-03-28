@@ -79,17 +79,14 @@ export default class OfficeHours extends CommandHandler {
         console.log(`OfficeHours extension loaded (${this.data.isOpen ? "open" : "closed"}).`);
     }
 
-    public onCommand(message: Discord.Message, command: string, args: string[]) {
+    public onCommand(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
 
         if (command === "ask") {
             const question = args.join(" ");
             this.storeQuestion(question, message, message.author.id, message.author.username);
         }
 
-        const isAdmin = (message.member && findOne(message.member.roles, this.sharedSettings.officehours.allowedRoles));
-        if (!isAdmin) {
-            return;
-        }
+        if (!isAdmin) return;
 
         if (command === "ask_for") {
 

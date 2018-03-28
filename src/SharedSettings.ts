@@ -5,13 +5,12 @@ export interface SharedSettings {
         nickname: string,
     };
 
-    channelAccess: {
-        forcedChannels: string[],
-        restrictedChannels: string[],
-    };
-
     uptimeSettings: {
         checkInterval: number,
+    };
+
+    commands: {
+        adminRoles: string[];
     };
 
     techBlog: {
@@ -28,10 +27,6 @@ export interface SharedSettings {
         checkInterval: number,
         channel: string,
         url: string,
-    };
-
-    honeypot: {
-        reportChannel: string,
     };
 
     autoReact: {

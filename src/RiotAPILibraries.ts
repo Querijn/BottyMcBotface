@@ -73,7 +73,7 @@ export default class RiotAPILibraries extends CommandHandler {
         console.log("Github extension loaded.");
     }
 
-    public onCommand(message: Discord.Message, command: string, args: string[]) {
+    public onCommand(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
 
         if (args.length === 0) {
             return this.getList(message);
