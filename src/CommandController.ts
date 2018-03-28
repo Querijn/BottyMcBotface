@@ -13,7 +13,12 @@ export interface SingleCommand {
 export interface CommandHolder {
     command: Command;
     handler: (CommandHandler | SingleCommand);
+    status: CommandStatus;
     prefix: string;
+}
+
+enum CommandStatus {
+    ENABLED, DISABLED,
 }
 
 export interface Command {
@@ -45,23 +50,58 @@ export default class CommandController {
         this.client = bot;
 
         bot.on("message", this.handleCommands.bind(this));
+
         this.registerCommand([
             {
                 aliases: ["help"],
                 description: "Prints all the commands",
             },
-        ] as Command[], { onCommand: this.onCommand } as SingleCommand);
+        ] as Command[], { onCommand: this.onHelp } as SingleCommand);
+
+        this.registerCommand([
+            {
+                admin: true,
+                aliases: ["toggle_command"],
+                description: "Enables or disables commands (!toggle_command {command})",
+            },
+        ] as Command[], { onCommand: this.onToggle } as SingleCommand);
     }
 
-    public onCommand(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+    public onToggle(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        if (args.length !== 1) return;
+
+        const filtered = this.commands.filter(handler => handler.command.aliases.some(alias => alias === args[0]));
+        filtered.forEach(handler => handler.status = (handler.status === CommandStatus.ENABLED ? CommandStatus.DISABLED : CommandStatus.ENABLED));
+    }
+
+    public onHelp(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         let response = "\n";
+
+        const toString = (holder: CommandHolder) => {
+
+            let str = "";
+
+            if (holder.status === CommandStatus.DISABLED) {
+                str += "~~";
+            }
+
+            str += `\`${holder.prefix}${holder.command.aliases}\``;
+
+            if (holder.status === CommandStatus.DISABLED) {
+                str += "~~";
+            }
+
+            str += `: ${holder.command.description}\n`;
+
+            return str;
+        };
 
         this.commands
             // ignore "*" commands
             .filter(holder => holder.command.aliases.some(a => a !== "*"))
-            // hide admin commands
+            // hide admin commands if not admin
             .filter(holder => isAdmin || !holder.command.admin)
-            .forEach(holder => response += `\`${holder.prefix}${holder.command.aliases}\`: ${holder.command.description}\n`);
+            .forEach(holder => response += toString(holder));
 
         message.reply(response);
     }
@@ -72,6 +112,7 @@ export default class CommandController {
                 command: cmd,
                 handler: commandHandler,
                 prefix: cmd.prefix || this.sharedSettings.botty.prefix,
+                status: CommandStatus.ENABLED,
             });
         });
 
@@ -93,6 +134,7 @@ export default class CommandController {
         const isAdmin = (message.member && this.sharedSettings.commands.adminRoles.some(x => message.member.roles.has(x)));
 
         this.commands.forEach(holder => {
+            if (holder.status === CommandStatus.DISABLED) return;
             if (holder.prefix === prefix) {
 
                 // handlers that register the "*" command will get all commands with that prefix (unless they already have gotten it once)
