@@ -2,6 +2,7 @@ import Botty from "./Botty";
 
 import ApiStatus from "./ApiStatus";
 import AutoReact from "./AutoReact";
+import CommandController from "./CommandController";
 import ForumReader from "./ForumReader";
 import Info from "./Info";
 import JoinMessaging from "./JoinMessaging";
@@ -13,7 +14,7 @@ import Techblog from "./Techblog";
 import Uptime from "./Uptime";
 import VersionChecker from "./VersionChecker";
 
-import { CommandList } from "./CommandHandler";
+import { CommandList } from "./CommandController";
 import { fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";
@@ -32,14 +33,15 @@ const keyFinder = new KeyFinder(bot.client, sharedSettings, "data/riot_keys.json
 const forum = new ForumReader(bot.client, sharedSettings, personalSettings, "data/forum_data.json", keyFinder);
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
 
+const controller = new CommandController(bot.client, sharedSettings);
+
 // bot.registerCommand(commandList.channelAccess, new ChannelAccess(bot.client, sharedSettings));
-bot.registerCommand(commandList.botty, bot);
-bot.registerCommand(commandList.info, new Info(sharedSettings, "data/info_data.json", versionChecker));
-bot.registerCommand(commandList.officeHours, new OfficeHours(sharedSettings, "data/office_hours_data.json"));
-bot.registerCommand(commandList.autoReact, new AutoReact(sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json"));
-bot.registerCommand(commandList.uptime, new Uptime(sharedSettings, personalSettings, "data/uptime_data.json"));
-bot.registerCommand(commandList.apiStatus, new ApiStatus(sharedSettings));
-bot.registerCommand(commandList.riotApiLibraries, new RiotAPILibraries(personalSettings, sharedSettings));
+controller.registerCommand(commandList.info, new Info(sharedSettings, "data/info_data.json", versionChecker));
+controller.registerCommand(commandList.officeHours, new OfficeHours(sharedSettings, "data/office_hours_data.json"));
+controller.registerCommand(commandList.autoReact, new AutoReact(sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json"));
+controller.registerCommand(commandList.uptime, new Uptime(sharedSettings, personalSettings, "data/uptime_data.json"));
+controller.registerCommand(commandList.apiStatus, new ApiStatus(sharedSettings));
+controller.registerCommand(commandList.riotApiLibraries, new RiotAPILibraries(personalSettings, sharedSettings));
 
 // start bot
 bot.start();

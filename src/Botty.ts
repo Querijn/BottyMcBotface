@@ -1,4 +1,4 @@
-import { Command, CommandHandler, CommandHolder } from "./CommandHandler";
+import { CommandHandler } from "./CommandController";
 import { fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";
@@ -13,14 +13,12 @@ export interface BottySettings {
     };
 }
 
-export default class Botty extends CommandHandler {
+export default class Botty {
     public readonly client = new Discord.Client();
     private personalSettings: PersonalSettings;
     private sharedSettings: SharedSettings;
-    private commands: CommandHolder[] = [];
 
     constructor(personalSettings: PersonalSettings, sharedSettings: SharedSettings) {
-        super();
         this.personalSettings = personalSettings;
         this.sharedSettings = sharedSettings;
         console.log("Successfully loaded bot settings.");
@@ -31,7 +29,6 @@ export default class Botty extends CommandHandler {
             // .on("debug", console.log)
             .on("disconnect", () => console.log("Disconnected!"))
             .on("reconnecting", () => console.log("Reconnecting..."))
-            .on("message", this.handleCommands.bind(this))
             .on("connect", () => console.log("Connected."))
             .on("ready", this.onConnect.bind(this));
 
@@ -45,31 +42,6 @@ export default class Botty extends CommandHandler {
     public onReady(bot: Discord.Client) {
         console.log("Successfully loaded botty commands.");
         return;
-    }
-
-    public onCommand(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-        let response = "\n";
-
-        this.commands
-            // ignore "*" commands
-            .filter(holder => holder.command.aliases.some(a => a !== "*"))
-            // hide admin commands
-            .filter(holder => isAdmin || !holder.command.admin)
-            .forEach(holder => response += `\`${holder.prefix}${holder.command.aliases}\`: ${holder.command.description}\n`);
-
-        message.reply(response);
-    }
-
-    public registerCommand(newCommand: Command[], commandHandler: (CommandHandler)) {
-        newCommand.forEach(cmd => {
-            this.commands.push({
-                command: cmd,
-                handler: commandHandler,
-                prefix: cmd.prefix || this.sharedSettings.botty.prefix,
-            });
-        });
-
-        commandHandler.onReady(this.client);
     }
 
     private initListeners() {
@@ -126,30 +98,6 @@ export default class Botty extends CommandHandler {
         } else {
             guild.me.setNickname("");
         }
-    }
-
-    private handleCommands(message: Discord.Message) {
-        if (message.author.bot) return;
-
-        const parts = message.content.split(" ");
-        const prefix = parts[0][0];
-        const command = parts[0].substr(1);
-        const isAdmin = (message.member && this.sharedSettings.commands.adminRoles.some(x => message.member.roles.has(x)));
-
-        this.commands.forEach(holder => {
-            if (holder.prefix === prefix) {
-
-                // handlers that register the "*" command will get all commands with that prefix (unless they already have gotten it once)
-                if (holder.command.aliases.some(x => x === command)) {
-                    holder.handler.onCommand(message, isAdmin, command, parts.slice(1));
-                    return;
-                }
-
-                if (holder.command.aliases.some(x => x === "*")) {
-                    holder.handler.onCommand(message, isAdmin, "*", Array<string>().concat(command, parts.slice(1)));
-                }
-            }
-        });
     }
 
 }

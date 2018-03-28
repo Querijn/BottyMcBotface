@@ -1,4 +1,4 @@
-import { CommandHandler } from "./CommandHandler";
+import { CommandHandler } from "./CommandController";
 import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";
 
@@ -49,7 +49,7 @@ interface LibraryDescription {
     links: string[];
 }
 
-export default class RiotAPILibraries extends CommandHandler {
+export default class RiotAPILibraries implements CommandHandler {
     private settings: SharedSettings;
 
     private lastCall: number;
@@ -57,8 +57,6 @@ export default class RiotAPILibraries extends CommandHandler {
     private fetchSettings: object;
 
     constructor(personalSettings: PersonalSettings, settings: SharedSettings) {
-        super();
-
         this.settings = settings;
         this.fetchSettings = {
             headers: {

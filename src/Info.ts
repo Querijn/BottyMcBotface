@@ -1,9 +1,10 @@
+import { CommandHandler } from "./CommandController";
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
+
 import VersionChecker from "./VersionChecker";
 
 import Discord = require("discord.js");
-import { CommandHandler } from "./CommandHandler";
 
 export interface InfoData {
     command: string;
@@ -15,14 +16,13 @@ const findOne = (arr1: Discord.Collection<string, Discord.Role>, arr2: any[]) =>
     return arr2.some(x => arr1.has(x));
 };
 
-export default class Info extends CommandHandler {
+export default class Info implements CommandHandler {
     private infos: InfoData[];
     private sharedSettings: SharedSettings;
     private command: string;
     private versionChecker: VersionChecker;
 
     constructor(sharedSettings: SharedSettings, userFile: string, versionChecker: VersionChecker) {
-        super();
         console.log("Requested Info extension..");
         this.command = sharedSettings.info.command;
         this.versionChecker = versionChecker;
@@ -30,7 +30,6 @@ export default class Info extends CommandHandler {
 
         this.infos = fileBackedObject(userFile);
         console.log("Successfully loaded info file.");
-
     }
 
     public onReady(bot: Discord.Client) {

@@ -1,4 +1,4 @@
-import { CommandHandler } from "./CommandHandler";
+import { CommandHandler } from "./CommandController";
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 
@@ -42,14 +42,13 @@ interface OnThisDayAPIEventLink {
     link: string;
 }
 
-export default class OfficeHours extends CommandHandler {
+export default class OfficeHours implements CommandHandler {
     private data: OfficeHoursData;
     private sharedSettings: SharedSettings;
 
     private guild: Discord.Guild;
 
     constructor(sharedSettings: SharedSettings, officeHoursData: string) {
-        super();
         console.log("Requested OfficeHours extension..");
 
         this.data = fileBackedObject(officeHoursData);

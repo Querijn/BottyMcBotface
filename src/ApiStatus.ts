@@ -3,7 +3,7 @@ import APIStatusAPI, { APIStatus } from "./ApiStatusApi";
 import { SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
-import { CommandHandler } from "./CommandHandler";
+import { CommandHandler } from "./CommandController";
 
 /**
  * Map from API name (e.g. champion-mastery-v3) to the string used in the embed field.
@@ -22,7 +22,7 @@ interface StatusEmbedState {
     allApisIssues: boolean;
 }
 
-export default class ApiStatus extends CommandHandler {
+export default class ApiStatus implements CommandHandler {
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
     private apiStatusAPI: APIStatusAPI;
@@ -31,8 +31,6 @@ export default class ApiStatus extends CommandHandler {
     private currentStatus: StatusEmbedState;
 
     constructor(sharedSettings: SharedSettings) {
-        super();
-
         this.sharedSettings = sharedSettings;
         this.lastCheckTime = 0;
         this.apiStatusAPI = new APIStatusAPI(this.sharedSettings.apiStatus.statusUrl, this.sharedSettings.apiStatus.checkInterval);

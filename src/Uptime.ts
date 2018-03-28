@@ -1,7 +1,7 @@
 import Discord = require("discord.js");
 import prettyMs = require("pretty-ms");
 
-import { CommandHandler } from "./CommandHandler";
+import { CommandHandler } from "./CommandController";
 import { fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";
@@ -12,13 +12,12 @@ export interface UptimeData {
     TotalDowntime: number;
 }
 
-export default class Uptime extends CommandHandler {
+export default class Uptime implements CommandHandler {
     private sharedSettings: SharedSettings;
     private personalSettings: PersonalSettings;
     private data: UptimeData;
 
     constructor(sharedSettings: SharedSettings, personalSettings: PersonalSettings, dataFile: string) {
-        super();
         console.log("Requested uptime extension..");
 
         this.sharedSettings = sharedSettings;

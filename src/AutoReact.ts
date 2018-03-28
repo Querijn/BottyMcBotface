@@ -2,9 +2,9 @@ import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
-import { CommandHandler } from "./CommandHandler";
+import { CommandHandler } from "./CommandController";
 
-export default class AutoReact extends CommandHandler {
+export default class AutoReact implements CommandHandler {
     private thinkingUsers: string[];
     private ignoreUsers: string[];
     private thinkingEmojis: Discord.Emoji[] = [];
@@ -13,7 +13,6 @@ export default class AutoReact extends CommandHandler {
     private bot: Discord.Client;
 
     constructor(sharedSettings: SharedSettings, userFile: string, ignoreFile: string) {
-        super();
         console.log("Requested Thinking extension..");
 
         this.sharedSettings = sharedSettings;
@@ -60,7 +59,7 @@ export default class AutoReact extends CommandHandler {
             return;
         }
 
-        if (this.ignoreUsers.indexOf(authorId) !== -1)  return;  // Only react to people not on list
+        if (this.ignoreUsers.indexOf(authorId) !== -1) return;  // Only react to people not on list
 
         if (!message.content.includes("🤔")) {
 
