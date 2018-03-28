@@ -41,6 +41,7 @@ export interface SharedSettings {
     info: {
         allowedRoles: string[],
         command: string,
+        maxScore: number,
     };
 
     officehours: {

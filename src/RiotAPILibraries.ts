@@ -23,6 +23,9 @@ interface GithubAPIStruct {
     type: string;
     _links: LinkStruct;
 }
+interface GithubAPILibraryStruct {
+    stargazers_count: number;
+}
 
 interface APILibraryLink {
     name: string;
@@ -109,7 +112,7 @@ export default class RiotAPILibraries extends CommandHandler {
         }
 
         const repoResponse = await repoResponsePromise;
-        const repoInfo = await repoResponse.json();
+        const repoInfo: GithubAPILibraryStruct = await repoResponse.json();
 
         return {
             library: libraryInfo,

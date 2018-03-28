@@ -2,9 +2,7 @@ import Botty from "./Botty";
 
 import ApiStatus from "./ApiStatus";
 import AutoReact from "./AutoReact";
-import ChannelAccess from "./ChannelAccess";
 import ForumReader from "./ForumReader";
-import Honeypot from "./Honeypot";
 import Info from "./Info";
 import JoinMessaging from "./JoinMessaging";
 import KeyFinder from "./KeyFinder";
@@ -27,9 +25,6 @@ const commandList = fileBackedObject<CommandList>("settings/command_list.json");
 const bot = new Botty(personalSettings, sharedSettings);
 
 // Load extensions
-// const honeypot = new Honeypot(bot.client, sharedSettings, personalSettings);
-
-// TODO: add registerEvent for these?
 const joinMessaging = new JoinMessaging(bot.client, sharedSettings);
 const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
 const logger = new Logger(bot.client, sharedSettings);

@@ -29,10 +29,10 @@ export default class Botty extends CommandHandler {
             .on("error", console.error)
             .on("warn", console.warn)
             // .on("debug", console.log)
-            .on("disconnect", () => console.warn("Disconnected!"))
-            .on("reconnecting", () => console.warn("Reconnecting..."))
+            .on("disconnect", () => console.log("Disconnected!"))
+            .on("reconnecting", () => console.log("Reconnecting..."))
             .on("message", this.handleCommands.bind(this))
-            .on("connect", () => console.warn("Connected."))
+            .on("connect", () => console.log("Connected."))
             .on("ready", this.onConnect.bind(this));
 
         this.initListeners();
@@ -118,7 +118,11 @@ export default class Botty extends CommandHandler {
         }
 
         // Set correct nickname
-        guild.me.setNickname(this.sharedSettings.botty.nickname);
+        if (this.personalSettings.isProduction) {
+            guild.me.setNickname("Botty McBotface");
+        } else {
+            guild.me.setNickname("");
+        }
     }
 
     private handleCommands(message: Discord.Message) {
