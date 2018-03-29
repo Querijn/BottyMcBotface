@@ -118,7 +118,7 @@ export default class RiotAPILibraries {
     private async getList(message: Discord.Message) {
         const response = await fetch(this.settings.riotApiLibraries.baseURL, this.fetchSettings);
         if (response.status !== 200) {
-            message.channel.send(this.settings.riotApiLibraries.githubError + response.status);
+            message.channel.send(this.settings.riotApiLibraries.githubErrorList + response.status);
             return;
         }
 
@@ -132,7 +132,7 @@ export default class RiotAPILibraries {
     private async getListForLanguage(message: Discord.Message, language: string) {
         const response = await fetch(this.settings.riotApiLibraries.baseURL + language);
         if (response.status !== 200) {
-            message.channel.send(this.settings.riotApiLibraries.githubError + response.status);
+            message.channel.send(this.settings.riotApiLibraries.githubErrorLanguage + response.status);
             return;
         }
 

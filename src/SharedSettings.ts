@@ -47,7 +47,8 @@ export interface SharedSettings {
     riotApiLibraries: {
         noLanguage: string,
         languageList: string,
-        githubError: string,
+        githubErrorList: string,
+        githubErrorLanguage: string,
         baseURL: string,
     };
 
