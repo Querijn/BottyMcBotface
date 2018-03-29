@@ -11,7 +11,7 @@ export interface CommandHolder {
 }
 
 enum CommandStatus {
-    ENABLED, DISABLED,
+    ENABLED = 1, DISABLED = 0,
 }
 
 export interface Command {
@@ -64,8 +64,16 @@ export default class CommandController {
     public onToggle(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         if (args.length !== 1) return;
 
-        const filtered = this.commands.filter(handler => handler.command.aliases.some(alias => alias === args[0]));
-        filtered.forEach(handler => handler.status = (handler.status === CommandStatus.ENABLED ? CommandStatus.DISABLED : CommandStatus.ENABLED));
+        const filtered = this.commands.filter(handler => handler.command.aliases.some(alias => handler.prefix + alias === args[0]));
+        if (filtered.length === 0) {
+            message.channel.send(`No command with the name ${args[0]} was found.`);
+            return;
+        }
+
+        for(let handler of filtered) {
+            handler.status = (handler.status === CommandStatus.ENABLED ? CommandStatus.DISABLED : CommandStatus.ENABLED);
+            message.channel.send(`${handler.prefix + handler.command.aliases.join("/")} is now ${handler.status === CommandStatus.ENABLED ? "enabled" : "disabled"}.`);
+        }
     }
 
     public onHelp(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
@@ -84,8 +92,12 @@ export default class CommandController {
                 str += "~~";
             }
 
-            str += `: ${holder.command.description}\n`;
-            return str;
+            str += `: ${holder.command.description}`;
+            if (holder.status === CommandStatus.DISABLED) {
+                str += " (command is disabled)";
+            }
+
+            return str + "\n";
         };
 
         this.commands
