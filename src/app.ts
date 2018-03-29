@@ -59,7 +59,7 @@ const uptime = new Uptime(sharedSettings, personalSettings, "data/uptime_data.js
 controller.registerCommand(commandList.uptime, uptime.onUptime.bind(uptime));
 
 const status = new ApiStatus(sharedSettings);
-controller.registerCommand(commandList.apiStatus, status.onStatus.bind(status));
+// controller.registerCommand(commandList.apiStatus, status.onStatus.bind(status));
 
 const libraries = new RiotAPILibraries(personalSettings, sharedSettings);
 controller.registerCommand(commandList.riotApiLibraries, libraries.onLibs.bind(libraries));
