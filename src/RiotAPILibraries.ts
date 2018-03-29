@@ -117,6 +117,11 @@ export default class RiotAPILibraries {
 
     private async getList(message: Discord.Message) {
         const response = await fetch(this.settings.riotApiLibraries.baseURL, this.fetchSettings);
+        if (response.status !== 200) {
+            message.channel.send(this.settings.riotApiLibraries.githubError + response.status);
+            return;
+        }
+
         const data = await response.json() as GithubAPIStruct[];
 
         const languages = "`" + data.map(x => x.name).join(", ") + "`";
