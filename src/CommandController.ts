@@ -80,7 +80,7 @@ export default class CommandController {
         }
     }
 
-    public onHelp(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+    public getHelp(isAdmin: boolean = false): string {
         let response = "\n";
 
         const toString = (holder: CommandHolder) => {
@@ -111,7 +111,12 @@ export default class CommandController {
             .filter(holder => isAdmin || !holder.command.admin)
             .forEach(holder => response += toString(holder));
 
-        message.channel.send(response);
+        return response;
+    }
+
+    public onHelp(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+
+        message.channel.send(this.getHelp(isAdmin));
     }
 
     public registerCommand(newCommand: Command, commandHandler: SingleCommand) {
