@@ -142,7 +142,7 @@ export default class RiotAPILibraries {
             return;
         }
 
-        const editMessagePromise = message.channel.send(`Found the list of libraries for ${language}, listing ${libraryList.length} libraries, this post will be edited with the result.`);
+        const editMessagePromise = message.channel.send(`Found the list of libraries for ${language}, evaluating ${libraryList.length} libraries, this post will be edited with the result.`);
 
         const promises = libraryList.map(lib => this.describeAPILibrary(lib));
         const libraryDescriptions = (await Promise.all(promises))
