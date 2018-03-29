@@ -102,7 +102,7 @@ export default class CommandController {
         this.commands.push({
             command: newCommand,
             handler: commandHandler,
-            prefix: newCommand.prefix || this.sharedSettings.botty.prefix,
+            prefix: newCommand.prefix || this.sharedSettings.commands.default_prefix,
             status: CommandStatus.ENABLED,
         });
     }

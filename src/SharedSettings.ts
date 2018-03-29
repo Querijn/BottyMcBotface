@@ -1,14 +1,12 @@
 export interface SharedSettings {
     server: string;
-    botty: {
-        prefix: string,
-    };
 
     uptimeSettings: {
         checkInterval: number,
     };
 
     commands: {
+        default_prefix: string,
         adminRoles: string[];
     };
 
