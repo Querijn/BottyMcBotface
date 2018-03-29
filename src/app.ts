@@ -35,34 +35,34 @@ const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.js
 const controller = new CommandController(bot.client, sharedSettings);
 
 // register commands
-controller.registerCommand(commandList.controller.toggle, controller.onToggle);
-controller.registerCommand(commandList.controller.help, controller.onHelp);
+controller.registerCommand(commandList.controller.toggle, controller.onToggle.bind(controller));
+controller.registerCommand(commandList.controller.help, controller.onHelp.bind(controller));
 
 const notes = new Info(sharedSettings, "data/info_data.json", versionChecker);
-controller.registerCommand(commandList.info.note, notes.onNote);
-controller.registerCommand(commandList.info.all, notes.onAll);
+controller.registerCommand(commandList.info.note, notes.onNote.bind(notes));
+controller.registerCommand(commandList.info.all, notes.onAll.bind(notes));
 
 const officeHours = new OfficeHours(bot.client, sharedSettings, "data/office_hours_data.json");
-controller.registerCommand(commandList.officeHours.ask, officeHours.onAsk);
-controller.registerCommand(commandList.officeHours.ask_for, officeHours.onAskFor);
-controller.registerCommand(commandList.officeHours.open, officeHours.onOpen);
-controller.registerCommand(commandList.officeHours.close, officeHours.onClose);
-controller.registerCommand(commandList.officeHours.question_remove, officeHours.onQuestionRemove);
-controller.registerCommand(commandList.officeHours.question_list, officeHours.onQuestionList);
+controller.registerCommand(commandList.officeHours.ask, officeHours.onAsk.bind(officeHours));
+controller.registerCommand(commandList.officeHours.ask_for, officeHours.onAskFor.bind(officeHours));
+controller.registerCommand(commandList.officeHours.open, officeHours.onOpen.bind(officeHours));
+controller.registerCommand(commandList.officeHours.close, officeHours.onClose.bind(officeHours));
+controller.registerCommand(commandList.officeHours.question_remove, officeHours.onQuestionRemove.bind(officeHours));
+controller.registerCommand(commandList.officeHours.question_list, officeHours.onQuestionList.bind(officeHours));
 
 const react = new AutoReact(bot.client, sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json");
-controller.registerCommand(commandList.autoReact.toggle_default_thinking, react.onToggleDefault);
-controller.registerCommand(commandList.autoReact.refresh_thinking, react.onRefreshThinking);
-controller.registerCommand(commandList.autoReact.toggle_react, react.onToggleReact);
+controller.registerCommand(commandList.autoReact.toggle_default_thinking, react.onToggleDefault.bind(react));
+controller.registerCommand(commandList.autoReact.refresh_thinking, react.onRefreshThinking.bind(react));
+controller.registerCommand(commandList.autoReact.toggle_react, react.onToggleReact.bind(react));
 
 const uptime = new Uptime(sharedSettings, personalSettings, "data/uptime_data.json");
-controller.registerCommand(commandList.uptime, uptime.onUptime);
+controller.registerCommand(commandList.uptime, uptime.onUptime.bind(uptime));
 
 const status = new ApiStatus(sharedSettings);
-controller.registerCommand(commandList.apiStatus, status.onStatus);
+controller.registerCommand(commandList.apiStatus, status.onStatus.bind(status));
 
 const libraries = new RiotAPILibraries(personalSettings, sharedSettings);
-controller.registerCommand(commandList.riotApiLibraries, libraries.onLibs);
+controller.registerCommand(commandList.riotApiLibraries, libraries.onLibs.bind(libraries));
 
 // start bot
 bot.start();

@@ -59,12 +59,12 @@ export default class OfficeHours {
         bot.on("ready", this.setupOpenState.bind(this));
     }
 
-    public onAsk = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+    public onAsk(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         const question = args.join(" ");
         this.storeQuestion(question, message, message.author.id, message.author.username);
     }
 
-    public onAskFor = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+    public onAskFor(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         const asked = message.mentions.members.first();
         if (!asked) return;
 
@@ -72,13 +72,13 @@ export default class OfficeHours {
         this.storeQuestion(question, message, asked.id, asked.toString(), message.author.username);
     }
 
-    public onQuestionList = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+    public onQuestionList(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         for (const data of this.data.questions) {
             message.channel.send(`${data.uuid}: ${data.authorName}: ${data.question}`);
         }
     }
 
-    public onQuestionRemove = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+    public onQuestionRemove(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         if (args.length === 1) {
             const id = +args[0];
             this.data.questions = this.data.questions.filter(q => q.uuid !== id);
@@ -89,7 +89,7 @@ export default class OfficeHours {
         message.reply("Invalid use of command, use !question_remove {id}");
     }
 
-    public onOpen = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+    public onOpen(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         if (!(message.channel instanceof Discord.TextChannel) || message.channel.name !== "office-hours") {
             return;
         }
@@ -97,7 +97,7 @@ export default class OfficeHours {
         this.open(message.channel);
     }
 
-    public onClose = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+    public onClose(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         if (!(message.channel instanceof Discord.TextChannel) || message.channel.name !== "office-hours") {
             return;
         }
@@ -211,7 +211,7 @@ export default class OfficeHours {
         const everyone = channel.guild.roles.find("name", "@everyone");
         await channel.overwritePermissions(everyone, { SEND_MESSAGES: false });
 
-        let message = await channel.send(this.sharedSettings.officehours.closeMessage.replace(/{botty}/g, this.sharedSettings.botty.nickname));
+        let message = await channel.send(this.sharedSettings.officehours.closeMessage.replace(/{botty}/g, this.bot.user.username));
         if (Array.isArray(message)) {
             message = message[0];
         }

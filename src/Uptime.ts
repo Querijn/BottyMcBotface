@@ -29,7 +29,7 @@ export default class Uptime {
         setInterval(this.onUpdate.bind(this), this.sharedSettings.uptimeSettings.checkInterval);
     }
 
-    public onUptime = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+    public onUptime(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         message.reply(`the bot has been up for ${this.uptimePercentage}% of the time. Bot started ${this.uptime} ago.`);
     }
 

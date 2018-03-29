@@ -1,8 +1,7 @@
 {
     "server": "342988445498474498",
     "botty": {
-        "prefix": "!",
-        "nickname": "Botty McBotface"
+        "prefix": "!"
     },
     "commands": {
         "adminRoles": [

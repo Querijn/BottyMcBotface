@@ -2,7 +2,6 @@ export interface SharedSettings {
     server: string;
     botty: {
         prefix: string,
-        nickname: string,
     };
 
     uptimeSettings: {

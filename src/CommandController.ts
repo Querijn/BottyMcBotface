@@ -61,14 +61,14 @@ export default class CommandController {
         bot.on("message", this.handleCommands.bind(this));
     }
 
-    public onToggle = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+    public onToggle(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         if (args.length !== 1) return;
 
         const filtered = this.commands.filter(handler => handler.command.aliases.some(alias => alias === args[0]));
         filtered.forEach(handler => handler.status = (handler.status === CommandStatus.ENABLED ? CommandStatus.DISABLED : CommandStatus.ENABLED));
     }
 
-    public onHelp = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+    public onHelp(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         let response = "\n";
 
         const toString = (holder: CommandHolder) => {

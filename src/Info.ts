@@ -31,7 +31,7 @@ export default class Info {
         console.log("Successfully loaded info file.");
     }
 
-    public onAll = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+    public onAll(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         let response: string | undefined;
         if (args.length !== 1) return;
 
@@ -51,7 +51,7 @@ export default class Info {
         message.channel.send(response);
     }
 
-    public onNote = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+    public onNote(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
 
         // the note we are trying to fetch (or the sub-command)
         const action = args[0];

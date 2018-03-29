@@ -36,16 +36,16 @@ export default class AutoReact {
         }
     }
 
-    public onToggleDefault = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+    public onToggleDefault(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         this.onToggleThinkingRequest(message, message.author.id);
     }
 
-    public onRefreshThinking = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+    public onRefreshThinking(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         message.reply("reloading thinking emojis.");
         this.refreshThinkingEmojis();
     }
 
-    public onToggleReact = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+    public onToggleReact(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         this.onToggleReactRequest(message, message.author.id);
     }
 

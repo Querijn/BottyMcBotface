@@ -35,7 +35,7 @@ export default class ApiStatus {
         this.apiStatusAPI = new APIStatusAPI(this.sharedSettings.apiStatus.statusUrl, this.sharedSettings.apiStatus.checkInterval);
     }
 
-    public onStatus = async (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+    public async onStatus(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         const apiStatus = await this.getApiStatus();
 
         const fields: {

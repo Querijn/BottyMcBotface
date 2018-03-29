@@ -66,7 +66,7 @@ export default class RiotAPILibraries {
         };
     }
 
-    public onLibs = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+    public onLibs(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
 
         if (args.length === 0) {
             return this.getList(message);
