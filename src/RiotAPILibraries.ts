@@ -1,4 +1,3 @@
-import { CommandHandler } from "./CommandHandler";
 import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";
 
@@ -23,6 +22,9 @@ interface GithubAPIStruct {
     type: string;
     _links: LinkStruct;
 }
+interface GithubAPILibraryStruct {
+    stargazers_count: number;
+}
 
 interface APILibraryLink {
     name: string;
@@ -46,7 +48,7 @@ interface LibraryDescription {
     links: string[];
 }
 
-export default class RiotAPILibraries extends CommandHandler {
+export default class RiotAPILibraries {
     private settings: SharedSettings;
 
     private lastCall: number;
@@ -54,8 +56,6 @@ export default class RiotAPILibraries extends CommandHandler {
     private fetchSettings: object;
 
     constructor(personalSettings: PersonalSettings, settings: SharedSettings) {
-        super();
-
         this.settings = settings;
         this.fetchSettings = {
             headers: {
@@ -66,11 +66,7 @@ export default class RiotAPILibraries extends CommandHandler {
         };
     }
 
-    public onReady(bot: Discord.Client) {
-        console.log("Github extension loaded.");
-    }
-
-    public onCommand(message: Discord.Message, command: string, args: string[]) {
+    public onLibs(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
 
         if (args.length === 0) {
             return this.getList(message);
@@ -109,7 +105,7 @@ export default class RiotAPILibraries extends CommandHandler {
         }
 
         const repoResponse = await repoResponsePromise;
-        const repoInfo = await repoResponse.json();
+        const repoInfo: GithubAPILibraryStruct = await repoResponse.json();
 
         return {
             library: libraryInfo,

@@ -1,4 +1,3 @@
-import { CommandHandler } from "./CommandHandler";
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 
@@ -42,104 +41,91 @@ interface OnThisDayAPIEventLink {
     link: string;
 }
 
-export default class OfficeHours extends CommandHandler {
+export default class OfficeHours {
     private data: OfficeHoursData;
     private sharedSettings: SharedSettings;
-
+    private bot: Discord.Client;
     private guild: Discord.Guild;
 
-    constructor(sharedSettings: SharedSettings, officeHoursData: string) {
-        super();
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings, officeHoursData: string) {
         console.log("Requested OfficeHours extension..");
+
+        this.bot = bot;
+        this.sharedSettings = sharedSettings;
 
         this.data = fileBackedObject(officeHoursData);
         console.log("Successfully question file.");
 
-        this.sharedSettings = sharedSettings;
-        // this.bot.on("channelUpdate", this.onChannelUpdate.bind(this));
+        bot.on("ready", this.setupOpenState.bind(this));
     }
 
-    public onReady(bot: Discord.Client) {
-        const mainGuild = bot.guilds.get(this.sharedSettings.server);
-        if (!mainGuild) {
-            console.warn(`Cannot determine main guild (${this.sharedSettings.server}), isOpen state of OfficeHours could not be determined!`);
-            return;
-        }
-        this.guild = mainGuild;
-
-        const officeHoursChannel = mainGuild.channels.find("name", "office-hours");
-        if (!officeHoursChannel) {
-            console.warn(`Cannot determine office hours channel of "${mainGuild.name}", isOpen state of OfficeHours could not be determined!`);
-            return;
-        }
-
-        const everyone = mainGuild.roles.find("name", "@everyone");
-        const randomUser = mainGuild.members.find(x => x.roles.has(everyone.id) && x.roles.size === 1);
-        this.data.isOpen = officeHoursChannel.permissionsFor(randomUser).has("SEND_MESSAGES");
-        console.log(`OfficeHours extension loaded (${this.data.isOpen ? "open" : "closed"}).`);
+    public onAsk(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        const question = args.join(" ");
+        this.storeQuestion(question, message, message.author.id, message.author.username);
     }
 
-    public onCommand(message: Discord.Message, command: string, args: string[]) {
+    public onAskFor(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        const asked = message.mentions.members.first();
+        if (!asked) return;
 
-        if (command === "ask") {
-            const question = args.join(" ");
-            this.storeQuestion(question, message, message.author.id, message.author.username);
+        const question = args.slice(1).join(" ");
+        this.storeQuestion(question, message, asked.id, asked.toString(), message.author.username);
+    }
+
+    public onQuestionList(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        for (const data of this.data.questions) {
+            message.channel.send(`${data.uuid}: ${data.authorName}: ${data.question}`);
         }
+    }
 
-        const isAdmin = (message.member && findOne(message.member.roles, this.sharedSettings.officehours.allowedRoles));
-        if (!isAdmin) {
+    public onQuestionRemove(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        if (args.length === 1) {
+            const id = +args[0];
+            this.data.questions = this.data.questions.filter(q => q.uuid !== id);
+            message.reply(this.sharedSettings.officehours.removedMessage);
             return;
         }
 
-        if (command === "ask_for") {
+        message.reply("Invalid use of command, use !question_remove {id}");
+    }
 
-            const asker = message.mentions.members.first();
-
-            if (!asker) return;
-
-            const question = args.slice(1).join(" ");
-            this.storeQuestion(question, message, asker.id, asker.toString(), message.author.username);
+    public onOpen(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        if (!(message.channel instanceof Discord.TextChannel) || message.channel.name !== "office-hours") {
             return;
         }
+        message.delete();
+        this.open(message.channel);
+    }
 
-        if (command === "question_list") {
-
-            for (const data of this.data.questions) {
-                message.channel.send(`${data.uuid}: ${data.authorName}: ${data.question}`);
-            }
-
-            return;
-        }
-
-        if (command === "question_remove") {
-            if (args.length === 1) {
-                const id = +args[0];
-                this.data.questions = this.data.questions.filter(q => q.uuid !== id);
-                message.reply(this.sharedSettings.officehours.removedMessage);
-                return;
-            }
-
-            message.reply("Invalid use of command, use !question_remove {id}");
-            return;
-        }
-
+    public onClose(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         if (!(message.channel instanceof Discord.TextChannel) || message.channel.name !== "office-hours") {
             return;
         }
 
-        if (command === "open") {
-            message.delete();
-            this.open(message.channel);
+        message.delete();
+        this.close(message.channel);
+    }
+
+    private setupOpenState() {
+        this.guild = this.bot.guilds.get(this.sharedSettings.server) as Discord.Guild;
+        if (!this.guild) {
+            console.warn(`Cannot determine main guild (${this.sharedSettings.server}), isOpen state of OfficeHours could not be determined!`);
+            return;
         }
 
-        if (command === "close") {
-            message.delete();
-            this.close(message.channel);
+        const officeHoursChannel = this.guild.channels.find("name", "office-hours");
+        if (!officeHoursChannel) {
+            console.warn(`Cannot determine office hours channel of "${this.guild.name}", isOpen state of OfficeHours could not be determined!`);
+            return;
         }
+
+        const everyone = this.guild.roles.find("name", "@everyone");
+        const randomUser = this.guild.members.find(x => x.roles.has(everyone.id)); // && x.roles.size === 1);
+        this.data.isOpen = officeHoursChannel.permissionsFor(randomUser).has("SEND_MESSAGES");
+        console.log(`OfficeHours extension loaded (${this.data.isOpen ? "open" : "closed"}).`);
     }
 
     private storeQuestion(question: string, message: Discord.Message, authorId: string, authorName: string, requester: string | null = null) {
-
         const questionData = {
             authorId,
             authorName,
@@ -225,7 +211,7 @@ export default class OfficeHours extends CommandHandler {
         const everyone = channel.guild.roles.find("name", "@everyone");
         await channel.overwritePermissions(everyone, { SEND_MESSAGES: false });
 
-        let message = await channel.send(this.sharedSettings.officehours.closeMessage.replace(/{botty}/g, this.sharedSettings.botty.nickname));
+        let message = await channel.send(this.sharedSettings.officehours.closeMessage.replace(/{botty}/g, this.bot.user.username));
         if (Array.isArray(message)) {
             message = message[0];
         }
@@ -233,6 +219,7 @@ export default class OfficeHours extends CommandHandler {
         this.data.lastCloseMessage = message.id;
         message.react("✋");
     }
+
 }
 
 const findOne = (arr1: Discord.Collection<string, Discord.Role>, arr2: any[]) => {

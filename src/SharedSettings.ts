@@ -1,17 +1,13 @@
 export interface SharedSettings {
     server: string;
-    botty: {
-        prefix: string,
-        nickname: string,
-    };
-
-    channelAccess: {
-        forcedChannels: string[],
-        restrictedChannels: string[],
-    };
 
     uptimeSettings: {
         checkInterval: number,
+    };
+
+    commands: {
+        default_prefix: string,
+        adminRoles: string[];
     };
 
     techBlog: {
@@ -30,10 +26,6 @@ export interface SharedSettings {
         url: string,
     };
 
-    honeypot: {
-        reportChannel: string,
-    };
-
     autoReact: {
         emoji: string,
     };
@@ -41,6 +33,7 @@ export interface SharedSettings {
     info: {
         allowedRoles: string[],
         command: string,
+        maxScore: number,
     };
 
     officehours: {
