@@ -1,4 +1,5 @@
 import Discord = require("discord.js");
+import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 
 type SingleCommand = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => void;
@@ -6,7 +7,6 @@ type SingleCommand = (message: Discord.Message, isAdmin: boolean, command: strin
 export interface CommandHolder {
     command: Command;
     handler: SingleCommand;
-    status: CommandStatus;
     prefix: string;
 }
 
@@ -46,17 +46,20 @@ export interface CommandList {
     };
     riotApiLibraries: Command;
     apiStatus: Command;
-}
+};
 
 export default class CommandController {
 
     private sharedSettings: SharedSettings;
     private commands: CommandHolder[] = [];
+    private commandStatuses: { [commandName: string]: CommandStatus } = {};
     private client: Discord.Client;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings) {
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings, commandData: string) {
         this.sharedSettings = sharedSettings;
         this.client = bot;
+
+        this.commandStatuses = fileBackedObject(commandData);
 
         bot.on("message", this.handleCommands.bind(this));
     }
@@ -71,8 +74,8 @@ export default class CommandController {
         }
 
         for(let handler of filtered) {
-            handler.status = (handler.status === CommandStatus.ENABLED ? CommandStatus.DISABLED : CommandStatus.ENABLED);
-            message.channel.send(`${handler.prefix + handler.command.aliases.join("/")} is now ${handler.status === CommandStatus.ENABLED ? "enabled" : "disabled"}.`);
+            this.commandStatuses[handler.command.description] = (this.getStatus(handler) === CommandStatus.DISABLED ? CommandStatus.ENABLED : CommandStatus.DISABLED);
+            message.channel.send(`${handler.prefix + handler.command.aliases.join("/")} is now ${this.getStatus(handler) === CommandStatus.ENABLED ? "enabled" : "disabled"}.`);
         }
     }
 
@@ -82,18 +85,18 @@ export default class CommandController {
         const toString = (holder: CommandHolder) => {
 
             let str = "";
-            if (holder.status === CommandStatus.DISABLED) {
+            if (this.getStatus(holder) === CommandStatus.DISABLED) {
                 str += "~~";
             }
 
             str += `\`${holder.prefix}${holder.command.aliases}\``;
 
-            if (holder.status === CommandStatus.DISABLED) {
+            if (this.getStatus(holder) === CommandStatus.DISABLED) {
                 str += "~~";
             }
 
             str += `: ${holder.command.description}`;
-            if (holder.status === CommandStatus.DISABLED) {
+            if (this.getStatus(holder) === CommandStatus.DISABLED) {
                 str += " (command is disabled)";
             }
 
@@ -115,7 +118,6 @@ export default class CommandController {
             command: newCommand,
             handler: commandHandler,
             prefix: newCommand.prefix || this.sharedSettings.commands.default_prefix,
-            status: CommandStatus.ENABLED,
         });
     }
 
@@ -128,20 +130,21 @@ export default class CommandController {
         const isAdmin = (message.member && this.sharedSettings.commands.adminRoles.some(x => message.member.roles.has(x)));
 
         this.commands.forEach(holder => {
-            if (holder.status === CommandStatus.DISABLED) return;
+            
+            if (this.getStatus(holder) === CommandStatus.DISABLED) return;
             if (holder.command.admin && !isAdmin) return;
-            if (holder.prefix === prefix) {
+            if (holder.prefix !== prefix) return; 
 
-                // handlers that register the "*" command will get all commands with that prefix (unless they already have gotten it once)
-                if (holder.command.aliases.some(x => x === command)) {
-                    holder.handler.call(null, message, isAdmin, command, parts.slice(1));
-                    return;
-                }
-
-                if (holder.command.aliases.some(x => x === "*")) {
-                    holder.handler.call(null, message, isAdmin, "*", Array<string>().concat(command, parts.slice(1)));
-                }
+            // handlers that register the "*" command will get all commands with that prefix (unless they already have gotten it once)
+            if (holder.command.aliases.some(x => x === command)) {
+                holder.handler.call(null, message, isAdmin, command, parts.slice(1));
+            } else if (holder.command.aliases.some(x => x === "*")) {
+                holder.handler.call(null, message, isAdmin, "*", Array<string>().concat(command, parts.slice(1)));
             }
         });
+    }
+
+    private getStatus(holder: CommandHolder): CommandStatus {
+        return this.commandStatuses[holder.command.description];
     }
 }

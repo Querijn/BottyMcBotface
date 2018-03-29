@@ -32,7 +32,7 @@ const logger = new Logger(bot.client, sharedSettings);
 const keyFinder = new KeyFinder(bot.client, sharedSettings, "data/riot_keys.json");
 // const forum = new ForumReader(bot.client, sharedSettings, personalSettings, "data/forum_data.json", keyFinder);
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
-const controller = new CommandController(bot.client, sharedSettings);
+const controller = new CommandController(bot.client, sharedSettings, "data/command_data.json");
 
 // register commands
 controller.registerCommand(commandList.controller.toggle, controller.onToggle.bind(controller));
