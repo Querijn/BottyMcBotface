@@ -100,10 +100,20 @@ export default class OfficeHours {
 
             if (arr.length === 2) {
                 const id = +arr[1];
-                this.data.questions = this.data.questions.filter(q => q.uuid !== id);
+
+                const newList = this.data.questions.filter(q => q.uuid !== id);
+                if (newList.length === this.data.questions.length) {
+                    message.reply("no question with id " + id + " found");
+                    return;
+                }
+
+                this.data.questions = newList;
+
+                message.reply(this.sharedSettings.officehours.removedMessage);
+                return;
             }
 
-            message.reply(this.sharedSettings.officehours.removedMessage);
+            message.reply("Invalid use of command, use `!question_remove {questionId}`");
             return;
         }
 
