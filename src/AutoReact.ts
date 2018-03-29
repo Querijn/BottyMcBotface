@@ -2,9 +2,8 @@ import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
-import { CommandHandler } from "./CommandController";
 
-export default class AutoReact implements CommandHandler {
+export default class AutoReact {
     private thinkingUsers: string[];
     private ignoreUsers: string[];
     private thinkingEmojis: Discord.Emoji[] = [];
@@ -12,21 +11,17 @@ export default class AutoReact implements CommandHandler {
     private sharedSettings: SharedSettings;
     private bot: Discord.Client;
 
-    constructor(sharedSettings: SharedSettings, userFile: string, ignoreFile: string) {
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings, userFile: string, ignoreFile: string) {
         console.log("Requested Thinking extension..");
 
         this.sharedSettings = sharedSettings;
+        this.bot = bot;
 
         this.thinkingUsers = fileBackedObject(userFile);
         console.log("Successfully loaded original thinking user file.");
 
         this.ignoreUsers = fileBackedObject(ignoreFile);
         console.log("Successfully loaded ignore reaction file.");
-    }
-
-    public onReady(bot: Discord.Client) {
-        this.bot = bot;
-        console.log("Thinking extension loaded.");
 
         this.refreshThinkingEmojis();
 
@@ -34,32 +29,29 @@ export default class AutoReact implements CommandHandler {
         if (emoji instanceof Discord.Emoji) {
             this.greetingEmoji = emoji;
             this.bot.on("message", this.onGreeting.bind(this));
+            this.bot.on("message", this.onMessage.bind(this));
             console.log("Bot has succesfully loaded greetings.");
         } else {
             console.error(`Unable to find the greeting emoji '${this.sharedSettings.autoReact.emoji}'.`);
         }
     }
 
-    public onCommand(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-        const authorId = message.author.id;
+    public onToggleDefault = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+        this.onToggleThinkingRequest(message, message.author.id);
+    }
 
-        if (command === "refresh_thinking") {
-            message.reply("reloading thinking emojis.");
-            this.refreshThinkingEmojis();
-            return;
-        }
+    public onRefreshThinking = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+        message.reply("reloading thinking emojis.");
+        this.refreshThinkingEmojis();
+    }
 
-        if (command === "toggle_react") {
-            this.onToggleReactRequest(message, authorId);
-            return;
-        }
+    public onToggleReact = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+        this.onToggleReactRequest(message, message.author.id);
+    }
 
-        if (command === "toggle_default_thinking") {
-            this.onToggleThinkingRequest(message, authorId);
-            return;
-        }
-
-        if (this.ignoreUsers.indexOf(authorId) !== -1) return;  // Only react to people not on list
+    private onMessage(message: Discord.Message) {
+        // Only react to people not on list
+        if (this.ignoreUsers.indexOf(message.author.id) !== -1) return;
 
         if (!message.content.includes("🤔")) {
 
@@ -82,7 +74,7 @@ export default class AutoReact implements CommandHandler {
         }
 
         // If original thinking user
-        if (this.thinkingUsers.indexOf(authorId) !== -1) {
+        if (this.thinkingUsers.indexOf(message.author.id) !== -1) {
             message.react("🤔");
             return;
         }

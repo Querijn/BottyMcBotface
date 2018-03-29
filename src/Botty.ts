@@ -1,4 +1,3 @@
-import { CommandHandler } from "./CommandController";
 import { fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";
@@ -37,11 +36,6 @@ export default class Botty {
 
     public start() {
         return this.client.login(this.personalSettings.discord.key);
-    }
-
-    public onReady(bot: Discord.Client) {
-        console.log("Successfully loaded botty commands.");
-        return;
     }
 
     private initListeners() {

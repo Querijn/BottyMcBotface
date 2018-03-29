@@ -1,4 +1,3 @@
-import { CommandHandler } from "./CommandController";
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 
@@ -16,7 +15,7 @@ const findOne = (arr1: Discord.Collection<string, Discord.Role>, arr2: any[]) =>
     return arr2.some(x => arr1.has(x));
 };
 
-export default class Info implements CommandHandler {
+export default class Info {
     private infos: InfoData[];
     private sharedSettings: SharedSettings;
     private command: string;
@@ -32,71 +31,11 @@ export default class Info implements CommandHandler {
         console.log("Successfully loaded info file.");
     }
 
-    public onReady(bot: Discord.Client) {
-        console.log("Info extension loaded.");
-    }
-
-    public onCommand(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-
+    public onAll = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
         let response: string | undefined;
+        if (args.length !== 1) return;
 
-        // the note we are trying to fetch (or the sub-command)
-        const action = args[0];
-
-        // if its not a .note command
-        if (command !== "*") {
-
-            // if no params, we print the list
-            if (args.length === 0) {
-                message.channel.send(this.listInfo());
-                return;
-            }
-            // Things we can't fetch
-            const badWords = ["add", "remove", "list"];
-
-            // a non-admin account tried to use one of the sub-commands, so we stop
-            if (!isAdmin && badWords.some(x => x === action)) {
-                return;
-            }
-
-            switch (action) {
-                case "add":
-                    {
-                        // we need atleast 3 arguments to add a note.
-                        //   cmd   1   2     3
-                        // (!note add name message)
-                        if (args.length < 3) {
-                            return;
-                        }
-
-                        const name = args[1];
-                        const text = args.splice(2).join(" ");
-
-                        message.channel.send(this.addInfo(name, text));
-                        return;
-                    }
-                case "remove":
-                    {
-                        // we need 2 arguments to remove a note.
-                        //   cmd    1     2
-                        // (!note remove name)
-                        if (args.length !== 2) {
-                            return;
-                        }
-
-                        message.channel.send(this.removeInfo(args[1]));
-                        return;
-                    }
-
-                case "list": {
-                    message.channel.send(this.listInfo());
-                    return;
-                }
-            }
-        }
-
-        // Retrieve note
-        const infoData = this.fetchInfo(action);
+        const infoData = this.fetchInfo(args[0]);
 
         // if we got a valid note, replace variables
         if (infoData) {
@@ -110,6 +49,58 @@ export default class Info implements CommandHandler {
         if (!response) return;
 
         message.channel.send(response);
+    }
+
+    public onNote = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => {
+
+        // the note we are trying to fetch (or the sub-command)
+        const action = args[0];
+
+        // if no params, we print the list
+        if (args.length === 0) {
+            message.channel.send(this.listInfo());
+            return;
+        }
+
+        // a non-admin account tried to use one of the sub-commands, so we stop
+        const badWords = ["add", "remove", "list"];
+        if (!isAdmin && badWords.some(x => x === action)) {
+            return;
+        }
+
+        if (action === "add") {
+            // we need atleast 3 arguments to add a note.
+            //   cmd   1   2     3
+            // (!note add name message)
+            if (args.length < 3) {
+                return;
+            }
+
+            const name = args[1];
+            const text = args.splice(2).join(" ");
+
+            message.channel.send(this.addInfo(name, text));
+            return;
+        }
+
+        if (action === "remove") {
+            // we need 2 arguments to remove a note.
+            //   cmd    1     2
+            // (!note remove name)
+            if (args.length !== 2) {
+                return;
+            }
+
+            message.channel.send(this.removeInfo(args[1]));
+            return;
+        }
+
+        if (action === "list") {
+            message.channel.send(this.listInfo());
+            return;
+        }
+
+        return this.onAll(message, isAdmin, command, args);
     }
 
     private addInfo(command: string, message: string) {

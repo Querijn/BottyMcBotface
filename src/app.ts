@@ -30,18 +30,39 @@ const joinMessaging = new JoinMessaging(bot.client, sharedSettings);
 const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
 const logger = new Logger(bot.client, sharedSettings);
 const keyFinder = new KeyFinder(bot.client, sharedSettings, "data/riot_keys.json");
-const forum = new ForumReader(bot.client, sharedSettings, personalSettings, "data/forum_data.json", keyFinder);
+// const forum = new ForumReader(bot.client, sharedSettings, personalSettings, "data/forum_data.json", keyFinder);
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
-
 const controller = new CommandController(bot.client, sharedSettings);
 
-// bot.registerCommand(commandList.channelAccess, new ChannelAccess(bot.client, sharedSettings));
-controller.registerCommand(commandList.info, new Info(sharedSettings, "data/info_data.json", versionChecker));
-controller.registerCommand(commandList.officeHours, new OfficeHours(sharedSettings, "data/office_hours_data.json"));
-controller.registerCommand(commandList.autoReact, new AutoReact(sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json"));
-controller.registerCommand(commandList.uptime, new Uptime(sharedSettings, personalSettings, "data/uptime_data.json"));
-controller.registerCommand(commandList.apiStatus, new ApiStatus(sharedSettings));
-controller.registerCommand(commandList.riotApiLibraries, new RiotAPILibraries(personalSettings, sharedSettings));
+// register commands
+controller.registerCommand(commandList.controller.toggle, controller.onToggle);
+controller.registerCommand(commandList.controller.help, controller.onHelp);
+
+const notes = new Info(sharedSettings, "data/info_data.json", versionChecker);
+controller.registerCommand(commandList.info.note, notes.onNote);
+controller.registerCommand(commandList.info.all, notes.onAll);
+
+const officeHours = new OfficeHours(bot.client, sharedSettings, "data/office_hours_data.json");
+controller.registerCommand(commandList.officeHours.ask, officeHours.onAsk);
+controller.registerCommand(commandList.officeHours.ask_for, officeHours.onAskFor);
+controller.registerCommand(commandList.officeHours.open, officeHours.onOpen);
+controller.registerCommand(commandList.officeHours.close, officeHours.onClose);
+controller.registerCommand(commandList.officeHours.question_remove, officeHours.onQuestionRemove);
+controller.registerCommand(commandList.officeHours.question_list, officeHours.onQuestionList);
+
+const react = new AutoReact(bot.client, sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json");
+controller.registerCommand(commandList.autoReact.toggle_default_thinking, react.onToggleDefault);
+controller.registerCommand(commandList.autoReact.refresh_thinking, react.onRefreshThinking);
+controller.registerCommand(commandList.autoReact.toggle_react, react.onToggleReact);
+
+const uptime = new Uptime(sharedSettings, personalSettings, "data/uptime_data.json");
+controller.registerCommand(commandList.uptime, uptime.onUptime);
+
+const status = new ApiStatus(sharedSettings);
+controller.registerCommand(commandList.apiStatus, status.onStatus);
+
+const libraries = new RiotAPILibraries(personalSettings, sharedSettings);
+controller.registerCommand(commandList.riotApiLibraries, libraries.onLibs);
 
 // start bot
 bot.start();
