@@ -62,6 +62,8 @@ export default class OfficeHours {
 
     private onCommand(message: Discord.Message) {
 
+        if (message.author.bot) return;
+
         const isAskFor = message.content.startsWith("!ask_for");
         if (message.content.startsWith("!ask") && !isAskFor) {
             const question = message.content.substr(message.content.indexOf(" ") + 1);
@@ -105,18 +107,20 @@ export default class OfficeHours {
             return;
         }
 
-        if (!(message.channel instanceof Discord.TextChannel) || message.channel.name !== "office-hours") {
+        const correctServer = message.guild.id == this.sharedSettings.server;
+        const isInOfficHoursChannel = (message.channel instanceof Discord.TextChannel) && message.channel.name === "office-hours";
+        if (!correctServer || !isInOfficHoursChannel) {
             return;
         }
 
         if (message.content.startsWith("!open")) {
             message.delete();
-            this.open(message.channel);
+            this.open(message.channel as Discord.TextChannel);
         }
 
         if (message.content.startsWith("!close")) {
             message.delete();
-            this.close(message.channel);
+            this.close(message.channel as Discord.TextChannel);
         }
     }
 
@@ -190,22 +194,24 @@ export default class OfficeHours {
 
         // Request last close message from Discord
         channel.fetchMessage(this.data.lastCloseMessage)
-            .then(closeMessage => {
-                // Find all users that raised their hand
-                const reactions = closeMessage.reactions.get("✋");
-                if (reactions) {
-                    const usersToMention = reactions.users.array().filter(user => !user.bot);
+        .then(closeMessage => {
+            // Find all users that raised their hand
+            const reaction = closeMessage.reactions.get("✋");
+            if (reaction) {
+                reaction.fetchUsers().then(function (reactionUsers) { 
+                    const usersToMention = reactionUsers.array().filter(user => !user.bot);
                     if (usersToMention.length > 0) {
                         channel.send(usersToMention.join(", ") + "\n");
                     }
-                }
+                });
+            }
 
-                this.sendOnThisDayMessage(channel);
-            })
-            .catch(reason => {
-                console.warn("Failed getting last close message: " + reason);
-                this.sendOnThisDayMessage(channel);
-            });
+            this.sendOnThisDayMessage(channel);
+        })
+        .catch(reason => {
+            console.warn("Failed getting last close message: " + reason);
+            this.sendOnThisDayMessage(channel);
+        });
     }
 
     private async close(channel: Discord.TextChannel) {
