@@ -7,10 +7,6 @@ export interface PersonalSettings {
         key: string,
         owner: number
     },
-    honeypot: {
-        token: string,
-        owner: number
-    },
     github: {
         username: string,
         password: string
