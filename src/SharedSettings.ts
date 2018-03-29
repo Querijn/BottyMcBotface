@@ -1,13 +1,13 @@
 export interface SharedSettings {
     server: string;
 
-    channelAccess: {
-        forcedChannels: string[],
-        restrictedChannels: string[],
-    };
-
     uptimeSettings: {
         checkInterval: number,
+    };
+
+    commands: {
+        default_prefix: string,
+        adminRoles: string[];
     };
 
     techBlog: {
@@ -26,10 +26,6 @@ export interface SharedSettings {
         url: string,
     };
 
-    honeypot: {
-        reportChannel: string,
-    };
-
     autoReact: {
         emoji: string,
     };
@@ -37,7 +33,7 @@ export interface SharedSettings {
     info: {
         allowedRoles: string[],
         command: string,
-        maxScore: number
+        maxScore: number,
     };
 
     officehours: {
@@ -48,11 +44,11 @@ export interface SharedSettings {
         removedMessage: string,
     };
 
-    githubLibraries: {
-        aliases: string[],
+    riotApiLibraries: {
         noLanguage: string,
         languageList: string,
-        githubError: string,
+        githubErrorList: string,
+        githubErrorLanguage: string,
         baseURL: string,
     };
 
@@ -73,8 +69,6 @@ export interface SharedSettings {
         checkInterval: number,
         apiOnFireThreshold: number,
         statusUrl: string,
-        command: string,
-        aliases: string[],
         onFireImages: string[],
     };
 
