@@ -107,7 +107,7 @@ export default class CommandController {
             .filter(holder => isAdmin || !holder.command.admin)
             .forEach(holder => response += toString(holder));
 
-        message.reply(response);
+        message.channel.send(response);
     }
 
     public registerCommand(newCommand: Command, commandHandler: SingleCommand) {
