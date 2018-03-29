@@ -5,6 +5,7 @@ import { SharedSettings } from "./SharedSettings";
 type SingleCommand = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => void;
 
 export interface CommandHolder {
+    identifier: string,
     command: Command;
     handler: SingleCommand;
     prefix: string;
@@ -115,6 +116,7 @@ export default class CommandController {
 
     public registerCommand(newCommand: Command, commandHandler: SingleCommand) {
         this.commands.push({
+            identifier: commandHandler.name,
             command: newCommand,
             handler: commandHandler,
             prefix: newCommand.prefix || this.sharedSettings.commands.default_prefix,
@@ -145,6 +147,6 @@ export default class CommandController {
     }
 
     private getStatus(holder: CommandHolder): CommandStatus {
-        return this.commandStatuses[holder.command.description];
+        return this.commandStatuses[holder.identifier];
     }
 }
