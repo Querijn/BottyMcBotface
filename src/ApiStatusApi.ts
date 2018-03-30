@@ -3,21 +3,21 @@ import fetch from "node-fetch";
 type RegionState = "up" | "troubled" | "down";
 
 export interface RegionStatus {
-    uptime: string,
-    performance: string,
-    state: RegionState
+    uptime: string;
+    performance: string;
+    state: RegionState;
 }
 export interface EndpointStatus {
-    [key: string]: RegionStatus
+    [key: string]: RegionStatus;
 }
 
 export interface APIStatus {
-    [key: string]: EndpointStatus
+    [key: string]: EndpointStatus;
 }
 
 export default class ApiStatusApi {
     private apiUrl: string;
-    private cached: APIStatus
+    private cached: APIStatus;
     private lastUpdate: number;
     private cacheDuration: number;
 
@@ -25,7 +25,7 @@ export default class ApiStatusApi {
         this.apiUrl = apiUrl;
         this.lastUpdate = 0;
         this.cacheDuration = cacheDuration;
-    }    
+    }
 
     public async getApiStatus(): Promise<APIStatus> {
         if (Date.now() - this.lastUpdate < this.cacheDuration) {
@@ -35,9 +35,9 @@ export default class ApiStatusApi {
         const resp = await fetch(this.apiUrl, {
             method: "GET",
             headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json"
-            }
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            },
         });
 
         if (resp.status !== 200) throw new Error(`[ApiStatus] Received status code ${resp.status}`);
@@ -45,5 +45,4 @@ export default class ApiStatusApi {
         this.lastUpdate = Date.now();
         return this.cached;
     }
-
 }

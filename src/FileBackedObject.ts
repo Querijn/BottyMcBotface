@@ -8,14 +8,14 @@ export function fileBackedObject<T>(path: string): T {
             Reflect.set(object, property, value, receiver);
             try {
                 fs.writeFileSync(path, JSON.stringify(obj));
-            }
-            catch (e) {
+            } catch (e) {
                 fs.writeFile(path, JSON.stringify(obj), (err) => {
                     if (err) {
                         console.error(`${path} had trouble saving, but we weren't able to fix it.`);
                         fs.writeFileSync(path + "_backup", JSON.stringify(obj)); // last-ditch effort
-                    } 
-                    else console.warn(`${path} had trouble saving, but we fixed it.`);
+                    } else {
+                        console.warn(`${path} had trouble saving, but we fixed it.`);
+                    }
                 });
             }
             return true;
@@ -25,7 +25,7 @@ export function fileBackedObject<T>(path: string): T {
             const child = Reflect.get(object, property, receiver);
             if (!child || typeof child !== "object") return child;
             return new Proxy(child, proxy);
-        }
+        },
     };
 
     return new Proxy(obj, proxy);

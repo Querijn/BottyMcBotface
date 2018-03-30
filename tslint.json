@@ -15,6 +15,7 @@
                 "array"
             ]
         },
+        "object-literal-sort-keys": false,
         "curly": {
             "options": [
                 "ignore-same-line"
