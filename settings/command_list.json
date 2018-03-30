@@ -36,6 +36,12 @@
         ],
         "description": "Checks the uptime of botty"
     },
+    "joinMessaging": {
+        "aliases": [
+            "welcome"
+        ],
+        "description": "Sends the welcome message to the sender (or tagged users)"
+    },
     "officeHours": {
         "ask": {
             "aliases": [

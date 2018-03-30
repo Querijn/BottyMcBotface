@@ -37,6 +37,7 @@ export interface CommandList {
         all: Command,
         note: Command,
     };
+    joinMessaging: Command;
     officeHours: {
         open: Command;
         close: Command;

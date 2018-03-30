@@ -37,4 +37,13 @@ export default class JoinMessaging {
             console.error("Something went wrong loading the message for new users: " + e.toString());
         }
     }
+
+    public onWelcome(message: Discord.Message) {
+        if (message.mentions.members === null) {
+            message.author.send(this.messageContents);
+            return;
+        }
+
+        message.mentions.members.forEach(u => u.send(this.messageContents));
+    }
 }
