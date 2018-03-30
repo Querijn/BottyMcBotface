@@ -1,0 +1,118 @@
+{
+    "controller": {
+        "toggle": {
+            "admin": true,
+            "aliases": [
+                "toggle_command"
+            ],
+            "description": "Enables or disables commands (!toggle_command {command})"
+        },
+        "help": {
+            "aliases": [
+                "help"
+            ],
+            "description": "Prints all the commands"
+        }
+    },
+    "info": {
+        "note": {
+            "aliases": [
+                "note",
+                "notes"
+            ],
+            "description": "Prints all the notes, or the content of a note if used with a parameter"
+        },
+        "all": {
+            "aliases": [
+                "*"
+            ],
+            "description": "Prints all the notes, or the content of a note if used with a parameter",
+            "prefix": "."
+        }
+    },
+    "uptime": {
+        "aliases": [
+            "uptime"
+        ],
+        "description": "Checks the uptime of botty"
+    },
+    "officeHours": {
+        "ask": {
+            "aliases": [
+                "ask"
+            ],
+            "description": "Ask a question at the next #office-hours"
+        },
+        "ask_for": {
+            "admin": true,
+            "aliases": [
+                "ask_for"
+            ],
+            "description": "Ask a question for someone else at the next #office-hours"
+        },
+        "open": {
+            "admin": true,
+            "aliases": [
+                "open"
+            ],
+            "description": "Open #office-hours"
+        },
+        "close": {
+            "admin": true,
+            "aliases": [
+                "close"
+            ],
+            "description": "Close #office-hours"
+        },
+        "question_list": {
+            "admin": false,
+            "aliases": [
+                "question_list"
+            ],
+            "description": "Print the list of questions waiting for #office-hours"
+        },
+        "question_remove": {
+            "admin": true,
+            "aliases": [
+                "question_remove"
+            ],
+            "description": "Remove a question from the list waiting for #office-hours"
+        }
+    },
+    "riotApiLibraries": {
+        "aliases": [
+            "lib",
+            "libs",
+            "libraries"
+        ],
+        "description": "Print a list of the public libraries"
+    },
+    "autoReact": {
+        "toggle_default_thinking": {
+            "aliases": [
+                "toggle_default_thinking"
+            ],
+            "description": "Changes bottys reaction from the normal thinking emote, to one of the custom ones (or opposite)"
+        },
+        "toggle_react": {
+            "aliases": [
+                "toggle_react"
+            ],
+            "description": "Decides if botty reacts to your messages"
+        },
+        "refresh_thinking": {
+            "admin": true,
+            "aliases": [
+                "refresh_thinking"
+            ],
+            "description": "Reloads the thinking emojis"
+        }
+    },
+    "apiStatus": {
+        "aliases": [
+            "status",
+            "apistatus"
+        ],
+        "description": "Prints the status of the Riot Games API"
+    }
+}

@@ -1,13 +1,12 @@
 {
     "server": "342988445498474498",
-    "channelAccess": {
-        "forcedChannels": [
-            "301148922443726870",
-            "187961895049756672",
-            "190817288507752448"
-        ],
-        "restrictedChannels": [
-            "190817288507752448"
+    "commands": {
+        "default_prefix": "!",
+        "adminRoles": [
+            "187653195038720000",
+            "187653430372728833",
+            "350692046631206912",
+            "347539422943903755"
         ]
     },
     "uptimeSettings": {
@@ -25,9 +24,6 @@
         "checkInterval": 10000,
         "channel": "external-activity",
         "url": "http://discussion.developer.riotgames.com/"
-    },
-    "honeypot": {
-        "reportChannel": "moderators"
     },
     "info": {
         "allowedRoles": [
@@ -51,16 +47,12 @@
         "addedMessage": "Your question is added to the queue, I will tag you with this message the next time #office-hours opens!",
         "removedMessage": "The question has been removed."
     },
-    "githubLibraries": {
-        "aliases": [
-            "!lib",
-            "!libs",
-            "!libraries"
-        ],
+    "riotApiLibraries": {
         "noLanguage": "No libraries found for language: ",
         "languageList": "I have libraries for one of the following languages: {languages}\nChoose one you like and reply with `!libs <your language>`.",
-        "githubError": "I tried to get the language from Github, but Github replied with status code ",
-        "baseURL":"https://api.github.com/repos/WxWatch/riot-api-libraries/contents/libraries/"
+        "githubErrorList": "I tried to get the languages from Github, but Github replied with status code ",
+        "githubErrorLanguage": "I tried to get the language from Github, but Github replied with status code ",
+        "baseURL": "https://api.github.com/repos/WxWatch/riot-api-libraries/contents/libraries/"
     },
     "autoReact": {
         "emoji": "408527155891273738"
@@ -80,10 +72,6 @@
         "checkInterval": 300000,
         "apiOnFireThreshold": 0.1,
         "statusUrl": "http://querijn.codes/api_status/1.1/",
-        "command": "status",
-        "aliases": [
-            "apistatus"
-        ],
         "onFireImages": [
             "https://media.giphy.com/media/dbtDDSvWErdf2/giphy.gif",
             "https://media.giphy.com/media/nLhdSinRtaL2E/giphy.gif",
