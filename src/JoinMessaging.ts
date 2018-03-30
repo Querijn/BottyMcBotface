@@ -22,7 +22,6 @@ export default class JoinMessaging {
 
         this.bot = bot;
         this.bot.on("ready", this.onBot.bind(this));
-        this.bot.on("message", this.onMessage.bind(this));
     }
 
     onBot() {
@@ -42,15 +41,7 @@ export default class JoinMessaging {
         }
     }
 
-    private onMessage(message: Discord.Message) {
-        if (message.author.bot) return;
-        const split = message.cleanContent.split(/[\n\r\s]/);
-        const prefix = split[0][0];
-        const command = split[0].substr(1);
-
-        if (prefix !== "!") return;
-        if ("welcome" !== command) return;
-
+    public onWelcome(message: Discord.Message) {
         if (message.mentions.members === null) {
             message.author.send(this.messageContents);
             return;

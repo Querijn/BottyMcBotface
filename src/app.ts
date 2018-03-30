@@ -27,7 +27,6 @@ const bot = new Botty(personalSettings, sharedSettings);
 
 // Load extensions
 const controller = new CommandController(bot.client, sharedSettings, "data/command_data.json");
-const joinMessaging = new JoinMessaging(bot.client, sharedSettings, controller);
 const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
 const logger = new Logger(bot.client, sharedSettings);
 const keyFinder = new KeyFinder(bot.client, sharedSettings, "data/riot_keys.json");
@@ -37,6 +36,9 @@ const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.js
 // register commands
 controller.registerCommand(commandList.controller.toggle, controller.onToggle.bind(controller));
 controller.registerCommand(commandList.controller.help, controller.onHelp.bind(controller));
+
+const joinMessaging = new JoinMessaging(bot.client, sharedSettings, controller);
+controller.registerCommand(commandList.joinMessaging, joinMessaging.onWelcome.bind(joinMessaging));
 
 const notes = new Info(sharedSettings, "data/info_data.json", versionChecker);
 controller.registerCommand(commandList.info.note, notes.onNote.bind(notes));
