@@ -93,4 +93,5 @@ export default class Botty {
             guild.me.setNickname("");
         }
     }
+
 }

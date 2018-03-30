@@ -1,13 +1,13 @@
 export interface SharedSettings {
     server: string;
 
-    channelAccess: {
-        forcedChannels: string[],
-        restrictedChannels: string[],
-    };
-
     uptimeSettings: {
         checkInterval: number,
+    };
+
+    commands: {
+        default_prefix: string,
+        adminRoles: string[];
     };
 
     techBlog: {
@@ -24,10 +24,6 @@ export interface SharedSettings {
         checkInterval: number,
         channel: string,
         url: string,
-    };
-
-    honeypot: {
-        reportChannel: string,
     };
 
     autoReact: {
@@ -48,11 +44,11 @@ export interface SharedSettings {
         removedMessage: string,
     };
 
-    githubLibraries: {
-        aliases: string[],
+    riotApiLibraries: {
         noLanguage: string,
         languageList: string,
-        githubError: string,
+        githubErrorList: string,
+        githubErrorLanguage: string,
         baseURL: string,
     };
 
@@ -73,8 +69,6 @@ export interface SharedSettings {
         checkInterval: number,
         apiOnFireThreshold: number,
         statusUrl: string,
-        command: string,
-        aliases: string[],
         onFireImages: string[],
     };
 
