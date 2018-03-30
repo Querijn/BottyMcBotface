@@ -1,11 +1,10 @@
+import { Article, default as AnswerHubAPI, Node, NodeList, Question } from "./AnswerHub";
 import { fileBackedObject } from "./FileBackedObject";
-import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
+import { SharedSettings } from "./SharedSettings";
 
-import { default as AnswerHubAPI, Article, Node, NodeList, Question } from "./AnswerHub";
-import KeyFinder from "./KeyFinder";
 import Discord = require("discord.js");
-
+import KeyFinder from "./KeyFinder";
 
 export interface ForumReaderData {
     Last: {
@@ -18,7 +17,7 @@ export interface ForumReaderData {
 
 /**
  * Reads data from the forum.
- * 
+ *
  * @export
  * @class ForumReader
  */
@@ -58,7 +57,7 @@ export default class ForumReader {
         if (this.data.Last.kbentry === 0) this.data.Last.kbentry = Date.now();
 
         bot.on("ready", () => {
-            let guild = bot.guilds.get(this.sharedSettings.server);
+            const guild = bot.guilds.get(this.sharedSettings.server);
             if (!guild) {
                 console.error(`ForumReader: Incorrect settings for guild ID ${this.sharedSettings.server}`);
                 return;
@@ -76,14 +75,14 @@ export default class ForumReader {
     }
 
     /**
-	 * Gets the node with the specified ID, first checking the cache, then the AnswerHub API
+     * Gets the node with the specified ID, first checking the cache, then the AnswerHub API
      *
-	 * @param id The node ID
-	 * @async
-	 * @returns The node with the specified ID
-	 * @throws {Error} Thrown if an AnswerHubAPI error occurs
-	 */
-    async getNode(id: number): Promise<Node> {
+     * @param id The node ID
+     * @async
+     * @returns The node with the specified ID
+     * @throws {Error} Thrown if an AnswerHubAPI error occurs
+     */
+    public async getNode(id: number): Promise<Node> {
         if (this.cachedNodes.has(id)) {
             return this.cachedNodes.get(id)!;
         } else {
@@ -98,7 +97,7 @@ export default class ForumReader {
      *
      * @param activity The activity to process
      */
-    async readActivity(activity: Node): Promise<void> {
+    public async readActivity(activity: Node): Promise<void> {
 
         const usernameIndex = activity.author.username.indexOf("(");
         const regionEndIndex = activity.author.username.indexOf(")");
@@ -115,7 +114,7 @@ export default class ForumReader {
                     .setDescription(this.answerHub.formatQuestionBody(activity.body))
                     .setURL(`${this.answerHub.baseURL}questions/${activity.id}/${activity.slug}.html`);
 
-                this.keyFinder.findKey(username, activity.title, <string>embed.url, activity.creationDate);
+                this.keyFinder.findKey(username, activity.title, embed.url as string, activity.creationDate);
                 break;
             }
 
@@ -158,21 +157,19 @@ export default class ForumReader {
         }
         if (!embed) return;
 
-        this.keyFinder.findKey(username, activity.body, <string>embed.url, activity.creationDate);
+        this.keyFinder.findKey(username, activity.body, embed.url as string, activity.creationDate);
         embed.setTimestamp(new Date(activity.creationDate)).setThumbnail(avatar);
 
-        await this.channel.send("", {
-            embed: embed
-        });
+        await this.channel.send({ embed });
     }
 
     /**
      * Waits for a promise to be fulfilled, then processes all the activities is was settled with. If any activities cannot be successfully processed,
      * they will be added to a list to be processed later.
-     * 
-     * @param promise 
+     *
+     * @param promise
      */
-    async readActivities(promise: Promise<NodeList<Node>>): Promise<void> {
+    public async readActivities(promise: Promise<NodeList<Node>>): Promise<void> {
         let activities;
         try {
             activities = await promise;
@@ -190,8 +187,8 @@ export default class ForumReader {
                 } catch (error) {
                     console.error(`Error for activity ID ${activity.id}: ${error}`);
                     this.erroredActivities.push({
-                        activity: activity,
-                        attempts: 1
+                        activity,
+                        attempts: 1,
                     });
                 }
                 if (this.data.Last[activity.type] < activity.creationDate) this.data.Last[activity.type] = activity.creationDate;
@@ -202,7 +199,7 @@ export default class ForumReader {
         return;
     }
 
-    async retryErroredActivities(): Promise<void> {
+    public async retryErroredActivities(): Promise<void> {
         for (let i = 0; i < this.erroredActivities.length; i++) {
             const activity = this.erroredActivities[i].activity;
 
@@ -222,9 +219,9 @@ export default class ForumReader {
     /**
      * Processes all new questions, answers, comments, and articles, then schedules the update.
      */
-    async fetchForumData(): Promise<void> {
-        
-        let timeDiff = (Date.now() - this.lastCheckTime);
+    public async fetchForumData(): Promise<void> {
+
+        const timeDiff = (Date.now() - this.lastCheckTime);
         if (timeDiff < this.sharedSettings.forum.checkInterval) {
             console.log(`last ForumReader.fetchForumData was ${Math.round(timeDiff * 0.001)} seconds ago, should have been ${Math.round(this.sharedSettings.forum.checkInterval * 0.001)} seconds ago.`);
             process.exit(-1); // Let the process manager restart this application

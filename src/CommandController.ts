@@ -5,7 +5,7 @@ import { SharedSettings } from "./SharedSettings";
 type SingleCommand = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => void;
 
 export interface CommandHolder {
-    identifier: string,
+    identifier: string;
     command: Command;
     handler: SingleCommand;
     prefix: string;
@@ -47,7 +47,7 @@ export interface CommandList {
     };
     riotApiLibraries: Command;
     apiStatus: Command;
-};
+}
 
 export default class CommandController {
 
@@ -74,7 +74,7 @@ export default class CommandController {
             return;
         }
 
-        for(let handler of filtered) {
+        for (const handler of filtered) {
             this.commandStatuses[handler.identifier] = (this.getStatus(handler) === CommandStatus.DISABLED ? CommandStatus.ENABLED : CommandStatus.DISABLED);
             message.channel.send(`${handler.prefix + handler.command.aliases.join("/")} is now ${this.getStatus(handler) === CommandStatus.ENABLED ? "enabled" : "disabled"}.`);
         }
@@ -137,10 +137,10 @@ export default class CommandController {
         const isAdmin = (message.member && this.sharedSettings.commands.adminRoles.some(x => message.member.roles.has(x)));
 
         this.commands.forEach(holder => {
-            
+
             if (this.getStatus(holder) === CommandStatus.DISABLED) return;
             if (holder.command.admin && !isAdmin) return;
-            if (holder.prefix !== prefix) return; 
+            if (holder.prefix !== prefix) return;
 
             // handlers that register the "*" command will get all commands with that prefix (unless they already have gotten it once)
             if (holder.command.aliases.some(x => x === command)) {

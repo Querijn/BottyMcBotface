@@ -1,10 +1,11 @@
 import Discord = require("discord.js");
 import fs = require("fs");
 
+import CommandController from "./CommandController";
+
+import { GuildMember } from "discord.js";
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
-import { GuildMember } from "discord.js";
-import CommandController from "./CommandController";
 
 export default class JoinMessaging {
     private bot: Discord.Client;
@@ -25,20 +26,18 @@ export default class JoinMessaging {
         this.bot.on("ready", this.onBot.bind(this));
     }
 
-    onBot() {
-
+    private onBot() {
         try {
             this.messageContents = fs.readFileSync(this.sharedSettings.onJoin.messageFile, "utf8").toString();
             this.commandContents = this.commandController.getHelp();
 
-            this.bot.on("guildMemberAdd", function(user: GuildMember) {
+            this.bot.on("guildMemberAdd", (user: GuildMember) => {
                 user.send(this.messageContents);
                 user.send(this.commandContents);
-            }.bind(this));
+            });
 
             console.log("Join message extension loaded.");
-        }
-        catch (e) {
+        } catch (e) {
             console.error("Something went wrong loading the message for new users: " + e.toString());
         }
     }
