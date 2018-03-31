@@ -34,8 +34,12 @@ export default class Info {
     public onAll(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         let response: string | undefined;
         if (args.length !== 1) return;
+        const name = args[0];
 
-        const infoData = this.fetchInfo(args[0]);
+        const regexp = /[a-z0-9-_]+/i;
+        if (!regexp.test(name)) return;
+
+        const infoData = this.fetchInfo(name);
 
         // if we got a valid note, replace variables
         if (infoData) {
@@ -78,11 +82,6 @@ export default class Info {
 
             const name = args[1];
             const text = args.splice(2).join(" ");
-
-            if (name[0] === ".") {
-                message.channel.send("Unable to create note starting with .");
-                return;
-            }
 
             message.channel.send(this.addInfo(name, text));
             return;
@@ -149,7 +148,6 @@ export default class Info {
 
         if (command.length === 0) return null;
         if (command.length > 300) return { message: `Stop it. Get some help.`, counter: 0, command };
-        if (command[0] === ".") return null;
 
         const info = this.infos.find(inf => {
             return inf.command === command;
