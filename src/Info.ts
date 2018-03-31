@@ -79,6 +79,11 @@ export default class Info {
             const name = args[1];
             const text = args.splice(2).join(" ");
 
+            if (name[0] === ".") {
+                message.channel.send("Unable to create note starting with .");
+                return;
+            }
+
             message.channel.send(this.addInfo(name, text));
             return;
         }
@@ -144,6 +149,7 @@ export default class Info {
 
         if (command.length === 0) return null;
         if (command.length > 300) return { message: `Stop it. Get some help.`, counter: 0, command };
+        if (command[0] === ".") return null;
 
         const info = this.infos.find(inf => {
             return inf.command === command;
