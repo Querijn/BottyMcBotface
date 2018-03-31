@@ -11,12 +11,11 @@ export interface VersionCheckerData {
 }
 
 export default class VersionChecker {
-    private bot: Discord.Client;
     private sharedSettings: SharedSettings;
     private data: VersionCheckerData;
     private channel: Discord.TextChannel;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, dataFile: string) {
+    constructor(sharedSettings: SharedSettings, dataFile: string) {
         console.log("Requested VersionChecker extension..");
 
         this.sharedSettings = sharedSettings;
@@ -25,12 +24,10 @@ export default class VersionChecker {
         this.data = fileBackedObject(dataFile);
         console.log("Successfully loaded VersionChecker data file.");
 
-        this.bot = bot;
-        this.bot.on("ready", this.onBot.bind(this));
     }
 
-    private onBot() {
-        const guild = this.bot.guilds.get(this.sharedSettings.server);
+    public onReady(bot: Discord.Client) {
+        const guild = bot.guilds.get(this.sharedSettings.server);
         if (!guild) {
             console.error(`VersionChecker: Incorrect settings for guild ID ${this.sharedSettings.server}`);
             return;

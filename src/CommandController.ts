@@ -55,15 +55,11 @@ export default class CommandController {
     private sharedSettings: SharedSettings;
     private commands: CommandHolder[] = [];
     private commandStatuses: { [commandName: string]: CommandStatus } = {};
-    private client: Discord.Client;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, commandData: string) {
+    constructor(sharedSettings: SharedSettings, commandData: string) {
         this.sharedSettings = sharedSettings;
-        this.client = bot;
 
         this.commandStatuses = fileBackedObject(commandData);
-
-        bot.on("message", this.handleCommands.bind(this));
     }
 
     public onToggle(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
@@ -129,7 +125,7 @@ export default class CommandController {
         });
     }
 
-    private handleCommands(message: Discord.Message) {
+    public onMessage(message: Discord.Message) {
         if (message.author.bot) return;
 
         const parts = message.content.split(" ");

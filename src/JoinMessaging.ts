@@ -8,33 +8,24 @@ import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 
 export default class JoinMessaging {
-    private bot: Discord.Client;
     private sharedSettings: SharedSettings;
     private messageContents: string;
     private commandContents: string;
     private commandController: CommandController;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, commandController: CommandController) {
+    constructor(sharedSettings: SharedSettings, commandController: CommandController) {
         console.log("Requested join message extension..");
 
         this.sharedSettings = sharedSettings;
         console.log("Successfully loaded join message settings.");
 
         this.commandController = commandController;
-
-        this.bot = bot;
-        this.bot.on("ready", this.onBot.bind(this));
     }
 
-    private onBot() {
+    public onReady(bot: Discord.Client) {
         try {
             this.messageContents = fs.readFileSync(this.sharedSettings.onJoin.messageFile, "utf8").toString();
             this.commandContents = this.commandController.getHelp();
-
-            this.bot.on("guildMemberAdd", (user: GuildMember) => {
-                user.send(this.messageContents);
-                user.send(this.commandContents);
-            });
 
             console.log("Join message extension loaded.");
         } catch (e) {
@@ -42,8 +33,12 @@ export default class JoinMessaging {
         }
     }
 
-    public onWelcome(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+    public onGuildMemberAdd(user: Discord.GuildMember) {
+        user.send(this.messageContents);
+        user.send(this.commandContents);
+    }
 
+    public onWelcome(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         message.channel.send(this.messageContents);
         message.channel.send(this.commandContents);
     }

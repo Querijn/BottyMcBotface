@@ -8,10 +8,9 @@ import fetch from "node-fetch";
 export default class KeyFinder {
     private sharedSettings: SharedSettings;
     private keys: FoundKeyInfo[];
-    private bot: Discord.Client;
     private channel?: Discord.TextChannel = undefined;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, keyFile: string) {
+    constructor(sharedSettings: SharedSettings, keyFile: string) {
         console.log("Requested KeyFinder extension..");
 
         this.sharedSettings = sharedSettings;
@@ -19,31 +18,28 @@ export default class KeyFinder {
 
         this.keys = fileBackedObject(keyFile);
         console.log("Successfully loaded KeyFinder key file.");
+    }
 
-        this.bot = bot;
+    public onReady(bot: Discord.Client) {
+        const guild = bot.guilds.get(this.sharedSettings.server);
 
-        this.bot.on("ready", () => {
-            const guild = this.bot.guilds.get(this.sharedSettings.server);
-
-            if (guild) {
-                const channel = guild.channels.find("name", this.sharedSettings.keyFinder.reportChannel) as Discord.TextChannel;
-                if (channel) {
-                    this.channel = channel;
-                } else {
-                    console.error(`KeyFinder: Incorrect setting for the channel: ${this.sharedSettings.keyFinder.reportChannel}`);
-                }
+        if (guild) {
+            const channel = guild.channels.find("name", this.sharedSettings.keyFinder.reportChannel) as Discord.TextChannel;
+            if (channel) {
+                this.channel = channel;
             } else {
-                console.error(`KeyFinder: Incorrect setting for the server: ${this.sharedSettings.server}`);
+                console.error(`KeyFinder: Incorrect setting for the channel: ${this.sharedSettings.keyFinder.reportChannel}`);
             }
+        } else {
+            console.error(`KeyFinder: Incorrect setting for the server: ${this.sharedSettings.server}`);
+        }
 
-            console.log("KeyFinder extension loaded.");
-            this.testAllKeys();
-        });
-        this.bot.on("message", this.onMessage.bind(this));
+        console.log("KeyFinder extension loaded.");
+        this.testAllKeys();
     }
 
     public onMessage(incomingMessage: Discord.Message) {
-        if (incomingMessage.author.id === this.bot.user.id) return;
+        if (incomingMessage.author.bot) return;
 
         this.findKey(`<@${incomingMessage.author.id}>`, incomingMessage.content, `<#${incomingMessage.channel.id}>`, incomingMessage.createdTimestamp);
 

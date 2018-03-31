@@ -11,7 +11,6 @@ import Discord = require("discord.js");
  * @class AutoReact
  */
 export default class AutoReact {
-    private bot: Discord.Client;
     private errorChannel: Discord.TextChannel;
     private logChannel: Discord.TextChannel;
     private sharedSettings: SharedSettings;
@@ -21,17 +20,14 @@ export default class AutoReact {
     private oldError: (message?: any, ...optionalParams: any[]) => void;
     private oldWarning: (message?: any, ...optionalParams: any[]) => void;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings) {
+    constructor(sharedSettings: SharedSettings) {
         console.log("Requested Logger extension..");
-        this.bot = bot;
 
         this.sharedSettings = sharedSettings;
-
-        this.bot.on("ready", this.onBot.bind(this));
     }
 
-    public onBot() {
-        const guild = this.bot.guilds.get(this.sharedSettings.logger.server);
+    public onReady(bot: Discord.Client) {
+        const guild = bot.guilds.get(this.sharedSettings.logger.server);
         if (!guild) {
             console.error(`Logger: Incorrect settings for guild ID ${this.sharedSettings.logger.server}`);
             return;
