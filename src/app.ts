@@ -62,7 +62,7 @@ eventHandler.registerHandler("message", keyFinder.onMessage.bind(keyFinder));
 
 eventHandler.registerHandler("ready", logger.onReady.bind(logger));
 
-eventHandler.registerHandler("ready", officeHours.setupOpenState.bind(officeHours));
+eventHandler.registerHandler("ready", officeHours.onReady.bind(officeHours));
 
 eventHandler.registerHandler("ready", techblog.onReady.bind(techblog));
 

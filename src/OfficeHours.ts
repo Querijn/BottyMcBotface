@@ -102,7 +102,7 @@ export default class OfficeHours {
         this.close(message.channel);
     }
 
-    public setupOpenState(bot: Discord.Client) {
+    public onReady(bot: Discord.Client) {
         this.guild = bot.guilds.get(this.sharedSettings.server) as Discord.Guild;
         if (!this.guild) {
             console.warn(`Cannot determine main guild (${this.sharedSettings.server}), isOpen state of OfficeHours could not be determined!`);
