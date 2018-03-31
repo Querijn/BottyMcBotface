@@ -44,19 +44,15 @@ interface OnThisDayAPIEventLink {
 export default class OfficeHours {
     private data: OfficeHoursData;
     private sharedSettings: SharedSettings;
-    private bot: Discord.Client;
     private guild: Discord.Guild;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, officeHoursData: string) {
+    constructor(sharedSettings: SharedSettings, officeHoursData: string) {
         console.log("Requested OfficeHours extension..");
 
-        this.bot = bot;
         this.sharedSettings = sharedSettings;
 
         this.data = fileBackedObject(officeHoursData);
         console.log("Successfully question file.");
-
-        bot.on("ready", this.setupOpenState.bind(this));
     }
 
     public onAsk(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
@@ -106,8 +102,8 @@ export default class OfficeHours {
         this.close(message.channel);
     }
 
-    private setupOpenState() {
-        this.guild = this.bot.guilds.get(this.sharedSettings.server) as Discord.Guild;
+    public onReady(bot: Discord.Client) {
+        this.guild = bot.guilds.get(this.sharedSettings.server) as Discord.Guild;
         if (!this.guild) {
             console.warn(`Cannot determine main guild (${this.sharedSettings.server}), isOpen state of OfficeHours could not be determined!`);
             return;
@@ -213,7 +209,7 @@ export default class OfficeHours {
         const everyone = channel.guild.roles.find("name", "@everyone");
         await channel.overwritePermissions(everyone, { SEND_MESSAGES: false });
 
-        let message = await channel.send(this.sharedSettings.officehours.closeMessage.replace(/{botty}/g, this.bot.user.username));
+        let message = await channel.send(this.sharedSettings.officehours.closeMessage.replace(/{botty}/g, this.sharedSettings.name));
         if (Array.isArray(message)) {
             message = message[0];
         }

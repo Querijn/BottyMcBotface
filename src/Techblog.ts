@@ -10,40 +10,38 @@ export interface TechblogData {
 }
 
 export default class Techblog {
-    private bot: Discord.Client;
     private sharedSettings: SharedSettings;
     private data: TechblogData;
     private channel: Discord.TextChannel;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, dataFile: string) {
+    constructor(sharedSettings: SharedSettings, dataFile: string) {
         this.sharedSettings = sharedSettings;
 
         this.data = fileBackedObject(dataFile);
         console.log("Successfully loaded TechblogReader data file.");
 
-        this.bot = bot;
+    }
 
-        this.bot.on("ready", () => {
-            if (!this.data.Last) this.data.Last = Date.now();
+    public onReady(bot: Discord.Client) {
+        if (!this.data.Last) this.data.Last = Date.now();
 
-            const guild = this.bot.guilds.get(this.sharedSettings.server);
-            if (!guild) {
-                console.error(`TechBlog: Invalid settings for guild ID ${this.sharedSettings.server}`);
-                return;
-            }
+        const guild = bot.guilds.get(this.sharedSettings.server);
+        if (!guild) {
+            console.error(`TechBlog: Invalid settings for guild ID ${this.sharedSettings.server}`);
+            return;
+        }
 
-            this.channel = guild.channels.find("name", this.sharedSettings.techBlog.channel) as Discord.TextChannel;
-            if (!this.channel) {
-                console.error(`TechBlog: Incorrect setting for the channel: ${this.sharedSettings.techBlog.channel}`);
-                return;
-            }
+        this.channel = guild.channels.find("name", this.sharedSettings.techBlog.channel) as Discord.TextChannel;
+        if (!this.channel) {
+            console.error(`TechBlog: Incorrect setting for the channel: ${this.sharedSettings.techBlog.channel}`);
+            return;
+        }
 
-            console.log("TechblogReader extension loaded.");
+        console.log("TechblogReader extension loaded.");
 
-            setInterval(() => {
-                this.checkFeed();
-            }, this.sharedSettings.techBlog.checkInterval);
-        });
+        setInterval(() => {
+            this.checkFeed();
+        }, this.sharedSettings.techBlog.checkInterval);
     }
 
     private checkFeed() {

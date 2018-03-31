@@ -37,7 +37,7 @@ export default class ForumReader {
 
     private lastCheckTime: number = 0;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, personalSettings: PersonalSettings, dataFile: string, keyFinder: KeyFinder) {
+    constructor(sharedSettings: SharedSettings, personalSettings: PersonalSettings, dataFile: string, keyFinder: KeyFinder) {
         console.log("Requested ForumReader extension..");
 
         this.sharedSettings = sharedSettings;
@@ -55,23 +55,23 @@ export default class ForumReader {
         if (this.data.Last.answer === 0) this.data.Last.answer = Date.now();
         if (this.data.Last.comment === 0) this.data.Last.comment = Date.now();
         if (this.data.Last.kbentry === 0) this.data.Last.kbentry = Date.now();
+    }
 
-        bot.on("ready", () => {
-            const guild = bot.guilds.get(this.sharedSettings.server);
-            if (!guild) {
-                console.error(`ForumReader: Incorrect settings for guild ID ${this.sharedSettings.server}`);
-                return;
-            }
+    public onReady(bot: Discord.Client) {
+        const guild = bot.guilds.get(this.sharedSettings.server);
+        if (!guild) {
+            console.error(`ForumReader: Incorrect settings for guild ID ${this.sharedSettings.server}`);
+            return;
+        }
 
-            const channel = guild.channels.find("name", this.sharedSettings.forum.channel);
-            if (!channel || !(channel instanceof Discord.TextChannel)) {
-                console.error(`ForumReader: Incorrect setting for the channel: ${this.sharedSettings.forum.channel}`);
-                return;
-            }
-            this.channel = channel as Discord.TextChannel;
+        const channel = guild.channels.find("name", this.sharedSettings.forum.channel);
+        if (!channel || !(channel instanceof Discord.TextChannel)) {
+            console.error(`ForumReader: Incorrect setting for the channel: ${this.sharedSettings.forum.channel}`);
+            return;
+        }
+        this.channel = channel as Discord.TextChannel;
 
-            this.fetchForumData();
-        });
+        this.fetchForumData();
     }
 
     /**

@@ -1,5 +1,6 @@
 export interface SharedSettings {
     server: string;
+    name: string;
 
     uptimeSettings: {
         checkInterval: number,

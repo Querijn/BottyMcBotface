@@ -1,5 +1,6 @@
 {
     "server": "342988445498474498",
+    "name": "Botty McBotFace",
     "commands": {
         "default_prefix": "!",
         "adminRoles": [
