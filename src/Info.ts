@@ -114,6 +114,7 @@ export default class Info {
         };
 
         this.infos.push(newInfo);
+        this.infos.sort((a, b) => a.command.localeCompare(b.command));
         return `Successfully added ${command}`;
     }
 
