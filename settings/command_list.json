@@ -30,6 +30,12 @@
             "prefix": "."
         }
     },
+    "welcome": {
+        "aliases": [
+            "welcome"
+        ],
+        "description": "Prints out a copy of the welcome message."
+    },
     "uptime": {
         "aliases": [
             "uptime"

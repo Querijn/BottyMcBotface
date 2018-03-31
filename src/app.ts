@@ -28,15 +28,17 @@ const bot = new Botty(personalSettings, sharedSettings);
 // Load extensions
 const controller = new CommandController(bot.client, sharedSettings, "data/command_data.json");
 const joinMessaging = new JoinMessaging(bot.client, sharedSettings, controller);
-const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
 const logger = new Logger(bot.client, sharedSettings);
 const keyFinder = new KeyFinder(bot.client, sharedSettings, "data/riot_keys.json");
-// const forum = new ForumReader(bot.client, sharedSettings, personalSettings, "data/forum_data.json", keyFinder);
+const forum = new ForumReader(bot.client, sharedSettings, personalSettings, "data/forum_data.json", keyFinder);
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
 
 // register commands
 controller.registerCommand(commandList.controller.toggle, controller.onToggle.bind(controller));
 controller.registerCommand(commandList.controller.help, controller.onHelp.bind(controller));
+
+const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
+controller.registerCommand(commandList.welcome, joinMessaging.onWelcome.bind(joinMessaging));
 
 const notes = new Info(sharedSettings, "data/info_data.json", versionChecker);
 controller.registerCommand(commandList.info.note, notes.onNote.bind(notes));
@@ -59,7 +61,7 @@ const uptime = new Uptime(sharedSettings, personalSettings, "data/uptime_data.js
 controller.registerCommand(commandList.uptime, uptime.onUptime.bind(uptime));
 
 const status = new ApiStatus(sharedSettings);
-// controller.registerCommand(commandList.apiStatus, status.onStatus.bind(status));
+controller.registerCommand(commandList.apiStatus, status.onStatus.bind(status));
 
 const libraries = new RiotAPILibraries(personalSettings, sharedSettings);
 controller.registerCommand(commandList.riotApiLibraries, libraries.onLibs.bind(libraries));

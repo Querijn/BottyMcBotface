@@ -27,6 +27,7 @@ export interface CommandList {
         toggle: Command;
         help: Command;
     };
+    welcome: Command;
     uptime: Command;
     autoReact: {
         toggle_default_thinking: Command;
