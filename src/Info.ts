@@ -36,7 +36,7 @@ export default class Info {
         if (args.length !== 1) return;
         const name = args[0];
 
-        const regexp = /[a-z0-9-_]+/i;
+        const regexp = /[a-z0-9-]+$/;
         if (!regexp.test(name)) return;
 
         const infoData = this.fetchInfo(name);
