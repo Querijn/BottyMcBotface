@@ -160,6 +160,11 @@ export default class Info {
                 .filter(s => s.score <= this.sharedSettings.info.maxScore)
                 .sort((a, b) => a.score - b.score);
 
+            if (data.length === 1) {
+                // if theres only one similar note, we might as well print it..
+                return this.infos.find(x => x.command === data[0].command)!;
+            }
+
             if (data.length !== 0) {
                 let message = "Did you mean: ";
                 message += data.map(s => "`" + s.command + "`").join(", ") + "?";
