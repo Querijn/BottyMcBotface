@@ -69,7 +69,7 @@ export default class OfficeHours {
         if (!asked) return;
 
         const question = args.slice(1).join(" ");
-        this.storeQuestion(question, message, asked.id, asked.toString(), message.author.username);
+        this.storeQuestion(question, message, asked.id, asked.user.username, message.author.username);
     }
 
     public onQuestionList(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
