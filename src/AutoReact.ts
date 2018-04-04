@@ -144,7 +144,7 @@ export default class AutoReact {
         const shouldReact = words.some(x => {
             if (greeting === x) { return true; }
 
-            const endChar = greeting.slice(-1);
+            const endChar = greeting.charAt(x.length);
             return greeting.startsWith(x) && endChars.findIndex(y => y === endChar) !== -1;
         });
 
