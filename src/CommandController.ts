@@ -81,43 +81,56 @@ export default class CommandController {
         }
     }
 
-    public getHelp(isAdmin: boolean = false): string {
-        let response = "\n";
-
+    public getHelp(isAdmin: boolean = false): Discord.RichEmbed[] {
         const toString = (holder: CommandHolder) => {
 
-            let str = "";
-            if (this.getStatus(holder) === CommandStatus.DISABLED) {
-                str += "~~";
-            }
-
-            str += `\`${holder.prefix}${holder.command.aliases}\``;
+            let title = "";
+            let desc = "";
 
             if (this.getStatus(holder) === CommandStatus.DISABLED) {
-                str += "~~";
+                title += "~~";
             }
 
-            str += `: ${holder.command.description}`;
+            title += `\`${holder.prefix}${holder.command.aliases}\``;
+
             if (this.getStatus(holder) === CommandStatus.DISABLED) {
-                str += " (command is disabled)";
+                title += "~~";
             }
 
-            return str + "\n";
+            desc += `${holder.command.description}`;
+            if (this.getStatus(holder) === CommandStatus.DISABLED) {
+                desc += " (command is disabled)";
+            }
+
+            return { title, desc };
         };
 
-        this.commands
+        const mapped = this.commands
             // ignore "*" commands
             .filter(holder => holder.command.aliases.some(a => a !== "*"))
             // hide admin commands if not admin
             .filter(holder => isAdmin || !holder.command.admin)
-            .forEach(holder => response += toString(holder));
+            .map(holder => toString(holder));
 
-        return response;
+        const data: Discord.RichEmbed[] = [];
+        let pageIndex = 0;
+        let embed: Discord.RichEmbed;
+
+        for (let i = 0; i < mapped.length; i++) {
+            // rich embeds have a 25 field limit
+            if (i % 25 === 0) {
+                embed = new Discord.RichEmbed({ title: `Commands (page ${++pageIndex})` });
+                data.push(embed);
+            }
+
+            embed!.addField(mapped[i].title, mapped[i].desc);
+        }
+        return data;
     }
 
     public onHelp(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-
-        message.channel.send(this.getHelp(isAdmin));
+        const data = this.getHelp(isAdmin);
+        data.forEach(d => message.channel.send({ embed: d }));
     }
 
     public registerCommand(newCommand: Command, commandHandler: SingleCommand) {
