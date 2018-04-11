@@ -73,6 +73,11 @@ export default class OfficeHours {
     }
 
     public onQuestionList(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        if (this.data.questions.length === 0) {
+            message.channel.send("No questions found.");
+            return;
+        }
+
         for (const data of this.data.questions) {
             message.channel.send(`${data.uuid}: ${data.authorName}: ${data.question}`);
         }
