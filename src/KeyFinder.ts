@@ -83,18 +83,18 @@ export default class KeyFinder {
     /**
      * Tests all keys to see if they are still active, removing deactivated keys from the list and logging a message for each one
      */
-    public testAllKeys(): void {
+    public async testAllKeys() {
         for (let i = 0; i < this.keys.length; i++) {
             const keyInfo = this.keys[i];
-            this.testKey(keyInfo.apiKey).then(header => {
-                if (header !== null) return;
+            const header = await this.testKey(keyInfo.apiKey);
 
-                this.keys.splice(i, 1);
+            if (header !== null) return;
 
-                const message = `Key \`${keyInfo.apiKey}\` returns 403 Forbidden now, removing it from my database.`;
-                console.warn(message);
-                if (this.channel) this.channel.send(message);
-            });
+            this.keys.splice(i, 1);
+
+            const message = `Key \`${keyInfo.apiKey}\` returns 403 Forbidden now, removing it from my database.`;
+            console.warn(message);
+            if (this.channel) this.channel.send(message);
         }
 
         setTimeout(this.testAllKeys.bind(this), 10000);

@@ -195,12 +195,11 @@ export default class OfficeHours {
         // Find all users that raised their hand
         const reaction = closeMessage.reactions.get("✋");
         if (reaction) {
-            reaction.fetchUsers().then((reactionUsers) => {
-                const usersToMention = reactionUsers.array().filter(user => !user.bot);
-                if (usersToMention.length > 0) {
-                    channel.send(usersToMention.join(", ") + "\n");
-                }
-            });
+            const reactionUsers = await reaction.fetchUsers();
+            const usersToMention = reactionUsers.array().filter(user => !user.bot);
+            if (usersToMention.length > 0) {
+                channel.send(usersToMention.join(", ") + "\n");
+            }
         }
 
         this.sendOnThisDayMessage(channel);
