@@ -110,7 +110,8 @@ export default class CommandController {
             .filter(holder => holder.command.aliases.some(a => a !== "*"))
             // hide admin commands if not admin
             .filter(holder => isAdmin || !holder.command.admin)
-            .map(holder => toString(holder));
+            .map(holder => toString(holder))
+            .sort((a, b) => a.title.localeCompare(b.title));
 
         const data: Discord.RichEmbed[] = [];
         let pageIndex = 0;
