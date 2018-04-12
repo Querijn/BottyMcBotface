@@ -33,7 +33,6 @@ export default class Info {
 
     public onAll(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         let response: string | undefined;
-        if (args.length !== 1) return;
         const name = args[0];
 
         const regexp = /[a-z0-9-]+$/;
