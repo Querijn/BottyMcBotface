@@ -28,7 +28,7 @@ export default class JoinMessaging {
 
     public onWelcome(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         message.channel.send(this.messageContents);
-        this.commandContents.forEach(e => message.channel.send({ embed: e }));
+        this.commandContents.forEach(embed => message.channel.send({ embed }));
     }
 
     private onBot() {
@@ -38,7 +38,7 @@ export default class JoinMessaging {
 
             this.bot.on("guildMemberAdd", (user: GuildMember) => {
                 user.send(this.messageContents);
-                this.commandContents.forEach(e => user.send({ embed: e }));
+                this.commandContents.forEach(embed => user.send({ embed }));
             });
 
             console.log("Join message extension loaded.");

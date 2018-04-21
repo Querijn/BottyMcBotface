@@ -131,7 +131,7 @@ export default class CommandController {
 
     public onHelp(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         const data = this.getHelp(isAdmin);
-        data.forEach(d => message.channel.send({ embed: d }));
+        data.forEach(embed => message.channel.send({ embed }));
     }
 
     public registerCommand(newCommand: Command, commandHandler: SingleCommand) {
