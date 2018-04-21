@@ -9,4 +9,6 @@ Here's some tips to help you on your way:
 6. You can follow the updates of the forum posts in #external-activity.
 7. Be sure to read the rules! #rules-faq
 
+Finally, even though Riot Games doesn't endorse any libraries, we want you to be able to contact the developers of libraries. If you want to discuss something about a specific library, you can mention the developers of that library, if available. For example, you can mention the Cassiopeia devs with `@Cassiopeia devs`. This is **not** for debugging your application, but for discussions about the library itself. The available mentions are `@Cassiopeia devs`, `@Kayn devs` and `@Orianna devs`.
+
 The commands I have right now are:
