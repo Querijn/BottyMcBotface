@@ -160,6 +160,12 @@ export default class RiotAPILibraries {
 
         let editMessage = await editMessagePromise;
         if (Array.isArray(editMessage)) { editMessage = editMessage[0]; }
+
+        if (libraryDescriptions.length === 0) {
+            editMessage.edit(`No up-to-date libraries found for ${language}`);
+            return;
+        }
+
         editMessage.edit({ embed });
     }
 }
