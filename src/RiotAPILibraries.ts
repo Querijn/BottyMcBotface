@@ -129,9 +129,21 @@ export default class RiotAPILibraries {
         message.channel.send(reply);
     }
 
-    private async getListForLanguage(message: Discord.Message, language: string) {
+    private async getListForLanguage(message: Discord.Message, language: string): Promise<void> {
         const response = await fetch(this.settings.riotApiLibraries.baseURL + language);
+
         if (response.status !== 200) {
+            const aliases = this.settings.riotApiLibraries.aliases;
+            const keys = Object.keys(aliases);
+
+            for (const index in keys) {
+                const key = keys[index];
+
+                if (aliases[key].find(self => self === language)) {
+                    return this.getListForLanguage(message, key);
+                }
+            }
+
             message.channel.send(this.settings.riotApiLibraries.githubErrorLanguage + response.status);
             return;
         }
