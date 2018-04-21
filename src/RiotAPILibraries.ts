@@ -132,6 +132,12 @@ export default class RiotAPILibraries {
     private async getListForLanguage(message: Discord.Message, language: string) {
         const response = await fetch(this.settings.riotApiLibraries.baseURL + language);
         if (response.status !== 200) {
+
+            if (response.status === 404) {
+                message.channel.send(`I found no libraries for ${language}`);
+                return;
+            }
+
             message.channel.send(this.settings.riotApiLibraries.githubErrorLanguage + response.status);
             return;
         }
