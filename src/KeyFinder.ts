@@ -131,7 +131,7 @@ export default class KeyFinder {
                 timestamp,
             });
 
-            const response = `Found an ${limit ? "active" : "inactive"} key in ${location} posted by ${user}: \`${match}\`. Key rate limit: \`${limit}\`.`;
+            const response = `Found a key in ${location} posted by ${user}: \`${match}\`. Key rate limit: \`${limit}\`.`;
             console.warn(response);
             if (this.channel) this.channel.send(response);
             break;
