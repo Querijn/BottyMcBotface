@@ -55,14 +55,16 @@
         "baseURL": "https://api.github.com/repos/WxWatch/riot-api-libraries/contents/libraries/",
         "aliases": {
             "javascript": [
-                "js",
-                "ts",
-                "typescript"
+                "js"
+            ],
+            "typescript": [
+                "ts"
             ],
             "c-sharp": [
-                ".net",
-                "vb",
                 "c#"
+            ],
+            "objective-c": [
+                "objc"
             ]
         }
     },
