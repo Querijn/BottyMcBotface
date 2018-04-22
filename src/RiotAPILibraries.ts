@@ -76,7 +76,7 @@ export default class RiotAPILibraries {
             return message.channel.send(`unknown argument for command; ${args}`);
         }
 
-        const param = args[0];
+        const param = args[0].toLowerCase();
 
         if (param === "list") {
             return this.getList(message);
@@ -139,7 +139,7 @@ export default class RiotAPILibraries {
             for (const index in keys) {
                 const key = keys[index];
 
-                if (aliases[key].find(self => self === language)) {
+                if (aliases[key].find(self => self.toLowerCase() === language.toLowerCase())) {
                     return this.getListForLanguage(message, key);
                 }
             }
