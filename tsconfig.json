@@ -5,7 +5,7 @@
     "alwaysStrict": true,
     "outDir": "dist",
     "module": "commonjs",
-    "target": "es6",
+    "target": "es2017",
     "sourceMap": true
   },
   "include": ["src/**/*"],

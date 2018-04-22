@@ -133,13 +133,9 @@ export default class RiotAPILibraries {
         const response = await fetch(this.settings.riotApiLibraries.baseURL + language);
 
         if (response.status !== 200) {
-            const aliases = this.settings.riotApiLibraries.aliases;
-            const keys = Object.keys(aliases);
 
-            for (const index in keys) {
-                const key = keys[index];
-
-                if (aliases[key].find(self => self.toLowerCase() === language.toLowerCase())) {
+            for (const [key, values] of Object.entries(this.settings.riotApiLibraries.aliases)) {
+                if (values.find(self => self.toLowerCase() === language.toLowerCase())) {
                     return this.getListForLanguage(message, key);
                 }
             }
