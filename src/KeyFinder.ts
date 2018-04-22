@@ -115,13 +115,13 @@ export default class KeyFinder {
 
         let found = false;
         for (const match of matches) {
+            const existing = this.keys.find(x => x.apiKey === match);
+            if (existing) continue; // we've already seen the key, check for other keys
+
             const limit = await this.testKey(match);
             found = found || limit !== null;
 
             if (limit == null) continue;
-
-            const existing = this.keys.find(x => x.apiKey === match);
-            if (existing) continue; // we've already seen the key, check for other keys
 
             this.keys.push({
                 apiKey: match,
