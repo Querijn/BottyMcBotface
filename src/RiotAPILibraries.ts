@@ -137,7 +137,7 @@ export default class RiotAPILibraries {
                 break;
             }
             case 404: {
-                message.channel.send(`I found no libraries for ${language}`);
+                message.channel.send(`I found no libraries for ${language}.`);
                 return;
             }
             default: {
