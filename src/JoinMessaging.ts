@@ -11,7 +11,7 @@ export default class JoinMessaging {
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
     private messageContents: string;
-    private commandContents: string;
+    private commandContents: Discord.RichEmbed[];
     private commandController: CommandController;
 
     constructor(bot: Discord.Client, sharedSettings: SharedSettings, commandController: CommandController) {
@@ -26,6 +26,11 @@ export default class JoinMessaging {
         this.bot.on("ready", this.onBot.bind(this));
     }
 
+    public onWelcome(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        message.channel.send(this.messageContents);
+        this.commandContents.forEach(embed => message.channel.send({ embed }));
+    }
+
     private onBot() {
         try {
             this.messageContents = fs.readFileSync(this.sharedSettings.onJoin.messageFile, "utf8").toString();
@@ -33,18 +38,12 @@ export default class JoinMessaging {
 
             this.bot.on("guildMemberAdd", (user: GuildMember) => {
                 user.send(this.messageContents);
-                user.send(this.commandContents);
+                this.commandContents.forEach(embed => user.send({ embed }));
             });
 
             console.log("Join message extension loaded.");
         } catch (e) {
             console.error("Something went wrong loading the message for new users: " + e.toString());
         }
-    }
-
-    public onWelcome(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-
-        message.channel.send(this.messageContents);
-        message.channel.send(this.commandContents);
     }
 }
