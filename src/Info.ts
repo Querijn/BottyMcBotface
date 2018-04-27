@@ -36,7 +36,7 @@ export default class Info {
         if(args.length === 0) return;
         const name = args[0];
 
-        const regexp = /[a-z0-9-]+$/;
+        const regexp = /^[a-z0-9-]+$/;
         if (!regexp.test(name)) return;
 
         const infoData = this.fetchInfo(name);
@@ -74,7 +74,7 @@ export default class Info {
 
         if (action === "add") {
             // we need atleast 3 arguments to add a note.
-            //   cmd   1   2     3
+            //  cmd   1   2    3
             // (!note add name message)
             if (args.length < 3) {
                 return;
