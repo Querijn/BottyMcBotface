@@ -115,13 +115,21 @@ export default class KeyFinder {
 
         let found = false;
         for (const match of matches) {
+            const existing = this.keys.find(x => x.apiKey === match);
+            if (existing) {
+                // we've already seen the key, check for other keys
+                console.log(`Found duplicate of a known key at ${location} posted by ${user}: \`${match}\`. Key rate limit: \`${existing.rateLimit}\`.`);
+                continue;
+            }
+
             const limit = await this.testKey(match);
             found = found || limit !== null;
 
-            if (limit == null) continue;
-
-            const existing = this.keys.find(x => x.apiKey === match);
-            if (existing) continue; // we've already seen the key, check for other keys
+            if (limit == null) {
+                // key is invalid, check for other keys
+                console.log(`Found inactive key in ${location} posted by ${user}: \`${match}\`. Key rate limit: \`${limit}\`.`);
+                continue;
+            }
 
             this.keys.push({
                 apiKey: match,
@@ -131,7 +139,7 @@ export default class KeyFinder {
                 timestamp,
             });
 
-            const response = `Found an ${limit ? "active" : "inactive"} key in ${location} posted by ${user}: \`${match}\`. Key rate limit: \`${limit}\`.`;
+            const response = `Found a key in ${location} posted by ${user}: \`${match}\`. Key rate limit: \`${limit}\`.`;
             console.warn(response);
             if (this.channel) this.channel.send(response);
             break;
