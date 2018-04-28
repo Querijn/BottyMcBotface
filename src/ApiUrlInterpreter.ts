@@ -483,7 +483,7 @@ export default class ApiUrlInterpreter {
                     break;
             }
 
-            validWith += "\\/+"; // Allow urls to end with a trailing /
+            validWith += "\\/?"; // Allow urls to end with a trailing /
 
             invalidPath = invalidPath.replace(parameterReplace, invalidWith);
             validPath = validPath.replace(parameterReplace, validWith);
