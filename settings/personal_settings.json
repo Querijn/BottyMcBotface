@@ -18,5 +18,9 @@
         "relativeFolderLocation": "www/",
         "relativeLiveLocation": "https://irule.at/riot/api/"
     },
+    "github": { 
+        "username": "Querijn",
+        "password": ""
+    },
     "isProduction": false
 }

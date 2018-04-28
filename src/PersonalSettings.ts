@@ -2,21 +2,23 @@ export interface PersonalSettings {
     forum: {
         username: string;
         password: string;
-    }
+    };
+
     discord: {
         key: string,
         owner: number
-    },
-    honeypot: {
-        token: string,
-        owner: number
-    },
+    };
     riotApi: {
-        key: string
-    },
+        key: string;
+    };
     webServer: {
-        relativeFolderLocation: string,
-        relativeLiveLocation: string
-    },
-    isProduction: boolean
+        relativeFolderLocation: string;
+        relativeLiveLocation: string;
+    };
+    github: {
+        username: string;
+        password: string;
+    };
+
+    isProduction: boolean;
 }

@@ -1,12 +1,16 @@
 {
     "server": "342988445498474498",
-
-    "channelAccess": {
-        "forcedChannels": ["301148922443726870", "187961895049756672", "190817288507752448"],
-        "restrictedChannels": ["190817288507752448"]
+    "commands": {
+        "default_prefix": "!",
+        "adminRoles": [
+            "187653195038720000",
+            "187653430372728833",
+            "350692046631206912",
+            "347539422943903755"
+        ]
     },
     "uptimeSettings": {
-        "checkInterval": 1000
+        "checkInterval": 60000
     },
     "techBlog": {
         "checkInterval": 300000,
@@ -17,16 +21,52 @@
         "reportChannel": "moderators"
     },
     "forum": {
-        "checkInterval":10000,
-        "channel":"external-activity",
-        "url":"http://discussion.developer.riotgames.com/"
-    },
-    "honeypot": {
-        "reportChannel": "moderators"
+        "checkInterval": 10000,
+        "channel": "external-activity",
+        "url": "http://discussion.developer.riotgames.com/"
     },
     "info": {
-        "allowedRoles": ["187653195038720000", "187653430372728833", "350692046631206912", "347539422943903755"],
-        "command": "note"
+        "allowedRoles": [
+            "187653195038720000",
+            "187653430372728833",
+            "350692046631206912",
+            "347539422943903755"
+        ],
+        "command": "note",
+        "maxScore": 2
+    },
+    "officehours": {
+        "allowedRoles": [
+            "187653195038720000",
+            "187653430372728833",
+            "350692046631206912",
+            "347539422943903755"
+        ],
+        "openMessage": "OFFICE HOURS OPEN\nThis channel is not for discussion, only for questions related to your app or the API as a whole. This channel should be used instead of PMing Rioters.",
+        "closeMessage": "OFFICE HOURS CLOSED\nIf you wish to ask a question to a Rioter, send {botty} a `!ask <your question>` command. You will be mentioned the next time this channel opens.\nIf you don't have a question, but you would like to be here for the next time, react with a `:raised_hand:`",
+        "addedMessage": "Your question is added to the queue, I will tag you with this message the next time #office-hours opens!",
+        "removedMessage": "The question has been removed."
+    },
+    "riotApiLibraries": {
+        "noLanguage": "No libraries found for language: ",
+        "languageList": "I have libraries for one of the following languages: {languages}\nChoose one you like and reply with `!libs <your language>`.",
+        "githubErrorList": "I tried to get the languages from Github, but Github replied with status code ",
+        "githubErrorLanguage": "I tried to get the language from Github, but Github replied with status code ",
+        "baseURL": "https://api.github.com/repos/WxWatch/riot-api-libraries/contents/libraries/",
+        "aliases": {
+            "javascript": [
+                "js"
+            ],
+            "typescript": [
+                "ts"
+            ],
+            "c-sharp": [
+                "c#"
+            ],
+            "objective-c": [
+                "objc"
+            ]
+        }
     },
     "autoReact": {
         "emoji": "408527155891273738"
@@ -46,9 +86,7 @@
         "checkInterval": 300000,
         "apiOnFireThreshold": 0.1,
         "statusUrl": "http://querijn.codes/api_status/1.1/",
-        "command": "status",
-        "aliases": ["apistatus"],
-        "onFireImages": [    
+        "onFireImages": [
             "https://media.giphy.com/media/dbtDDSvWErdf2/giphy.gif",
             "https://media.giphy.com/media/nLhdSinRtaL2E/giphy.gif",
             "https://i.imgur.com/Ufq47yf.gif",

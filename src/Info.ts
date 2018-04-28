@@ -1,15 +1,9 @@
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
+
 import VersionChecker from "./VersionChecker";
 
 import Discord = require("discord.js");
-
-// If the Collection contains anything in the other array
-const findOne = (arr1: Discord.Collection<string, Discord.Role>, arr2: Array<any>) => {
-    return arr2.some(v => {
-        return !!arr1.get(v);
-    });
-};
 
 export interface InfoData {
     command: string;
@@ -17,108 +11,100 @@ export interface InfoData {
     counter: number;
 }
 
+const findOne = (arr1: Discord.Collection<string, Discord.Role>, arr2: any[]) => {
+    return arr2.some(x => arr1.has(x));
+};
+
 export default class Info {
-    private bot: Discord.Client;
     private infos: InfoData[];
     private sharedSettings: SharedSettings;
     private command: string;
     private versionChecker: VersionChecker;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, userFile: string, versionChecker: VersionChecker) {
+    constructor(sharedSettings: SharedSettings, userFile: string, versionChecker: VersionChecker) {
         console.log("Requested Info extension..");
-        this.bot = bot;
         this.command = sharedSettings.info.command;
         this.versionChecker = versionChecker;
+        this.sharedSettings = sharedSettings;
 
         this.infos = fileBackedObject(userFile);
         console.log("Successfully loaded info file.");
-
-        this.sharedSettings = sharedSettings;
-
-        this.bot.on("ready", this.onBot.bind(this));
-        this.bot.on("message", this.onInfo.bind(this));
     }
 
-    onBot() {
-        console.log("Info extension loaded.");
-    }
-
-    onInfo(message: Discord.Message) {
-        if (message.author.bot) return;
-
-        // if using .syntax we can only read notes
-        let commandIsFetch = false;
-
-        // Needs to start with '/' or '!' or in separate cases '.'
-        const split = message.cleanContent.split(" ");
-        if (split[0][0] === '.') commandIsFetch = true;
-        else if (split[0][0] !== '!' && split[0][0] !== '/') return;
-        
-        // needs to start with command unless we are reading a note
-        let command = split[0].substr(1);
-        let nextIndex = 1;
-        
-        if (!commandIsFetch && command.startsWith(this.command)) {
-            // !info <command>
-            if (command.length === this.command.length) {
-                command = split[1];
-                nextIndex++;
-            }
-
-            // !info<command>
-            else command = command.substr(this.command.length);
-        } 
-
-        // Things we can't fetch
-        else if (command === "add" || command === "remove" || command === "list") 
-            return;
-
+    public onAll(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         let response: string | undefined;
-        switch (command) {
-            case "add":
-                // Only admins
-                if (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) return;
-                
-                if (split.length <= nextIndex + 1) return;
-                response = this.addInfo(split[nextIndex], split.slice(nextIndex + 1).join(" "));
-                break;
+        if(args.length === 0) return;
+        const name = args[0];
 
-            case "remove":
-                // Only admins
-                if (!message.member || !findOne(message.member.roles, this.sharedSettings.info.allowedRoles)) return;
-                
-                if (split.length <= nextIndex) return;
-                response = this.removeInfo(split[nextIndex]);
-                break;
+        const regexp = /^[a-z0-9-]+$/;
+        if (!regexp.test(name)) return;
 
-            case "list":
-                response = this.listInfo();
-                break;
+        const infoData = this.fetchInfo(name);
 
-            default: // Retrieve or just !info
-
-                let infoData: InfoData|null;
-                if (!commandIsFetch) {
-                    if (split.length <= 1) return;
-                    infoData = this.fetchInfo(split[1]);
-                }
-                else {
-                    infoData = this.fetchInfo(command);
-                }
-
-                if (infoData) {
-                    response = infoData.message;
-                    response = response.replace(/{ddragonVersion}/g, this.versionChecker.ddragonVersion);
-                    response = response.replace(/{gameVersion}/g, this.versionChecker.gameVersion);
-                    response = response.replace(/{counter}/g, infoData.counter.toString());
-                }
-                break;
+        // if we got a valid note, replace variables
+        if (infoData) {
+            response = infoData.message;
+            response = response.replace(/{ddragonVersion}/g, this.versionChecker.ddragonVersion);
+            response = response.replace(/{gameVersion}/g, this.versionChecker.gameVersion);
+            response = response.replace(/{counter}/g, infoData.counter.toString());
         }
 
+        // if we didnt get a valid note from fetchInfo, we return;
         if (!response) return;
 
-
         message.channel.send(response);
+    }
+
+    public onNote(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+
+        // the note we are trying to fetch (or the sub-command)
+        const action = args[0];
+
+        // if no params, we print the list
+        if (args.length === 0) {
+            message.channel.send(this.listInfo());
+            return;
+        }
+
+        // a non-admin account tried to use one of the sub-commands, so we stop
+        const badWords = ["add", "remove", "list"];
+        if (!isAdmin && badWords.some(x => x === action)) {
+            return;
+        }
+
+        if (action === "add") {
+            // we need atleast 3 arguments to add a note.
+            //  cmd   1   2    3
+            // (!note add name message)
+            if (args.length < 3) {
+                return;
+            }
+
+            const name = args[1];
+            const text = args.splice(2).join(" ");
+
+            message.channel.send(this.addInfo(name, text));
+            return;
+        }
+
+        if (action === "remove") {
+            // we need 2 arguments to remove a note.
+            //   cmd    1     2
+            // (!note remove name)
+            if (args.length !== 2) {
+                return;
+            }
+
+            message.channel.send(this.removeInfo(args[1]));
+            return;
+        }
+
+        if (action === "list") {
+            message.channel.send(this.listInfo());
+            return;
+        }
+
+        return this.onAll(message, isAdmin, command, args);
     }
 
     private addInfo(command: string, message: string) {
@@ -126,12 +112,13 @@ export default class Info {
         if (alreadyExists) return;
 
         const newInfo: InfoData = {
-            command: command,
-            message: message,
-            counter: 0
+            command,
+            counter: 0,
+            message,
         };
 
         this.infos.push(newInfo);
+        this.infos.sort((a, b) => a.command.localeCompare(b.command));
         return `Successfully added ${command}`;
     }
 
@@ -151,25 +138,99 @@ export default class Info {
 
         let message = `The available info commands are: \n`;
 
-        for (let i = 0; i < this.infos.length; i++) {
-            message += `- \`!${this.command} ${this.infos[i].command}\`\n`;
+        for (const info of this.infos) {
+            message += `- \`!${this.command} ${info.command}\`\n`;
         }
 
         return message;
     }
 
     private fetchInfo(command: string): InfoData | null {
-        const info = this.infos.find(info => {
-            return info.command === command;
+
+        if (command.length === 0) return null;
+        if (command.length > 300) return { message: `Stop it. Get some help.`, counter: 0, command };
+
+        const info = this.infos.find(inf => {
+            return inf.command === command;
         });
 
-        if (!info) return null;
+        if (!info) {
+            const data = this.infos.slice()
+                .map(i => {
+                    return {
+                        command: i.command,
+                        score: this.levenshteinDistance(command, i.command),
+                    };
+                })
+                .filter(s => s.score <= this.sharedSettings.info.maxScore)
+                .sort((a, b) => a.score - b.score);
+
+            if (data.length === 1) {
+                // if theres only one similar note, we might as well print it..
+                return this.infos.find(x => x.command === data[0].command)!;
+            }
+
+            if (data.length !== 0) {
+                let message = "Did you mean: ";
+                message += data.map(s => "`" + s.command + "`").join(", ") + "?";
+                return { message, counter: 0, command };
+            }
+
+            return { message: `No note with the name ${command} was found.`, counter: 0, command };
+        }
 
         // Backwards compatibility
-        if (info.counter === undefined || info.counter === null) 
+        if (info.counter === undefined || info.counter === null) {
             info.counter = 0;
+        }
 
         info.counter++;
         return info;
+    }
+
+    /**
+     * Counts the substitutions needed to transform a into b
+     * source adapted from: https://en.wikipedia.org/wiki/Levenshtein_distance#Iterative_with_two_matrix_rows
+     * @param a first string
+     * @param b seconds string
+     */
+    private levenshteinDistance(a: string, b: string): number {
+        if (a === b) {
+            return 0;
+        }
+
+        if (a.length === 0) {
+            return b.length;
+        }
+
+        if (b.length === 0) {
+            return a.length;
+        }
+
+        let v0 = [];
+        const v1 = [];
+
+        for (let i = 0; i < b.length + 1; i++) {
+            v0[i] = i;
+            v1[i] = 0;
+        }
+
+        for (let i = 0; i < a.length; i++) {
+            v1[0] = i + 1;
+
+            for (let j = 0; j < b.length; j++) {
+                const cost = a[i] === b[j] ? 0 : 1;
+
+                const deletionCost = v0[j + 1] + 1;
+                const insertCost = v1[j] + 1;
+                const substituteCost = v0[j] + cost;
+                const minCost = Math.min(Math.min(deletionCost, insertCost), substituteCost);
+
+                v1[j + 1] = minCost;
+            }
+            v0 = v1.slice();
+        }
+
+        return v1[b.length];
     }
 }

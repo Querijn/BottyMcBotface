@@ -1,58 +1,83 @@
 export interface SharedSettings {
-    server: string,
-    channelAccess: {
-        forcedChannels: string[],
-        restrictedChannels: string[]
-    },
+    server: string;
+
     uptimeSettings: {
-        checkInterval: number
-    },
+        checkInterval: number,
+    };
+
+    commands: {
+        default_prefix: string,
+        adminRoles: string[];
+    };
+
     techBlog: {
         checkInterval: number,
         channel: string,
-        url: string
-    },
+        url: string,
+    };
+
     keyFinder: {
-        reportChannel: string
-    },
+        reportChannel: string,
+    };
+
     forum: {
         checkInterval: number,
         channel: string,
-        url: string
-    }
-    honeypot: {
-        reportChannel: string;
-    },
+        url: string,
+    };
+
     autoReact: {
-        emoji: string;
-    },
+        emoji: string,
+    };
+
     info: {
         allowedRoles: string[],
-        command: string
-    },
+        command: string,
+        maxScore: number,
+    };
+
+    officehours: {
+        allowedRoles: string[],
+        openMessage: string,
+        closeMessage: string,
+        addedMessage: string,
+        removedMessage: string,
+    };
+
+    riotApiLibraries: {
+        noLanguage: string,
+        languageList: string,
+        githubErrorList: string,
+        githubErrorLanguage: string,
+        baseURL: string,
+        aliases: { [key: string]: string[] },
+    };
+
     versionChecker: {
         checkInterval: number,
         channel: string,
         gameThumbnail: string,
-        dataDragonThumbnail: string
-    },
+        dataDragonThumbnail: string,
+    };
+
     logger: {
         server: string,
-        errorChannel: string
-        logChannel: string
-    },
+        errorChannel: string,
+        logChannel: string,
+    };
+
     apiStatus: {
         checkInterval: number,
         apiOnFireThreshold: number,
         statusUrl: string,
-        command: string,
-        aliases: string[],
-        onFireImages: string[]
-    },
+        onFireImages: string[],
+    };
+
     onJoin: {
         messageFile: string
-    },
+    };
+  
     apiUrlInterpreter: {
         timeOutDuration: number
-    }
+    };
 }
