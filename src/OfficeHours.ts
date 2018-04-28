@@ -61,7 +61,7 @@ export default class OfficeHours {
 
     public onAsk(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         const question = args.join(" ");
-        this.storeQuestion(question, message, message.author.id, message.author.toString());
+        this.storeQuestion(question, message, message.author.toString(), message.author.username);
     }
 
     public onAskFor(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
@@ -69,7 +69,7 @@ export default class OfficeHours {
         if (!asked) return;
 
         const question = args.slice(1).join(" ");
-        this.storeQuestion(question, message, asked.id, asked.toString(), message.author.username);
+        this.storeQuestion(question, message, asked.toString(), asked.user.username, message.author.username);
     }
 
     public onQuestionList(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
@@ -178,10 +178,7 @@ export default class OfficeHours {
 
         // Add all questions with mention
         for (const data of this.data.questions) {
-            const member = channel.guild.members.get(data.authorId);
-            const mention = member ? member : data.authorName;
-
-            channel.send(`${mention} asked ${data.requester ? `(via ${data.requester})` : ""}: \`\`\`${data.question}\`\`\``);
+            channel.send(`${data.authorId} asked ${data.requester ? `(via ${data.requester})` : ""}: \`\`\`${data.question}\`\`\``);
         }
 
         this.data.questions = [];
