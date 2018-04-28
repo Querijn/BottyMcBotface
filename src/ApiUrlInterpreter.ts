@@ -146,7 +146,7 @@ export default class ApiUrlInterpreter {
         else replyMessage.edit(newMessage);
     }
 
-    async makeRequest(path: Path, service: string, url: string, message: Discord.Message) {
+    async makeRequest(path: Path, region: string, url: string, message: Discord.Message) {
         
         const currentTime = Date.now();
         if (currentTime < this.applicationRatelimitLastTime) {
@@ -155,20 +155,20 @@ export default class ApiUrlInterpreter {
             return;
         }
 
-        const servicedMethodName = `${service}.${path.method}`;
+        const servicedMethodName = `${region}.${path.method}`;
         if (this.methodRatelimitLastTime[servicedMethodName] && currentTime < this.methodRatelimitLastTime[servicedMethodName]) {
             const timeDiff = prettyMs(this.methodRatelimitLastTime[servicedMethodName] - currentTime, { verbose: true });
             message.edit(`We are ratelimited by the method (${servicedMethodName}), please wait ${timeDiff}.`);
             return;
         }
         
-        fetch(url, this.fetchSettings)
-        .then((resp) => {
+        try {
+            const resp = await fetch(url, this.fetchSettings);
             this.handleResponse(resp, message, url, servicedMethodName);
-        })
-        .catch((e) => {
+        }
+        catch (e) {
             console.error(`Error handling the API call: ${e.message}`);
-        });
+        }
     }
 
     async handleResponse(resp: Response, message: Discord.Message, url: string, servicedMethodName: string) {
@@ -225,12 +225,20 @@ export default class ApiUrlInterpreter {
             message.edit(`The Riot API responded to ${url} with ${resp.status} ${resp.statusText}.`);
             return;
         }
+
         // TODO: Message is good here, reply with upload
         try {
             const curIterator = this.iterator;
             const fileName = `${curIterator}.json`;
             const localFile = `${this.personalSettings.webServer.relativeFolderLocation}${fileName}`;
-            fs.writeFile(localFile, await resp.text(), null, (err: NodeJS.ErrnoException) =>
+
+            const json = {
+                url: url,
+                method: servicedMethodName,
+                result: await resp.json(),
+            };
+
+            fs.writeFile(localFile, JSON.stringify(json), null, (err: NodeJS.ErrnoException) =>
             {
                 if (err != null) {
                     message.edit(`Woah, something went wrong trying to fetch ${url}, sorry!`);
