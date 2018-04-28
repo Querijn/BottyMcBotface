@@ -11,6 +11,8 @@ export default class KeyFinder {
     private bot: Discord.Client;
     private channel?: Discord.TextChannel = undefined;
 
+    private timeOut: number | null = null;
+
     constructor(bot: Discord.Client, sharedSettings: SharedSettings, keyFile: string) {
         console.log("Requested KeyFinder extension..");
 
@@ -88,7 +90,7 @@ export default class KeyFinder {
             const keyInfo = this.keys[i];
             const header = await this.testKey(keyInfo.apiKey);
 
-            if (header !== null) return;
+            if (header !== null) continue;
 
             this.keys.splice(i, 1);
 
@@ -97,7 +99,8 @@ export default class KeyFinder {
             if (this.channel) this.channel.send(message);
         }
 
-        setTimeout(this.testAllKeys.bind(this), 10000);
+        if (this.timeOut != undefined) window.clearTimeout(this.timeOut);
+        this.timeOut = window.setTimeout(this.testAllKeys.bind(this), 60000);
     }
 
     /**
