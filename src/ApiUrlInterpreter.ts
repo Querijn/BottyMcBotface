@@ -99,7 +99,8 @@ export default class ApiUrlInterpreter {
         for (let i = 0; i < this.paths.length; i++) {
             const path = this.paths[i];
 
-            const validMatch = new RegExp(path.regex.valid, "g").exec(content);
+            const optionalAdditions = ".+\?.*"
+            const validMatch = new RegExp(path.regex.valid + optionalAdditions, "g").exec(content);
             if (validMatch && validMatch.length > 0) {
 
                 let replyMessageContent = `Making a request to ${path.method}..`;
@@ -380,7 +381,7 @@ export default class ApiUrlInterpreter {
             const parameterReplace = new RegExp(`{${parameter.name}}`, "g");
 
             const invalidWith = "(.*?)";
-            let validWith = "(.*+)";
+            let validWith = "(.*?)";
 
             if (parameter.schema.enum) {
                 validWith = `(${parameter.schema.enum.join("|")})`;
