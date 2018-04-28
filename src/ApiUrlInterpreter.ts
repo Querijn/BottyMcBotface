@@ -9,6 +9,7 @@ import { SharedSettings } from "./SharedSettings";
 import { PersonalSettings } from "./PersonalSettings";
 import { setTimeout, clearTimeout } from "timers";
 import { platform } from "os";
+import levenshteinDistance from "./LevenshteinDistance";
 
 class PathRegexCollection {
     constructor(validString: string, invalidString: string) {
@@ -18,6 +19,16 @@ class PathRegexCollection {
 
     public invalid: string;
     public valid: string;
+};
+
+class SchemaRegexCollection extends PathRegexCollection {
+    constructor(schema: any, validString: string, invalidString: string) {
+        super(validString, invalidString);
+
+        this.schema = schema;
+    }
+    
+    public schema: any;
 };
 
 class RatelimitResult {
@@ -33,6 +44,7 @@ class RatelimitResult {
 class Path {
     public methodType: "GET"|"POST";
     public regex: PathRegexCollection;
+    public parameterRegexMatches: SchemaRegexCollection[];
     public method: string;
 };
 
@@ -47,6 +59,7 @@ export default class ApiUrlInterpreter {
 
     private baseUrl: string;
     private platforms: string[];
+    private platformRegexString: string;
 
     private applicationRatelimitLastTime: number = 0;
     private methodRatelimitLastTime: {[method: string]: number} = {};
@@ -99,8 +112,7 @@ export default class ApiUrlInterpreter {
         for (let i = 0; i < this.paths.length; i++) {
             const path = this.paths[i];
 
-            const optionalAdditions = ".+\?.*"
-            const validMatch = new RegExp(path.regex.valid + optionalAdditions, "g").exec(content);
+            const validMatch = new RegExp(path.regex.valid, "g").exec(content);
             if (validMatch && validMatch.length > 0) {
 
                 let replyMessageContent = `Making a request to ${path.method}..`;
@@ -116,14 +128,47 @@ export default class ApiUrlInterpreter {
 
         for (let i = 0; i < this.paths.length; i++) {
             const path = this.paths[i];
-            const invalidMatch = new RegExp(path.regex.valid, "g").exec(content);
+            
+            const invalidMatch = new RegExp(path.regex.invalid, "g").exec(content);
             if (invalidMatch && invalidMatch.length > 0) {
-                // TODO
 
+                let replyMessageContent = "I see you've posted a Riot Games API url, but I was expecting it to have a slightly different format:\n";
 
+                // Get closest platform if incorrect
+                const closestPlatform = this.getClosestPlatform(invalidMatch[1]);
+                if (closestPlatform) {
+                    replyMessageContent += `- The platform \`${invalidMatch[1]}\` is invalid, did you mean: \`${closestPlatform}\`? Expected one of the following values: \`${this.platforms.join(", ")}\``;
+                }
+
+                invalidMatch.splice(0, 2); // Remove url and platform from array
+                
+                for (let j = 0; j < invalidMatch.length; j++) {
+                    
+                    const parameterRegexes = path.parameterRegexMatches[j];
+                    const value = invalidMatch[j];
+
+                    const parameterCorrect = new RegExp(parameterRegexes.valid, "g").exec(value);
+                    if (parameterCorrect) continue;
+                    debugger;
+                }
+
+                message.channel.send(replyMessageContent);
                 return;
             }
         }
+    }
+
+    getClosestPlatform(platform: string) {
+        const validPlatform = new RegExp(this.platformRegexString, "g").exec(platform);
+        if (validPlatform) return null;
+        
+        return this.platforms.map(p => { 
+            return { 
+                platform: p, 
+                distance: levenshteinDistance(platform, p) 
+            }
+        })
+        .sort((a, b) => a.distance - b.distance)[0];
     }
 
     async onUpdateSchemaRequest(message: Discord.Message) {
@@ -322,8 +367,9 @@ export default class ApiUrlInterpreter {
             let schema = await response.json();
 
             let baseUrlRegex = this.constructBaseUrlRegex(schema);
+            let invalidBaseUrlRegex = this.constructInvalidBaseUrlRegex(schema);
 
-            let paths: Path[] = [];
+            this.paths = [];
             
             for (const pathName in schema.paths) {
                 const pathSchema = schema.paths[pathName];
@@ -335,12 +381,11 @@ export default class ApiUrlInterpreter {
                 let path = new Path();
                 path.methodType = pathSchema.get ? "GET" : "POST";
                 path.method = methodSchema.operationId;
-                path.regex = this.constructRegex(baseUrlRegex + this.escapeRegex(pathName), methodSchema);
-
-                paths.push(path);
+                this.constructRegex(path, baseUrlRegex + this.escapeRegex(pathName), invalidBaseUrlRegex + this.escapeRegex(pathName), methodSchema);
+                console.assert(path.regex, "Path Regex should be set");
+                
+                this.paths.push(path);
             }
-
-            this.paths = paths;
         }
         catch (e) {
             console.error("Schema fetch error: " + e.message);
@@ -355,23 +400,30 @@ export default class ApiUrlInterpreter {
 
     constructBaseUrlRegex(schema: any): string {
         let baseUrl = this.escapeRegex(schema.servers[0].url);
-        const platforms = schema.servers[0].variables.platform.enum;
+        this.platforms = schema.servers[0].variables.platform.enum;
 
         // This makes a regex string from all the platform options
-        let platformRegexString = `(${platforms.join("|")})`;
+        this.platformRegexString = `(${this.platforms.join("|")})`;
 
-        return baseUrl.replace(/{platform}/g, platformRegexString);
+        return baseUrl.replace(/{platform}/g, this.platformRegexString);
     }
 
-    constructRegex(pathName: string, methodSchema: any): PathRegexCollection {
-        
-        let returns: PathRegexCollection[] = [];
+    constructInvalidBaseUrlRegex(schema: any): string {
+        let baseUrl = this.escapeRegex(schema.servers[0].url);
+        return baseUrl.replace(/{platform}/g, "(.*?)");
+    }
 
-        let invalidPath = pathName;
+    constructRegex(path: Path, pathName: string, invalidPathName: string, methodSchema: any) {
+        
+        path.parameterRegexMatches = [ ];
+
+        let invalidPath = invalidPathName;
         let validPath = pathName;
 
-        if (!methodSchema.parameters)
-            return new PathRegexCollection(validPath, invalidPath);
+        if (!methodSchema.parameters) {
+            path.regex = new PathRegexCollection(validPath, invalidPath);
+            return;
+        }
 
         for (let i = 0; i < methodSchema.parameters.length; i++) {
 
@@ -381,7 +433,7 @@ export default class ApiUrlInterpreter {
             const parameterReplace = new RegExp(`{${parameter.name}}`, "g");
 
             const invalidWith = "(.*?)";
-            let validWith = "(.*?)";
+            let validWith = "(.+?)";
 
             if (parameter.schema.enum) {
                 validWith = `(${parameter.schema.enum.join("|")})`;
@@ -401,9 +453,11 @@ export default class ApiUrlInterpreter {
 
             invalidPath = invalidPath.replace(parameterReplace, invalidWith);
             validPath = validPath.replace(parameterReplace, validWith);
+
+            path.parameterRegexMatches.push(new SchemaRegexCollection(parameter.schema, validWith, invalidWith));
         }
 
-        return new PathRegexCollection(validPath, invalidPath);
+        path.regex = new PathRegexCollection(validPath, invalidPath);
     }
     
     escapeRegex(regex: string): string {
