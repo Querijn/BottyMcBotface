@@ -226,7 +226,6 @@ export default class ApiUrlInterpreter {
             return;
         }
 
-        // TODO: Message is good here, reply with upload
         try {
             const curIterator = this.iterator;
             const fileName = `${curIterator}.json`;
@@ -381,9 +380,12 @@ export default class ApiUrlInterpreter {
             const parameterReplace = new RegExp(`{${parameter.name}}`, "g");
 
             const invalidWith = "(.*?)";
-            let validWith = "(.*?)";
+            let validWith = "(.*+)";
 
-            switch(parameter.schema.type) {
+            if (parameter.schema.enum) {
+                validWith = `(${parameter.schema.enum.join("|")})`;
+            }
+            else switch(parameter.schema.type) {
                 default:
                     console.warn(`Unhandled schema parameter in ${pathName}: ${parameter.name} is a ${parameter.schema.type}`);
                     break;
