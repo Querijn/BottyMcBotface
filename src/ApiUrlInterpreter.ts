@@ -450,7 +450,7 @@ export default class ApiUrlInterpreter {
         path.parameterInfo = [ ];
 
         let invalidPath = invalidBase + this.escapeRegex(pathName);
-        let validPath = validBase + this.escapeRegex(pathName) + "[?\\s]"; // Message will always end in a whitespace, use this a delimiter at the end of valid paths
+        let validPath = validBase + this.escapeRegex(pathName);
 
         if (!methodSchema.parameters) {
             path.regex = new PathRegexCollection(validPath, invalidPath);
@@ -483,13 +483,14 @@ export default class ApiUrlInterpreter {
                     break;
             }
 
-            validWith += "\\/?"; // Allow urls to end with a trailing /
-
             invalidPath = invalidPath.replace(parameterReplace, invalidWith);
             validPath = validPath.replace(parameterReplace, validWith);
 
             path.parameterInfo.push(new SchemaRegexCollection(parameter.name, parameter.schema, validWith, invalidWith));
         }
+
+        validPath += "\\/?"; // Allow urls to end with a trailing /
+        validPath += "\\s"; // Message will always end in a whitespace, use this a delimiter at the end of valid paths
 
         // If the last parameter is missing from the url, don't require the last / match for invalids.
         const lastIndex = invalidPath.lastIndexOf("\\/" + invalidWith);
