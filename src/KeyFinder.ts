@@ -99,8 +99,8 @@ export default class KeyFinder {
             if (this.channel) this.channel.send(message);
         }
 
-        if (this.timeOut != undefined) window.clearTimeout(this.timeOut);
-        this.timeOut = window.setTimeout(this.testAllKeys.bind(this), 60000);
+        if (this.timeOut != undefined) clearTimeout(this.timeOut);
+        this.timeOut = setTimeout(this.testAllKeys.bind(this), 60000);
     }
 
     /**
