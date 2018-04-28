@@ -47,7 +47,7 @@ class RatelimitResult {
 class Path {
     public methodType: "GET"|"POST";
     public regex: PathRegexCollection;
-    public parameterRegexMatches: SchemaRegexCollection[];
+    public parameterInfo: SchemaRegexCollection[];
     public method: string;
     public name: string;
 };
@@ -135,23 +135,26 @@ export default class ApiUrlInterpreter {
             
             const invalidMatch = new RegExp(path.regex.invalid, "g").exec(content);
             if (invalidMatch && invalidMatch.length > 0) {
+                let errorIdentified = false;
 
-                let replyMessageContent = "I see you've posted a Riot Games API url, but I was expecting it to have a slightly different format:\n";
+                let mistakes = [];
 
                 // Get closest platform if incorrect
                 const closestPlatform = this.getClosestPlatform(invalidMatch[1]);
                 if (closestPlatform) {
-                    replyMessageContent += `- The platform \`${invalidMatch[1]}\` is invalid, did you mean: \`${closestPlatform}\`? Expected one of the following values: \`${this.platforms.join(", ")}\`\n`;
+                    errorIdentified = true;
+                    mistakes.push(`- The platform \`${invalidMatch[1]}\` is invalid, did you mean: \`${closestPlatform}\`? Expected one of the following values: \`${this.platforms.join(", ")}\``);
                 }
 
                 invalidMatch.splice(0, 2); // Remove url and platform from array
                 
                 // This now contains all required parameters.
-                for (let j = 0; j < Math.max(path.parameterRegexMatches.length, invalidMatch.length); j++) {
+                for (let j = 0; j < Math.max(path.parameterInfo.length, invalidMatch.length); j++) {
                     
-                    const parameter = path.parameterRegexMatches[j];
+                    const parameter = path.parameterInfo[j]; // All info about this parameter
                     const value = invalidMatch[j];
 
+                    // If it's correct, don't bother
                     const parameterCorrect = new RegExp(parameter.valid, "g").exec(value);
                     if (parameterCorrect) continue;
 
@@ -159,10 +162,24 @@ export default class ApiUrlInterpreter {
                     const start = path.name.indexOf(`/{${parameter.name}}`); // Find /${leagueId}
                     const end = path.name.lastIndexOf("/", start - 1); // Find the / before it
                     let location = path.name.substr(end + 1, start - end); // Make a `leagues/` string.
+
+                    // Get type
+                    let type = parameter.schema.type; // Usually this is enough
+                    if (parameter.schema.enum) { // If there are limited options what it could be, show them
+                        type = parameter.schema.enum.join("/");
+                    }
                     
-                    replyMessageContent += `- Parameter ${j + 1}, expected \`${parameter.name} (${parameter.schema.type})\` right after \`${location}\`, got "${value}".\n`;
+                    mistakes.push(`- Parameter ${j + 1}, expected \`${parameter.name} (${type})\` right after \`${location}\`, got "${value}".`);
+                    errorIdentified = true;
                 }
 
+                if (!errorIdentified) {
+                    message.channel.send(`I see you've posted a Riot Games API url (\`${path.method}\` if I am not mistaken), but I identified it as invalid.. Unfortunately I can't exactly tell why. This might be a bug!`);
+                    console.warn("Could not identify the issue with the Riot API url from the following message `" + message.content + "`");
+                    return;
+                }
+
+                const replyMessageContent = `I see you've posted a Riot Games API url (\`${path.method}\` if I am not mistaken), but it seems to have ${mistakes.length} mistake${mistakes.length !== 1 ? "s" : ""}:\n` + mistakes.join("\n");
                 message.channel.send(replyMessageContent);
                 return;
             }
@@ -427,7 +444,7 @@ export default class ApiUrlInterpreter {
     constructRegex(path: Path, validBase: string, invalidBase: string, pathName: string, methodSchema: any) {
         
         path.name = pathName;
-        path.parameterRegexMatches = [ ];
+        path.parameterInfo = [ ];
 
         let invalidPath = invalidBase + this.escapeRegex(pathName);
         let validPath = validBase + this.escapeRegex(pathName);
@@ -437,6 +454,7 @@ export default class ApiUrlInterpreter {
             return;
         }
 
+        const invalidWith = "([^\\s]*)";
         for (let i = 0; i < methodSchema.parameters.length; i++) {
 
             const parameter = methodSchema.parameters[i];
@@ -444,8 +462,7 @@ export default class ApiUrlInterpreter {
 
             const parameterReplace = new RegExp(`{${parameter.name}}`, "g");
 
-            const invalidWith = "(.*?)";
-            let validWith = "(.+?)";
+            let validWith = "([^\\s]+)";
 
             if (parameter.schema.enum) {
                 validWith = `(${parameter.schema.enum.join("|")})`;
@@ -466,7 +483,13 @@ export default class ApiUrlInterpreter {
             invalidPath = invalidPath.replace(parameterReplace, invalidWith);
             validPath = validPath.replace(parameterReplace, validWith);
 
-            path.parameterRegexMatches.push(new SchemaRegexCollection(parameter.name, parameter.schema, validWith, invalidWith));
+            path.parameterInfo.push(new SchemaRegexCollection(parameter.name, parameter.schema, validWith, invalidWith));
+        }
+
+        // If the last parameter is missing from the url, don't require the last / match for invalids.
+        const lastIndex = invalidPath.lastIndexOf("\\/" + invalidWith);
+        if (lastIndex !== -1) {
+            invalidPath = invalidPath.substr(0, lastIndex) + "\\/?([^\\s]*)";
         }
 
         path.regex = new PathRegexCollection(validPath, invalidPath);
