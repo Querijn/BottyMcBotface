@@ -108,8 +108,8 @@ export default class ApiUrlInterpreter {
 
     async onRiotApiURL(message: Discord.Message, content: string|null = null) {
         
-        // Init message if missing.
-        if (!content) content = message.content.replace(/(`){1,3}(.*?)(`){1,3}/g, "");
+        // Init message if missing, also append with space.
+        if (!content) content = message.content.replace(/(`){1,3}(.*?)(`){1,3}/g, "") + " ";
 
         if (content.indexOf("https://") == -1) return; // We're about to do ~80 regex tests, better make sure that it's on a message with a URL
 
@@ -128,10 +128,7 @@ export default class ApiUrlInterpreter {
                 await this.makeRequest(path, region, validMatch[0], replyMessage);
                 return;
             }
-        }
 
-        for (let i = 0; i < this.paths.length; i++) {
-            const path = this.paths[i];
             
             const invalidMatch = new RegExp(path.regex.invalid, "g").exec(content);
             if (invalidMatch && invalidMatch.length > 0) {
@@ -414,6 +411,9 @@ export default class ApiUrlInterpreter {
                 
                 this.paths.push(path);
             }
+
+            // This fixes the issue where it would match getAllChampionsMasteries before a specific champion mastery (which starts the same but has extra parameters)
+            this.paths = this.paths.sort((a, b) => b.name.length - a.name.length);
         }
         catch (e) {
             console.error("Schema fetch error: " + e.message);
@@ -447,14 +447,14 @@ export default class ApiUrlInterpreter {
         path.parameterInfo = [ ];
 
         let invalidPath = invalidBase + this.escapeRegex(pathName);
-        let validPath = validBase + this.escapeRegex(pathName);
+        let validPath = validBase + this.escapeRegex(pathName) + "[?\\s]"; // Message will always end in a whitespace, use this a delimiter at the end of valid paths
 
         if (!methodSchema.parameters) {
             path.regex = new PathRegexCollection(validPath, invalidPath);
             return;
         }
 
-        const invalidWith = "([^\\s]*)";
+        const invalidWith = "([^\\s^\\/]*)";
         for (let i = 0; i < methodSchema.parameters.length; i++) {
 
             const parameter = methodSchema.parameters[i];
@@ -462,7 +462,7 @@ export default class ApiUrlInterpreter {
 
             const parameterReplace = new RegExp(`{${parameter.name}}`, "g");
 
-            let validWith = "([^\\s]+)";
+            let validWith = "([^\\s^\\/]+)";
 
             if (parameter.schema.enum) {
                 validWith = `(${parameter.schema.enum.join("|")})`;
@@ -480,6 +480,8 @@ export default class ApiUrlInterpreter {
                     break;
             }
 
+            validWith += "\\/+"; // Allow urls to end with a trailing /
+
             invalidPath = invalidPath.replace(parameterReplace, invalidWith);
             validPath = validPath.replace(parameterReplace, validWith);
 
@@ -489,7 +491,7 @@ export default class ApiUrlInterpreter {
         // If the last parameter is missing from the url, don't require the last / match for invalids.
         const lastIndex = invalidPath.lastIndexOf("\\/" + invalidWith);
         if (lastIndex !== -1) {
-            invalidPath = invalidPath.substr(0, lastIndex) + "\\/?([^\\s]*)";
+            invalidPath = invalidPath.substr(0, lastIndex) + "\\/?" + invalidWith;
         }
 
         path.regex = new PathRegexCollection(validPath, invalidPath);
