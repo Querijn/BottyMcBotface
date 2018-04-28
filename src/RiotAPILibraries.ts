@@ -130,6 +130,14 @@ export default class RiotAPILibraries {
     }
 
     private async getListForLanguage(message: Discord.Message, language: string): Promise<void> {
+
+        // Check if alias
+        for (const [key, values] of Object.entries(this.settings.riotApiLibraries.aliases)) {
+            if (values.find(self => self.toLowerCase() === language.toLowerCase())) {
+                return this.getListForLanguage(message, key);
+            }
+        }
+
         const response = await fetch(this.settings.riotApiLibraries.baseURL + language);
         switch (response.status) {
             case 200: {
@@ -139,11 +147,6 @@ export default class RiotAPILibraries {
             case 404: {
                 message.channel.send(`I found no libraries for ${language}.`);
                 
-                for (const [key, values] of Object.entries(this.settings.riotApiLibraries.aliases)) {
-                    if (values.find(self => self.toLowerCase() === language.toLowerCase())) {
-                        return this.getListForLanguage(message, key);
-                    }
-                }
                 return;
             }
             default: {
