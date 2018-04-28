@@ -116,6 +116,7 @@ export default class ApiUrlInterpreter {
         for (let i = 0; i < this.paths.length; i++) {
             const path = this.paths[i];
 
+            // Check if path was valid
             const validMatch = new RegExp(path.regex.valid, "g").exec(content);
             if (validMatch && validMatch.length > 0) {
 
@@ -125,11 +126,13 @@ export default class ApiUrlInterpreter {
                 const replyMessage = Array.isArray(replyMessages) ? replyMessages[0] : replyMessages;
 
                 const region = validMatch[1];
+                
+                // Path works fine, make a request
                 await this.makeRequest(path, region, validMatch[0], replyMessage);
                 return;
             }
 
-            
+            // Now check if it's the same path, but with incorrect parameters.
             const invalidMatch = new RegExp(path.regex.invalid, "g").exec(content);
             if (invalidMatch && invalidMatch.length > 0) {
                 let errorIdentified = false;
