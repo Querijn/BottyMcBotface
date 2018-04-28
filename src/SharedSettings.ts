@@ -50,6 +50,7 @@ export interface SharedSettings {
         githubErrorList: string,
         githubErrorLanguage: string,
         baseURL: string,
+        aliases: { [key: string]: string[] },
     };
 
     versionChecker: {
