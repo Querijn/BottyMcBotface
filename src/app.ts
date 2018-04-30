@@ -15,13 +15,14 @@ import Uptime from "./Uptime";
 import VersionChecker from "./VersionChecker";
 
 import { CommandList } from "./CommandController";
+import { defaultBackedObject } from "./DefaultBackedSettings";
 import { fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";
 
 // Load and initialise settings
-const sharedSettings = fileBackedObject<SharedSettings>("settings/shared_settings.json");
-const personalSettings = fileBackedObject<PersonalSettings>("settings/personal_settings.json");
+const sharedSettings = defaultBackedObject<SharedSettings>("settings/shared_settings.json", "private/shared_settings.json");
+const personalSettings = defaultBackedObject<PersonalSettings>("settings/personal_settings.json", "private/personal_settings.json");
 const commandList = fileBackedObject<CommandList>("settings/command_list.json");
 const bot = new Botty(personalSettings, sharedSettings);
 
