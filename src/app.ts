@@ -15,8 +15,7 @@ import Uptime from "./Uptime";
 import VersionChecker from "./VersionChecker";
 
 import { CommandList } from "./CommandController";
-import { defaultBackedObject } from "./DefaultBackedSettings";
-import { fileBackedObject } from "./FileBackedObject";
+import { defaultBackedObject, fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";
 
