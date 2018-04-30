@@ -1,7 +1,6 @@
 import { Article, default as AnswerHubAPI, Node, NodeList, Question } from "./AnswerHub";
 import { fileBackedObject } from "./FileBackedObject";
-import { PersonalSettings } from "./PersonalSettings";
-import { SharedSettings } from "./SharedSettings";
+import { PersonalSettings, SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
 import KeyFinder from "./KeyFinder";
@@ -37,11 +36,11 @@ export default class ForumReader {
 
     private lastCheckTime: number = 0;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, personalSettings: PersonalSettings, dataFile: string, keyFinder: KeyFinder) {
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings, dataFile: string, keyFinder: KeyFinder) {
         console.log("Requested ForumReader extension..");
 
         this.sharedSettings = sharedSettings;
-        this.personalSettings = personalSettings;
+        this.personalSettings = sharedSettings.botty;
         console.log("Successfully loaded ForumReader settings.");
 
         this.data = fileBackedObject(dataFile);

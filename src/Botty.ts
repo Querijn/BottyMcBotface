@@ -1,6 +1,5 @@
 import { fileBackedObject } from "./FileBackedObject";
-import { PersonalSettings } from "./PersonalSettings";
-import { SharedSettings } from "./SharedSettings";
+import { PersonalSettings, SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
 import { GuildMember } from "discord.js";
@@ -17,8 +16,8 @@ export default class Botty {
     private personalSettings: PersonalSettings;
     private sharedSettings: SharedSettings;
 
-    constructor(personalSettings: PersonalSettings, sharedSettings: SharedSettings) {
-        this.personalSettings = personalSettings;
+    constructor(sharedSettings: SharedSettings) {
+        this.personalSettings = sharedSettings.botty;
         this.sharedSettings = sharedSettings;
         console.log("Successfully loaded bot settings.");
 

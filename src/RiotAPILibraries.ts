@@ -1,4 +1,3 @@
-import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
@@ -55,7 +54,8 @@ export default class RiotAPILibraries {
 
     private fetchSettings: object;
 
-    constructor(personalSettings: PersonalSettings, settings: SharedSettings) {
+    constructor(settings: SharedSettings) {
+        const personalSettings = settings.botty;
         this.settings = settings;
         this.fetchSettings = {
             headers: {
@@ -146,7 +146,6 @@ export default class RiotAPILibraries {
             }
             case 404: {
                 message.channel.send(`I found no libraries for ${language}.`);
-                
                 return;
             }
             default: {
