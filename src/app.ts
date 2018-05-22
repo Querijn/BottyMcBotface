@@ -15,6 +15,7 @@ import Techblog from "./Techblog";
 import Uptime from "./Uptime";
 import VersionChecker from "./VersionChecker";
 
+import { APISchema } from "./ApiSchema";
 import { CommandList } from "./CommandController";
 import { defaultBackedObject, fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
@@ -25,19 +26,20 @@ const commandList = fileBackedObject<CommandList>("settings/command_list.json");
 const bot = new Botty(sharedSettings);
 
 // Load extensions
+const apiSchema = new APISchema(sharedSettings);
 const controller = new CommandController(bot.client, sharedSettings, "data/command_data.json");
 const joinMessaging = new JoinMessaging(bot.client, sharedSettings, controller);
 const logger = new Logger(bot.client, sharedSettings);
 const keyFinder = new KeyFinder(bot.client, sharedSettings, "data/riot_keys.json");
 const forum = new ForumReader(bot.client, sharedSettings, "data/forum_data.json", keyFinder);
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
-const apiUrlInterpreter = new ApiUrlInterpreter(bot.client, sharedSettings);
+const apiUrlInterpreter = new ApiUrlInterpreter(bot.client, sharedSettings, apiSchema);
 
 // register commands
 controller.registerCommand(commandList.controller.toggle, controller.onToggle.bind(controller));
 controller.registerCommand(commandList.controller.help, controller.onHelp.bind(controller));
 
-controller.registerCommand(commandList.apiUrlInterpreter.updateSchema, apiUrlInterpreter.onUpdateSchemaRequest.bind(apiUrlInterpreter));
+controller.registerCommand(commandList.apiSchema.updateSchema, apiSchema.onUpdateSchemaRequest.bind(apiSchema));
 controller.registerCommand(commandList.keyFinder, keyFinder.onKeyList.bind(keyFinder));
 
 const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");

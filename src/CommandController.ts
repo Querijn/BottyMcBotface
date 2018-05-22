@@ -27,7 +27,7 @@ export interface CommandList {
         toggle: Command;
         help: Command;
     };
-    apiUrlInterpreter: {
+    apiSchema: {
         updateSchema: Command;
     };
     keyFinder: Command;
