@@ -74,11 +74,11 @@ export default class ApiUrlInterpreter {
 
     private fetchSettings: Object;
 
-    constructor(bot: Discord.Client, personalSettings: PersonalSettings, sharedSettings: SharedSettings) {
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings) {
         console.log("Requested API URL Interpreter extension..");
 
         this.sharedSettings = sharedSettings;
-        this.personalSettings = personalSettings;
+        this.personalSettings = sharedSettings.botty;
         console.log("Successfully loaded API URL Interpreter settings.");
 
         this.fetchSettings = { 

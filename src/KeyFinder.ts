@@ -1,5 +1,4 @@
 import { fileBackedObject } from "./FileBackedObject";
-import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
@@ -99,7 +98,7 @@ export default class KeyFinder {
             if (this.channel) this.channel.send(message);
         }
 
-        if (this.timeOut != undefined) clearTimeout(this.timeOut);
+        if (this.timeOut !== undefined &&  this.timeOut !== null) clearTimeout(this.timeOut);
         this.timeOut = setTimeout(this.testAllKeys.bind(this), 60000);
     }
 

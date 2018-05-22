@@ -29,7 +29,7 @@ export default class AutoReact {
         this.bot.on("message", this.onMessage.bind(this));
     }
 
-    public onConnect() {        
+    public onConnect() {
         const emoji = this.bot.emojis.get(this.sharedSettings.autoReact.emoji);
         if (emoji instanceof Discord.Emoji) {
             this.greetingEmoji = emoji;

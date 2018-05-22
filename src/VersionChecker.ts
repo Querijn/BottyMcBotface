@@ -2,7 +2,6 @@ import Discord = require("discord.js");
 import fetch from "node-fetch";
 
 import { fileBackedObject } from "./FileBackedObject";
-import { PersonalSettings } from "./PersonalSettings";
 import { SharedSettings } from "./SharedSettings";
 
 export interface VersionCheckerData {
