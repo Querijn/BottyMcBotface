@@ -48,21 +48,22 @@ export default class KeyFinder {
         if (incomingMessage.author.id === this.bot.user.id) return;
 
         this.findKey(`<@${incomingMessage.author.id}>`, incomingMessage.content, `<#${incomingMessage.channel.id}>`, incomingMessage.createdTimestamp);
+    }
 
-        // Check if the reporting channel is enabled, the message was sent in the reporting channel, and the command to view active keys was used
+    public onKeyList(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        // only allow this command if it was sent in the reporting channel (#moderators)
         if (!this.channel) return;
-        if (incomingMessage.channel.id !== this.channel.id) return;
-        if (!(incomingMessage.content.startsWith("!active_keys") || incomingMessage.content.startsWith("!activekeys"))) return;
+        if (message.channel.id !== this.channel.id) return;
 
         if (this.keys.length === 0) {
-            incomingMessage.reply("I haven't found any keys.");
+            message.reply("I haven't found any keys.");
             return;
         }
 
         let outgoingMessage = `I've found ${this.keys.length} key${this.keys.length === 1 ? "" : "s"} that ${this.keys.length === 1 ? "is" : "are"} still active:\n`;
         for (const keyInfo of this.keys) outgoingMessage += `- \`${keyInfo.apiKey}\` (posted by ${keyInfo.user} in ${keyInfo.location} on ${new Date(keyInfo.timestamp)}). Rate limit: \`${keyInfo.rateLimit}\`\n`;
 
-        incomingMessage.reply(outgoingMessage);
+        message.reply(outgoingMessage);
     }
 
     /**

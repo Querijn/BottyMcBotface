@@ -23,6 +23,13 @@
             "description": "Loads an updated api url schema"
         }
     },
+    "keyFinder": {
+        "aliases": [
+            "active_keys",
+            "activekeys"
+        ],
+        "description": "prints a list of keys that botty have seen, and that are still active"
+    },
     "info": {
         "note": {
             "aliases": [

@@ -30,6 +30,7 @@ export interface CommandList {
     apiUrlInterpreter: {
         updateSchema: Command;
     };
+    keyFinder: Command;
     welcome: Command;
     uptime: Command;
     autoReact: {
