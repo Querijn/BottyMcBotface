@@ -1,6 +1,7 @@
 import Botty from "./Botty";
 
 import ApiStatus from "./ApiStatus";
+import ApiUrlInterpreter from "./ApiUrlInterpreter";
 import AutoReact from "./AutoReact";
 import CommandController from "./CommandController";
 import ForumReader from "./ForumReader";
@@ -30,6 +31,7 @@ const logger = new Logger(bot.client, sharedSettings);
 const keyFinder = new KeyFinder(bot.client, sharedSettings, "data/riot_keys.json");
 const forum = new ForumReader(bot.client, sharedSettings, "data/forum_data.json", keyFinder);
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
+const apiUrlInterpreter = new ApiUrlInterpreter(bot.client, sharedSettings);
 
 // register commands
 controller.registerCommand(commandList.controller.toggle, controller.onToggle.bind(controller));
@@ -65,4 +67,6 @@ const libraries = new RiotAPILibraries(sharedSettings);
 controller.registerCommand(commandList.riotApiLibraries, libraries.onLibs.bind(libraries));
 
 // start bot
-bot.start();
+bot.start().catch((reason) => {
+    console.error(`Unable to run botty: ${reason}.`);
+});

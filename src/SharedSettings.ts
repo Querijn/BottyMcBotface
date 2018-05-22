@@ -5,10 +5,16 @@ export interface PersonalSettings {
     };
 
     discord: {
-        key: string;
+        key: string,
         owner: number;
     };
-
+    riotApi: {
+        key: string;
+    };
+    webServer: {
+        relativeFolderLocation: string;
+        relativeLiveLocation: string;
+    };
     github: {
         username: string;
         password: string;
@@ -95,6 +101,10 @@ export interface SharedSettings {
     };
 
     onJoin: {
-        messageFile: string,
+        messageFile: string;
+    };
+
+    apiUrlInterpreter: {
+        timeOutDuration: number;
     };
 }

@@ -5,9 +5,20 @@
             "key": "",
             "owner": 132268173432061952
         },
+        "honeypot": {
+            "token": "",
+            "owner": 132268173432061952
+        },
         "forum": {
             "username": "<lowercase summoner name> (<region>)",
             "password": ""
+        },
+        "riotApi": {
+            "key": ""
+        },
+        "webServer": {
+            "relativeFolderLocation": "www/",
+            "relativeLiveLocation": "https://irule.at/riot/api/"
         },
         "github": {
             "username": "Querijn",
@@ -110,5 +121,8 @@
     },
     "onJoin": {
         "messageFile": "data/message.markdown"
+    },
+    "apiUrlInterpreter": {
+        "timeOutDuration": 10800000
     }
 }

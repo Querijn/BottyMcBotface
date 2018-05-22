@@ -68,3 +68,4 @@ dist/
 
 # Private bot files that shouldnt be shared
 private/
+www/
