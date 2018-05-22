@@ -112,7 +112,8 @@ export default class ApiStatus {
         for (const api in apiStatus) {
             const regionStates: { troubled: string[], up: string[], down: string[] } = { troubled: [], up: [], down: [] };
             let regionCounter = 0;
-            for (const region in apiStatus.api) {
+
+            for (const region in apiStatus[api]) {
                 const regionState = apiStatus[api][region];
                 regionStates[regionState.state].push(region);
                 regionCounter++;
@@ -145,7 +146,8 @@ export default class ApiStatus {
             }
         }
 
-        statusEmbed.onFire = onFire || (apiIssuesCounter / apiCounter) > this.sharedSettings.apiStatus.apiOnFireThreshold;
+        const issueRate = ((apiIssuesCounter / apiCounter) || 0);
+        statusEmbed.onFire = onFire || issueRate > this.sharedSettings.apiStatus.apiOnFireThreshold;
         statusEmbed.allApisOK = allApisOK;
         statusEmbed.allApisIssues = allApisIssues;
         return statusEmbed;
