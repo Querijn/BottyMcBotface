@@ -6,7 +6,7 @@ export interface PersonalSettings {
 
     discord: {
         key: string,
-        owner: number
+        owner: number;
     };
     riotApi: {
         key: string;

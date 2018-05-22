@@ -74,10 +74,10 @@ export interface SharedSettings {
     };
 
     onJoin: {
-        messageFile: string
+        messageFile: string,
     };
-  
+
     apiUrlInterpreter: {
-        timeOutDuration: number
+        timeOutDuration: number,
     };
 }

@@ -1,11 +1,9 @@
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 
-import VersionChecker from "./VersionChecker";
-
 import Discord = require("discord.js");
-
-import levenshteinDistance from "./LevenshteinDistance"
+import levenshteinDistance from "./LevenshteinDistance";
+import VersionChecker from "./VersionChecker";
 
 export interface InfoData {
     command: string;
@@ -35,7 +33,7 @@ export default class Info {
 
     public onAll(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         let response: string | undefined;
-        if(args.length === 0) return;
+        if (args.length === 0) return;
         const name = args[0];
 
         const regexp = /^[a-z0-9-]+$/;

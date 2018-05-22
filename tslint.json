@@ -10,6 +10,7 @@
         "no-console": false,
         "forin": false,
         "arrow-parens": false,
+        "max-classes-per-file": false,
         "array-type": {
             "options": [
                 "array"
