@@ -39,6 +39,8 @@ const apiUrlInterpreter = new ApiUrlInterpreter(bot.client, personalSettings, sh
 controller.registerCommand(commandList.controller.toggle, controller.onToggle.bind(controller));
 controller.registerCommand(commandList.controller.help, controller.onHelp.bind(controller));
 
+controller.registerCommand(commandList.apiUrlInterpreter.updateSchema, apiUrlInterpreter.onUpdateSchemaRequest.bind(apiUrlInterpreter));
+
 const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
 controller.registerCommand(commandList.welcome, joinMessaging.onWelcome.bind(joinMessaging));
 

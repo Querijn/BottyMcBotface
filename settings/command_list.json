@@ -14,6 +14,15 @@
             "description": "Prints all the commands"
         }
     },
+    "apiUrlInterpreter": {
+        "updateSchema": {
+            "aliases": [
+                "update_schema",
+                "updateschema"
+            ],
+            "description": "Loads an updated api url schema"
+        }
+    },
     "info": {
         "note": {
             "aliases": [
