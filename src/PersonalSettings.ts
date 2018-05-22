@@ -5,10 +5,16 @@ export interface PersonalSettings {
     };
 
     discord: {
-        key: string;
-        owner: number;
+        key: string,
+        owner: number
     };
-
+    riotApi: {
+        key: string;
+    };
+    webServer: {
+        relativeFolderLocation: string;
+        relativeLiveLocation: string;
+    };
     github: {
         username: string;
         password: string;

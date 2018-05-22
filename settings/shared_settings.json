@@ -95,5 +95,8 @@
     },
     "onJoin": {
         "messageFile": "data/message.markdown"
+    },
+    "apiUrlInterpreter": {
+        "timeOutDuration": 10800000
     }
 }
