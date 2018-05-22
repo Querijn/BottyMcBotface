@@ -101,8 +101,6 @@ export default class ApiUrlInterpreter {
     onMessage(message: Discord.Message) {
         if (message.author.bot) return; 
 
-        this.onUpdateSchemaRequest(message);
-
         this.onRiotApiURL(message);
     }
 
@@ -203,9 +201,7 @@ export default class ApiUrlInterpreter {
         .sort((a, b) => a.distance - b.distance)[0].platform;
     }
 
-    async onUpdateSchemaRequest(message: Discord.Message) {
-        if (message.content.startsWith("!update_schema") == false) return;
-
+    public async onUpdateSchemaRequest(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         const replyMessagePromise = message.channel.send("Updating schema..");
 
         console.log(`${message.author.username} requested a schema update.`);

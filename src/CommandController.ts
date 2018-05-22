@@ -27,6 +27,10 @@ export interface CommandList {
         toggle: Command;
         help: Command;
     };
+    apiUrlInterpreter: {
+        updateSchema: Command;
+    };
+    keyFinder: Command;
     welcome: Command;
     uptime: Command;
     autoReact: {
