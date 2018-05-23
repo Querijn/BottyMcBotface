@@ -5,7 +5,7 @@ import fetch from "node-fetch";
 import fs = require("fs");
 
 import { fileBackedObject } from "./FileBackedObject";
-import { SharedSettings } from "./SharedSettings";
+import { PersonalSettings, SharedSettings } from "./SharedSettings";
 import { setTimeout, clearTimeout } from "timers";
 import { platform } from "os";
 import levenshteinDistance from "./LevenshteinDistance";
@@ -56,7 +56,7 @@ export default class ApiUrlInterpreter {
     
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
-    private personalSettings: any; // TODO Make an actually correct reference
+    private personalSettings: PersonalSettings;
     private timeOut: NodeJS.Timer|null;
     private iterator: number = 1;
 
