@@ -6,7 +6,6 @@ import fs = require("fs");
 
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
-import { PersonalSettings } from "./PersonalSettings";
 import { setTimeout, clearTimeout } from "timers";
 import { platform } from "os";
 import levenshteinDistance from "./LevenshteinDistance";
