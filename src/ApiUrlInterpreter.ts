@@ -9,8 +9,7 @@ import { Response } from "node-fetch";
 import { platform } from "os";
 import { clearTimeout, setTimeout } from "timers";
 import { fileBackedObject } from "./FileBackedObject";
-import { PersonalSettings } from "./PersonalSettings";
-import { SharedSettings } from "./SharedSettings";
+import { PersonalSettings, SharedSettings } from "./SharedSettings";
 
 class PathRegexCollection {
     public invalid: string;
@@ -74,11 +73,11 @@ export default class ApiUrlInterpreter {
 
     private fetchSettings: object;
 
-    constructor(bot: Discord.Client, personalSettings: PersonalSettings, sharedSettings: SharedSettings) {
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings) {
         console.log("Requested API URL Interpreter extension..");
 
         this.sharedSettings = sharedSettings;
-        this.personalSettings = personalSettings;
+        this.personalSettings = sharedSettings.botty;
         console.log("Successfully loaded API URL Interpreter settings.");
 
         this.fetchSettings = {
@@ -94,14 +93,30 @@ export default class ApiUrlInterpreter {
         this.updateSchema();
     }
 
-    private onBot() {
+    public onBot() {
         console.log("API URL Interpreter extension loaded.");
     }
 
-    private onMessage(message: Discord.Message) {
-        if (message.author.bot) return;
+    public async onUpdateSchemaRequest(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        const replyMessagePromise = message.channel.send("Updating schema..");
 
-        this.onUpdateSchemaRequest(message);
+        console.log(`${message.author.username} requested a schema update.`);
+        await this.updateSchema();
+
+        const newMessage = "Updated schema.";
+        const replyMessage = await replyMessagePromise;
+
+        // Could be an array? Would be weird.
+        if (Array.isArray(replyMessage)) {
+            console.warn("replyMessage is an array, what do you know?");
+            for (const replyMessageContent of replyMessage) {
+                replyMessageContent.edit(newMessage);
+            }
+        } else replyMessage.edit(newMessage);
+    }
+
+    public onMessage(message: Discord.Message) {
+        if (message.author.bot) return;
 
         this.onRiotApiURL(message);
     }
@@ -199,26 +214,6 @@ export default class ApiUrlInterpreter {
             };
         })
             .sort((a, b) => a.distance - b.distance)[0].platform;
-    }
-
-    private async onUpdateSchemaRequest(message: Discord.Message) {
-        if (message.content.startsWith("!update_schema") === false) return;
-
-        const replyMessagePromise = message.channel.send("Updating schema..");
-
-        console.log(`${message.author.username} requested a schema update.`);
-        await this.updateSchema();
-
-        const newMessage = "Updated schema.";
-        const replyMessage = await replyMessagePromise;
-
-        // Could be an array? Would be weird.
-        if (Array.isArray(replyMessage)) {
-            console.warn("replyMessage is an array, what do you know?");
-            for (const replyMessageContent of replyMessage) {
-                replyMessageContent.edit(newMessage);
-            }
-        } else replyMessage.edit(newMessage);
     }
 
     private async makeRequest(path: Path, region: string, url: string, message: Discord.Message) {

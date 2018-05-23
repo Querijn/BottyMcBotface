@@ -1,5 +1,32 @@
+export interface PersonalSettings {
+    forum: {
+        username: string;
+        password: string;
+    };
+
+    discord: {
+        key: string,
+        owner: number;
+    };
+    riotApi: {
+        key: string;
+    };
+    webServer: {
+        relativeFolderLocation: string;
+        relativeLiveLocation: string;
+    };
+    github: {
+        username: string;
+        password: string;
+    };
+
+    isProduction: boolean;
+}
+
 export interface SharedSettings {
     server: string;
+
+    botty: PersonalSettings;
 
     uptimeSettings: {
         checkInterval: number,
@@ -74,10 +101,10 @@ export interface SharedSettings {
     };
 
     onJoin: {
-        messageFile: string,
+        messageFile: string;
     };
 
     apiUrlInterpreter: {
-        timeOutDuration: number,
+        timeOutDuration: number;
     };
 }

@@ -3,6 +3,19 @@ import fs = require("fs");
 export function fileBackedObject<T>(path: string): T {
     const contents = fs.readFileSync(path, "utf8");
     const obj = JSON.parse(contents);
+
+    return generateProxy(obj, path);
+}
+
+export function defaultBackedObject<T>(path: string, overwritePath: string): T {
+    const defaults = fs.readFileSync(path, "utf-8");
+    const overwrite = fs.readFileSync(overwritePath, "utf-8");
+    const obj = Object.assign({}, JSON.parse(defaults), JSON.parse(overwrite));
+
+    return generateProxy(obj, path);
+}
+
+function generateProxy<T>(obj: T, path: string): T {
     const proxy = {
         set(object: any, property: string, value: any, receiver: any) {
             Reflect.set(object, property, value, receiver);

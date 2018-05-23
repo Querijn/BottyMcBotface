@@ -1,0 +1,18 @@
+{
+    "server": 424563137312981013,
+    "botty": {
+        "discord": {
+            "key": "",
+            "owner": 95265940081475584
+        },
+        "forum": {
+            "username": "<lowercase summoner name> (<region>)",
+            "password": ""
+        },
+        "github": {
+            "username": "Querijn",
+            "password": ""
+        },
+        "isProduction": false
+    }
+}

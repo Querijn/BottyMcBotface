@@ -2,8 +2,7 @@ import Discord = require("discord.js");
 import prettyMs = require("pretty-ms");
 
 import { fileBackedObject } from "./FileBackedObject";
-import { PersonalSettings } from "./PersonalSettings";
-import { SharedSettings } from "./SharedSettings";
+import { PersonalSettings, SharedSettings } from "./SharedSettings";
 
 export interface UptimeData {
     LastUptime: number;
@@ -16,11 +15,11 @@ export default class Uptime {
     private personalSettings: PersonalSettings;
     private data: UptimeData;
 
-    constructor(sharedSettings: SharedSettings, personalSettings: PersonalSettings, dataFile: string) {
+    constructor(sharedSettings: SharedSettings, dataFile: string) {
         console.log("Requested uptime extension..");
 
         this.sharedSettings = sharedSettings;
-        this.personalSettings = personalSettings;
+        this.personalSettings = sharedSettings.botty;
         console.log("Successfully loaded uptime settings.");
 
         this.data = fileBackedObject(dataFile);
