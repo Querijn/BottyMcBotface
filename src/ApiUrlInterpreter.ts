@@ -56,7 +56,7 @@ export default class ApiUrlInterpreter {
     
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
-    private personalSettings: PersonalSettings;
+    private personalSettings: any; // TODO Make an actually correct reference
     private timeOut: NodeJS.Timer|null;
     private iterator: number = 1;
 
