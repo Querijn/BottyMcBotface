@@ -3,13 +3,15 @@ import fs = require("fs");
 import fetch from "node-fetch";
 import prettyMs = require("pretty-ms");
 
+import { ENODATA } from "constants";
+import { Response } from "node-fetch";
+import { platform } from "os";
+import { clearTimeout, setTimeout } from "timers";
+
 import { APISchema, Path } from "./ApiSchema";
 import { fileBackedObject } from "./FileBackedObject";
 import levenshteinDistance from "./LevenshteinDistance";
 import { PersonalSettings, SharedSettings } from "./SharedSettings";
-
-import { ENODATA } from "constants";
-import { Response } from "node-fetch";
 
 class RatelimitResult {
     public rateLimit: number;
