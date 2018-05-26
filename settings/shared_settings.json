@@ -124,5 +124,15 @@
     },
     "apiUrlInterpreter": {
         "timeOutDuration": 10800000
+    },
+    "endpoint": {
+        "updateInterval": 86400,
+        "baseUrl": "https://developer.riotgames.com/api-methods/#",
+        "maxDistance": 3,
+        "aliases": {
+            "lol-status-v3": [
+                "league-status"
+            ]
+        }
     }
 }

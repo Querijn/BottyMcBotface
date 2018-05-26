@@ -52,6 +52,7 @@ export interface CommandList {
     };
     riotApiLibraries: Command;
     apiStatus: Command;
+    endpoint: Command;
 }
 
 export default class CommandController {

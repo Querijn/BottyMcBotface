@@ -107,4 +107,11 @@ export interface SharedSettings {
     apiUrlInterpreter: {
         timeOutDuration: number;
     };
+
+    endpoint: {
+        updateInterval: number,
+        baseUrl: string,
+        maxDistance: number,
+        aliases: { [key: string]: string[] },
+    };
 }

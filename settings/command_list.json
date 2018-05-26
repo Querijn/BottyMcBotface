@@ -136,5 +136,10 @@
             "apistatus"
         ],
         "description": "Prints the status of the Riot Games API"
+    },
+    "endpoint": {
+        "aliases": [
+            "endpoint"
+        ]
     }
 }

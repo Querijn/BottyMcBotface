@@ -14,6 +14,7 @@ import RiotAPILibraries from "./RiotAPILibraries";
 import Techblog from "./Techblog";
 import Uptime from "./Uptime";
 import VersionChecker from "./VersionChecker";
+import Endpoint from "./Endpoint"
 
 import { CommandList } from "./CommandController";
 import { defaultBackedObject, fileBackedObject } from "./FileBackedObject";
@@ -68,6 +69,9 @@ controller.registerCommand(commandList.apiStatus, status.onStatus.bind(status));
 
 const libraries = new RiotAPILibraries(sharedSettings);
 controller.registerCommand(commandList.riotApiLibraries, libraries.onLibs.bind(libraries));
+
+const endpoint = new Endpoint(sharedSettings, "data/endpoints.json");
+controller.registerCommand(commandList.endpoint, endpoint.onEndpoint.bind(endpoint));
 
 // start bot
 bot.start().catch((reason) => {
