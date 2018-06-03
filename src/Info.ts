@@ -1,11 +1,9 @@
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 
-import VersionChecker from "./VersionChecker";
-
 import Discord = require("discord.js");
-
-import levenshteinDistance from "./LevenshteinDistance"
+import levenshteinDistance from "./LevenshteinDistance";
+import VersionChecker from "./VersionChecker";
 
 export interface InfoData {
     command: string;

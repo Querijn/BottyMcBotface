@@ -1,63 +1,63 @@
 import Discord = require("discord.js");
-import prettyMs = require("pretty-ms");
-import { Response } from "node-fetch";
-import fetch from "node-fetch";
 import fs = require("fs");
+import fetch from "node-fetch";
+import prettyMs = require("pretty-ms");
+import levenshteinDistance from "./LevenshteinDistance";
 
+import { ENODATA } from "constants";
+import { Response } from "node-fetch";
+import { platform } from "os";
+import { clearTimeout, setTimeout } from "timers";
 import { fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings, SharedSettings } from "./SharedSettings";
-import { setTimeout, clearTimeout } from "timers";
-import { platform } from "os";
-import levenshteinDistance from "./LevenshteinDistance";
-import { ENODATA } from "constants";
 
 class PathRegexCollection {
+    public invalid: string;
+    public valid: string;
+
     constructor(validString: string, invalidString: string) {
         this.valid = validString;
         this.invalid = invalidString;
     }
-
-    public invalid: string;
-    public valid: string;
-};
+}
 
 class SchemaRegexCollection extends PathRegexCollection {
+    public name: string;
+    public schema: any;
+
     constructor(name: string, schema: any, validString: string, invalidString: string) {
         super(validString, invalidString);
 
         this.name = name;
         this.schema = schema;
     }
-    
-    public name: string;
-    public schema: any;
-};
+}
 
 class RatelimitResult {
-    constructor(rateLimit: number, startTime: number|null) {
+    public rateLimit: number;
+    public startTime: number | null;
+
+    constructor(rateLimit: number, startTime: number | null) {
         this.rateLimit = rateLimit;
         this.startTime = startTime;
     }
-
-    public rateLimit: number;
-    public startTime: number|null;
-};
+}
 
 class Path {
-    public methodType: "GET"|"POST";
+    public methodType: "GET" | "POST";
     public regex: PathRegexCollection;
     public parameterInfo: SchemaRegexCollection[];
     public method: string;
     public name: string;
-};
+}
 
 export default class ApiUrlInterpreter {
     private static ratelimitErrorMs = 100;
-    
+
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
     private personalSettings: PersonalSettings;
-    private timeOut: NodeJS.Timer|null;
+    private timeOut: NodeJS.Timer | null;
     private iterator: number = 1;
 
     private baseUrl: string;
@@ -65,13 +65,13 @@ export default class ApiUrlInterpreter {
     private platformRegexString: string;
 
     private applicationRatelimitLastTime: number = 0;
-    private methodRatelimitLastTime: {[method: string]: number} = {};
+    private methodRatelimitLastTime: { [method: string]: number } = {};
     private applicationStartTime: number = 0;
-    private methodStartTime: {[method: string]: number} = {};
+    private methodStartTime: { [method: string]: number } = {};
 
     private paths: Path[] = [];
 
-    private fetchSettings: Object;
+    private fetchSettings: object;
 
     constructor(bot: Discord.Client, sharedSettings: SharedSettings) {
         console.log("Requested API URL Interpreter extension..");
@@ -80,10 +80,10 @@ export default class ApiUrlInterpreter {
         this.personalSettings = sharedSettings.botty;
         console.log("Successfully loaded API URL Interpreter settings.");
 
-        this.fetchSettings = { 
-            headers: { 
-                "X-Riot-Token": this.personalSettings.riotApi.key 
-            }
+        this.fetchSettings = {
+            headers: {
+                "X-Riot-Token": this.personalSettings.riotApi.key,
+            },
         };
 
         this.bot = bot;
@@ -93,52 +93,68 @@ export default class ApiUrlInterpreter {
         this.updateSchema();
     }
 
-    onBot() {
+    public onBot() {
         console.log("API URL Interpreter extension loaded.");
     }
 
-    onMessage(message: Discord.Message) {
-        if (message.author.bot) return; 
+    public async onUpdateSchemaRequest(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        const replyMessagePromise = message.channel.send("Updating schema..");
+
+        console.log(`${message.author.username} requested a schema update.`);
+        await this.updateSchema();
+
+        const newMessage = "Updated schema.";
+        const replyMessage = await replyMessagePromise;
+
+        // Could be an array? Would be weird.
+        if (Array.isArray(replyMessage)) {
+            console.warn("replyMessage is an array, what do you know?");
+            for (const replyMessageContent of replyMessage) {
+                replyMessageContent.edit(newMessage);
+            }
+        } else replyMessage.edit(newMessage);
+    }
+
+    public onMessage(message: Discord.Message) {
+        if (message.author.bot) return;
 
         this.onRiotApiURL(message);
     }
 
-    async onRiotApiURL(message: Discord.Message, content: string|null = null) {
-        
+    private async onRiotApiURL(message: Discord.Message, content: string | null = null) {
+
         // Init message if missing, also append with space.
         if (!content) content = message.content.replace(/(`){1,3}(.*?)(`){1,3}/g, "") + " ";
 
-        if (content.indexOf("https://") == -1) return; // We're about to do ~80 regex tests, better make sure that it's on a message with a URL
+        if (content.indexOf("https://") === -1) return; // We're about to do ~80 regex tests, better make sure that it's on a message with a URL
 
-        for (let i = 0; i < this.paths.length; i++) {
-            const path = this.paths[i];
+        for (const path of this.paths) {
 
             // Check if path was valid
             const validMatch = new RegExp(path.regex.valid, "g").exec(content);
             if (validMatch && validMatch.length > 0) {
 
-                let replyMessageContent = `Making a request to ${path.method}..`;
+                const replyMessageContent = `Making a request to ${path.method}..`;
 
                 const replyMessages = await message.channel.send(replyMessageContent);
                 const replyMessage = Array.isArray(replyMessages) ? replyMessages[0] : replyMessages;
 
                 const region = validMatch[1];
-                
+
                 // Path works fine, make a request
                 await this.makeRequest(path, region, validMatch[0], replyMessage);
                 return;
             }
         }
-        
-        for (let i = 0; i < this.paths.length; i++) {
-            const path = this.paths[i];
-            
+
+        for (const path of this.paths) {
+
             // Now check if it's the same path, but with incorrect parameters.
             const invalidMatch = new RegExp(path.regex.invalid, "g").exec(content);
             if (invalidMatch && invalidMatch.length > 0) {
                 let errorIdentified = false;
 
-                let mistakes = [];
+                const mistakes = [];
 
                 // Get closest platform if incorrect
                 const closestPlatform = this.getClosestPlatform(invalidMatch[1]);
@@ -148,10 +164,10 @@ export default class ApiUrlInterpreter {
                 }
 
                 invalidMatch.splice(0, 2); // Remove url and platform from array
-                
+
                 // This now contains all required parameters.
                 for (let j = 0; j < Math.max(path.parameterInfo.length, invalidMatch.length); j++) {
-                    
+
                     const parameter = path.parameterInfo[j]; // All info about this parameter
                     const value = invalidMatch[j];
 
@@ -162,14 +178,14 @@ export default class ApiUrlInterpreter {
                     // Find the location of the parameter in the URL
                     const start = path.name.indexOf(`/{${parameter.name}}`); // Find /${leagueId}
                     const end = path.name.lastIndexOf("/", start - 1); // Find the / before it
-                    let location = path.name.substr(end + 1, start - end); // Make a `leagues/` string.
+                    const location = path.name.substr(end + 1, start - end); // Make a `leagues/` string.
 
                     // Get type
                     let type = parameter.schema.type; // Usually this is enough
                     if (parameter.schema.enum) { // If there are limited options what it could be, show them
                         type = parameter.schema.enum.join("/");
                     }
-                    
+
                     mistakes.push(`- Parameter ${j + 1}, expected \`${parameter.name} (${type})\` right after \`${location}\`, got "${value}".`);
                     errorIdentified = true;
                 }
@@ -187,40 +203,21 @@ export default class ApiUrlInterpreter {
         }
     }
 
-    getClosestPlatform(platform: string) {
-        const validPlatform = new RegExp(this.platformRegexString, "g").exec(platform);
+    private getClosestPlatform(platformParam: string) {
+        const validPlatform = new RegExp(this.platformRegexString, "g").exec(platformParam);
         if (validPlatform) return null;
-        
-        return this.platforms.map(p => { 
-            return { 
-                platform: p, 
-                distance: levenshteinDistance(platform, p) 
-            }
+
+        return this.platforms.map(p => {
+            return {
+                platform: p,
+                distance: levenshteinDistance(platformParam, p),
+            };
         })
-        .sort((a, b) => a.distance - b.distance)[0].platform;
+            .sort((a, b) => a.distance - b.distance)[0].platform;
     }
 
-    public async onUpdateSchemaRequest(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-        const replyMessagePromise = message.channel.send("Updating schema..");
+    private async makeRequest(path: Path, region: string, url: string, message: Discord.Message) {
 
-        console.log(`${message.author.username} requested a schema update.`);
-        await this.updateSchema();
-
-        const newMessage = "Updated schema.";
-        let replyMessage = await replyMessagePromise;
-
-        // Could be an array? Would be weird.
-        if (Array.isArray(replyMessage)) {
-            console.warn("replyMessage is an array, what do you know?");
-            for (let i = 0; i < replyMessage.length; i++) {
-                replyMessage[i].edit(newMessage);
-            }
-        }
-        else replyMessage.edit(newMessage);
-    }
-
-    async makeRequest(path: Path, region: string, url: string, message: Discord.Message) {
-        
         const currentTime = Date.now();
         if (currentTime < this.applicationRatelimitLastTime) {
             const timeDiff = prettyMs(this.applicationRatelimitLastTime - currentTime, { verbose: true });
@@ -234,21 +231,20 @@ export default class ApiUrlInterpreter {
             message.edit(`We are ratelimited by the method (${servicedMethodName}), please wait ${timeDiff}.`);
             return;
         }
-        
+
         try {
             const resp = await fetch(url, this.fetchSettings);
             this.handleResponse(resp, message, url, servicedMethodName);
-        }
-        catch (e) {
+        } catch (e) {
             console.error(`Error handling the API call: ${e.message}`);
         }
     }
 
-    async handleResponse(resp: Response, message: Discord.Message, url: string, servicedMethodName: string) {
+    private async handleResponse(resp: Response, message: Discord.Message, url: string, servicedMethodName: string) {
         if (resp === null) {
             console.warn(`Not handling ratelimits due to missing response.`);
             return;
-        } 
+        }
 
         // Set start times
         if (this.applicationStartTime === 0) {
@@ -264,11 +260,11 @@ export default class ApiUrlInterpreter {
             const limitHeader = resp.headers.get("x-app-rate-limit");
 
             if (countHeader && limitHeader) {
-                
+
                 const appCountStrings = countHeader.split(",");
                 const appLimitStrings = limitHeader.split(",");
                 const appResult = this.handleRatelimit("application", servicedMethodName, this.applicationStartTime, appCountStrings, appLimitStrings);
-    
+
                 if (appResult) {
                     this.applicationRatelimitLastTime = appResult.rateLimit;
                     if (appResult.startTime !== null) this.applicationStartTime = appResult.startTime;
@@ -294,7 +290,7 @@ export default class ApiUrlInterpreter {
             }
         }
 
-        if (resp.status != 200) {
+        if (resp.status !== 200) {
             message.edit(`The Riot API responded to ${url} with ${resp.status} ${resp.statusText}.`);
             return;
         }
@@ -305,13 +301,12 @@ export default class ApiUrlInterpreter {
             const localFile = `${this.personalSettings.webServer.relativeFolderLocation}${fileName}`;
 
             const json = {
-                url: url,
+                url,
                 method: servicedMethodName,
                 result: await resp.json(),
             };
 
-            fs.writeFile(localFile, JSON.stringify(json), null, (err: NodeJS.ErrnoException) =>
-            {
+            fs.writeFile(localFile, JSON.stringify(json), null, (err: NodeJS.ErrnoException) => {
                 if (err != null) {
                     message.edit(`Woah, something went wrong trying to fetch ${url}, sorry!`);
                     console.warn(`Error ${err.code} (${err.name}) while trying to save \`${url}\` to \`${localFile}\`: ${err.message}`);
@@ -322,8 +317,7 @@ export default class ApiUrlInterpreter {
             });
 
             this.iterator = (this.iterator % 50) + 1;
-        }
-        catch (e) {
+        } catch (e) {
             message.edit("Eh, something went wrong trying to upload this :(").catch((reason) => {
                 console.error(`Error occurred trying to edit the message when the upload failed, reason: ${reason}\nreason for failed upload: ${e}`);
             });
@@ -331,28 +325,26 @@ export default class ApiUrlInterpreter {
         }
     }
 
-    handleRatelimit(ratelimitType: string, methodName: string, startTime: number, countStrings: string[], limitStrings: string[]): RatelimitResult|null {
-        
+    private handleRatelimit(ratelimitType: string, methodName: string, startTime: number, countStrings: string[], limitStrings: string[]): RatelimitResult | null {
+
         let found = false;
         let longestSpreadTime = 0;
-        let resultStartTime: number|null = 0;
+        let resultStartTime: number | null = 0;
         let resultRatelimit = 0;
 
-        for (let i = 0; i < countStrings.length; i++) {
-            const splitCount = countStrings[i].split(":");
-            const count = parseInt(splitCount[0].trim());
-            const time = parseInt(splitCount[1].trim());
-            
-            const limit = limitStrings.find(function(element) {
-                return element.indexOf(`:${time}`) != -1;
-            });
+        for (const cString of countStrings) {
+            const splitCount = cString.split(":");
+            const count = parseInt(splitCount[0].trim(), 10);
+            const time = parseInt(splitCount[1].trim(), 10);
+
+            const limit = limitStrings.find((e) => e.indexOf(`:${time}`) !== -1);
             if (!limit) {
                 console.warn(`Unable to find limits for the ${ratelimitType} ratelimit with time being ${time} on a result of ${methodName}.`);
                 continue;
             }
 
             const splitLimit = limit.split(":");
-            const max = parseInt(splitLimit[0].trim());
+            const max = parseInt(splitLimit[0].trim(), 10);
 
             if (count + 1 >= max) {
                 console.warn(`Hit ${ratelimitType} ratelimit with ${methodName}.`);
@@ -365,7 +357,7 @@ export default class ApiUrlInterpreter {
                 found = true;
                 longestSpreadTime = spreadTime;
 
-                let delay = spreadTime * 1000 + ApiUrlInterpreter.ratelimitErrorMs;
+                const delay = spreadTime * 1000 + ApiUrlInterpreter.ratelimitErrorMs;
                 resultRatelimit = Date.now() + delay;
                 if (count <= 1) resultStartTime = Date.now();
                 else resultStartTime = null;
@@ -373,17 +365,17 @@ export default class ApiUrlInterpreter {
         }
 
         if (found === false) return null;
-        return new RatelimitResult(resultRatelimit, resultStartTime)
+        return new RatelimitResult(resultRatelimit, resultStartTime);
     }
 
-    async updateSchema() {
-        try { 
+    private async updateSchema() {
+        try {
             const response = await fetch(`http://www.mingweisamuel.com/riotapi-schema/openapi-3.0.0.json`, {
                 method: "GET",
                 headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json"
-                }
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                },
             });
 
             if (response.status !== 200) {
@@ -391,13 +383,13 @@ export default class ApiUrlInterpreter {
                 return;
             }
 
-            let schema = await response.json();
+            const schema = await response.json();
 
-            let baseUrlRegex = this.constructBaseUrlRegex(schema);
-            let invalidBaseUrlRegex = this.constructInvalidBaseUrlRegex(schema);
+            const baseUrlRegex = this.constructBaseUrlRegex(schema);
+            const invalidBaseUrlRegex = this.constructInvalidBaseUrlRegex(schema);
 
             this.paths = [];
-            
+
             for (const pathName in schema.paths) {
                 const pathSchema = schema.paths[pathName];
                 const methodSchema = pathSchema.get ? pathSchema.get : pathSchema.post;
@@ -405,19 +397,18 @@ export default class ApiUrlInterpreter {
                 if (!methodSchema) continue; // Only handle GET/POST
                 if (methodSchema.operationId.startsWith("tournament")) continue;
 
-                let path = new Path();
+                const path = new Path();
                 path.methodType = pathSchema.get ? "GET" : "POST";
                 path.method = methodSchema.operationId;
                 this.constructRegex(path, baseUrlRegex, invalidBaseUrlRegex, pathName, methodSchema);
                 console.assert(path.regex, "Path Regex should be set");
-                
+
                 this.paths.push(path);
             }
 
             // This fixes the issue where it would match getAllChampionsMasteries before a specific champion mastery (which starts the same but has extra parameters)
             this.paths = this.paths.sort((a, b) => b.name.length - a.name.length);
-        }
-        catch (e) {
+        } catch (e) {
             console.error("Schema fetch error: " + e.message);
         }
 
@@ -428,8 +419,8 @@ export default class ApiUrlInterpreter {
         this.timeOut = setTimeout(this.updateSchema.bind(this), this.sharedSettings.apiUrlInterpreter.timeOutDuration);
     }
 
-    constructBaseUrlRegex(schema: any): string {
-        let baseUrl = this.escapeRegex(schema.servers[0].url);
+    private constructBaseUrlRegex(schema: any): string {
+        const baseUrl = this.escapeRegex(schema.servers[0].url);
         this.platforms = schema.servers[0].variables.platform.enum;
 
         // This makes a regex string from all the platform options
@@ -438,15 +429,15 @@ export default class ApiUrlInterpreter {
         return baseUrl.replace(/{platform}/g, this.platformRegexString);
     }
 
-    constructInvalidBaseUrlRegex(schema: any): string {
-        let baseUrl = this.escapeRegex(schema.servers[0].url);
+    private constructInvalidBaseUrlRegex(schema: any): string {
+        const baseUrl = this.escapeRegex(schema.servers[0].url);
         return baseUrl.replace(/{platform}/g, "(.*?)");
     }
 
-    constructRegex(path: Path, validBase: string, invalidBase: string, pathName: string, methodSchema: any) {
-        
+    private constructRegex(path: Path, validBase: string, invalidBase: string, pathName: string, methodSchema: any) {
+
         path.name = pathName;
-        path.parameterInfo = [ ];
+        path.parameterInfo = [];
 
         let invalidPath = invalidBase + this.escapeRegex(pathName);
         let validPath = validBase + this.escapeRegex(pathName);
@@ -457,10 +448,8 @@ export default class ApiUrlInterpreter {
         }
 
         const invalidWith = "([^\\s^\\/]*)";
-        for (let i = 0; i < methodSchema.parameters.length; i++) {
-
-            const parameter = methodSchema.parameters[i];
-            if (parameter.required == false) continue;
+        for (const parameter of methodSchema.parameters) {
+            if (parameter.required === false) continue;
 
             const parameterReplace = new RegExp(`{${parameter.name}}`, "g");
 
@@ -468,18 +457,19 @@ export default class ApiUrlInterpreter {
 
             if (parameter.schema.enum) {
                 validWith = `(${parameter.schema.enum.join("|")})`;
-            }
-            else switch(parameter.schema.type) {
-                default:
-                    console.warn(`Unhandled schema parameter in ${pathName}: ${parameter.name} is a ${parameter.schema.type}`);
-                    break;
+            } else {
+                switch (parameter.schema.type) {
+                    default:
+                        console.warn(`Unhandled schema parameter in ${pathName}: ${parameter.name} is a ${parameter.schema.type}`);
+                        break;
 
-                case "string":
-                    break;
+                    case "string":
+                        break;
 
-                case "integer":
-                    validWith = "([0-9]+)";
-                    break;
+                    case "integer":
+                        validWith = "([0-9]+)";
+                        break;
+                }
             }
 
             invalidPath = invalidPath.replace(parameterReplace, invalidWith);
@@ -499,8 +489,8 @@ export default class ApiUrlInterpreter {
 
         path.regex = new PathRegexCollection(validPath, invalidPath);
     }
-    
-    escapeRegex(regex: string): string {
+
+    private escapeRegex(regex: string): string {
         return regex.replace(/[\-\[\]\/\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
     }
 }

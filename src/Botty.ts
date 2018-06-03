@@ -86,10 +86,8 @@ export default class Botty {
         }
 
         // Set correct nickname
-        if (guild.me) {    
-            if (this.personalSettings.isProduction)
-                guild.me.setNickname("Botty McBotface");
-            else guild.me.setNickname("");
+        if (guild.me) {
+            guild.me.setNickname(this.personalSettings.isProduction ? "Botty McBotface" : "");
         }
     }
 
