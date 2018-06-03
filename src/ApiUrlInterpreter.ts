@@ -124,7 +124,8 @@ export default class ApiUrlInterpreter {
     private async onRiotApiURL(message: Discord.Message, content: string | null = null) {
 
         // Init message if missing, also append with space.
-        if (!content) content = message.content.replace(/(`){1,3}(.*?)(`){1,3}/g, "") + " ";
+        if (!content) content = message.content.replace(/(`){1,3}([.\s\S]*?)(`){1,3}/gm, "") + " ";
+        // if (!content) content = message.content.replace(/`{1,3}(.*?)`{1,3}/g, "") + " ";
 
         if (content.indexOf("https://") === -1) return; // We're about to do ~80 regex tests, better make sure that it's on a message with a URL
 
