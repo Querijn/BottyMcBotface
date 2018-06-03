@@ -1,8 +1,0 @@
-language: nodejs
-
-install:
-  - npm install
-
-script:
-    - node_modules/.bin/tslint -p .
-    - node_modules/.bin/tsc -p .
