@@ -36,16 +36,35 @@ export default class AutoReact {
             return;
         }
 
-        const errorChannel = guild.channels.find("name", this.sharedSettings.logger.errorChannel);
+        const isProduction = this.sharedSettings.botty.isProduction;
+        let environment: {
+            errorChannel: string;
+            logChannel: string;
+        };
+
+        if (isProduction && this.sharedSettings.logger.prod) {
+            environment = this.sharedSettings.logger.prod;
+        }
+
+        else if (!isProduction && this.sharedSettings.logger.dev) {
+            environment = this.sharedSettings.logger.dev;
+        }
+
+        // Fallback to old style
+        else /*if (!this.sharedSettings.logger.prod && !this.sharedSettings.logger.dev)*/ {
+            environment = this.sharedSettings.logger;
+        }
+
+        const errorChannel = guild.channels.find("name", environment.errorChannel);
         if (!errorChannel || !(errorChannel instanceof Discord.TextChannel)) {
-            console.error(`Logger: Incorrect setting for the channel: ${this.sharedSettings.logger.errorChannel}`);
+            console.error(`Logger: Incorrect setting for the error channel: ${environment.errorChannel}, isProduction: ${isProduction}`);
             return;
         }
         this.errorChannel = errorChannel as Discord.TextChannel;
 
-        const logChannel = guild.channels.find("name", this.sharedSettings.logger.logChannel);
+        const logChannel = guild.channels.find("name", environment.logChannel);
         if (!logChannel || !(logChannel instanceof Discord.TextChannel)) {
-            console.error(`Logger: Incorrect setting for the channel: ${this.sharedSettings.logger.logChannel}`);
+            console.error(`Logger: Incorrect setting for the log channel: ${environment.logChannel}, isProduction: ${isProduction}`);
             return;
         }
         this.logChannel = logChannel as Discord.TextChannel;
