@@ -16,6 +16,7 @@
     },
     "apiUrlInterpreter": {
         "updateSchema": {
+            "admin": true,
             "aliases": [
                 "update_schema",
                 "updateschema"
@@ -24,6 +25,7 @@
         }
     },
     "keyFinder": {
+        "admin": true,
         "aliases": [
             "active_keys",
             "activekeys"
@@ -87,7 +89,7 @@
             "description": "Close #office-hours"
         },
         "question_list": {
-            "admin": false,
+            "admin": true,
             "aliases": [
                 "question_list"
             ],
