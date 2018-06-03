@@ -1,0 +1,8 @@
+language: nodejs
+
+install:
+  - npm install
+
+script:
+    - tslint -p .
+    - tsc -p .
