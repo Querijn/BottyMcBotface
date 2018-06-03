@@ -478,7 +478,7 @@ export default class ApiUrlInterpreter {
             path.parameterInfo.push(new SchemaRegexCollection(parameter.name, parameter.schema, validWith, invalidWith));
         }
 
-        validPath += "\\/?"; // Allow urls to end with a trailing /
+        validPath += "\\/?(\\?(.*))?"; // Allow urls to end with a trailing / or ?
         validPath += "\\s"; // Message will always end in a whitespace, use this a delimiter at the end of valid paths
 
         // If the last parameter is missing from the url, don't require the last / match for invalids.
