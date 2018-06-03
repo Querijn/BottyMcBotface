@@ -4,5 +4,5 @@ install:
   - npm install
 
 script:
-    - tslint -p .
-    - tsc -p .
+    - node_modules/.bin/tslint -p .
+    - node_modules/.bin/tsc -p .
