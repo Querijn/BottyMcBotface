@@ -37,7 +37,7 @@ export default class ApiUrlInterpreter {
     private applicationStartTime: number = 0;
     private methodStartTime: { [method: string]: number } = {};
 
-    private fetchSettings: Object;
+    private fetchSettings: object;
 
     constructor(bot: Discord.Client, sharedSettings: SharedSettings, apiSchema: APISchema) {
         console.log("Requested API URL Interpreter extension..");
@@ -49,8 +49,8 @@ export default class ApiUrlInterpreter {
 
         this.fetchSettings = {
             headers: {
-                "X-Riot-Token": this.personalSettings.riotApi.key
-            }
+                "X-Riot-Token": this.personalSettings.riotApi.key,
+            },
         };
 
         this.bot = bot;
@@ -58,22 +58,23 @@ export default class ApiUrlInterpreter {
         this.bot.on("message", this.onMessage.bind(this));
     }
 
-    onBot() {
+    public onBot() {
         console.log("API URL Interpreter extension loaded.");
     }
 
-    onMessage(message: Discord.Message) {
+    private onMessage(message: Discord.Message) {
         if (message.author.bot) return;
 
         this.onRiotApiURL(message);
     }
 
-    async onRiotApiURL(message: Discord.Message, content: string | null = null) {
+    private async onRiotApiURL(message: Discord.Message, content: string | null = null) {
 
         // Init message if missing, also append with space.
-        if (!content) content = message.content.replace(/(`){1,3}(.*?)(`){1,3}/g, "") + " ";
+        if (!content) content = message.content.replace(/(`){1,3}([.\s\S]*?)(`){1,3}/gm, "") + " ";
+        // if (!content) content = message.content.replace(/`{1,3}(.*?)`{1,3}/g, "") + " ";
 
-        if (content.indexOf("https://") == -1) return; // We're about to do ~80 regex tests, better make sure that it's on a message with a URL
+        if (content.indexOf("https://") === -1) return; // We're about to do ~80 regex tests, better make sure that it's on a message with a URL
 
         for (const path of this.apiSchema.paths) {
 
@@ -81,7 +82,7 @@ export default class ApiUrlInterpreter {
             const validMatch = new RegExp(path.regex.valid, "g").exec(content);
             if (validMatch && validMatch.length > 0) {
 
-                let replyMessageContent = `Making a request to ${path.method}..`;
+                const replyMessageContent = `Making a request to ${path.method}..`;
 
                 const replyMessages = await message.channel.send(replyMessageContent);
                 const replyMessage = Array.isArray(replyMessages) ? replyMessages[0] : replyMessages;
@@ -100,10 +101,10 @@ export default class ApiUrlInterpreter {
             if (invalidMatch && invalidMatch.length > 0) {
                 let errorIdentified = false;
 
-                let mistakes = [];
+                const mistakes = [];
 
                 // Get closest platform if incorrect
-                const closestPlatform = this.getClosestPlatform(invalidMatch[1]);
+                const closestPlatform = this.apiSchema.getClosestPlatform(invalidMatch[1]);
                 if (closestPlatform) {
                     errorIdentified = true;
                     mistakes.push(`- The platform \`${invalidMatch[1]}\` is invalid, did you mean: \`${closestPlatform}\`? Expected one of the following values: \`${this.apiSchema.platforms.join(", ")}\``);
@@ -124,7 +125,7 @@ export default class ApiUrlInterpreter {
                     // Find the location of the parameter in the URL
                     const start = path.name.indexOf(`/{${parameter.name}}`); // Find /${leagueId}
                     const end = path.name.lastIndexOf("/", start - 1); // Find the / before it
-                    let location = path.name.substr(end + 1, start - end); // Make a `leagues/` string.
+                    const location = path.name.substr(end + 1, start - end); // Make a `leagues/` string.
 
                     // Get type
                     let type = parameter.schema.type; // Usually this is enough
@@ -149,20 +150,7 @@ export default class ApiUrlInterpreter {
         }
     }
 
-    getClosestPlatform(platform: string) {
-        const validPlatform = new RegExp(this.apiSchema.platformRegexString, "g").exec(platform);
-        if (validPlatform) return null;
-
-        return this.apiSchema.platforms.map(p => {
-            return {
-                platform: p,
-                distance: levenshteinDistance(platform, p)
-            }
-        })
-            .sort((a, b) => a.distance - b.distance)[0].platform;
-    }
-
-    async makeRequest(path: Path, region: string, url: string, message: Discord.Message) {
+    private async makeRequest(path: Path, region: string, url: string, message: Discord.Message) {
 
         const currentTime = Date.now();
         if (currentTime < this.applicationRatelimitLastTime) {
@@ -181,13 +169,12 @@ export default class ApiUrlInterpreter {
         try {
             const resp = await fetch(url, this.fetchSettings);
             this.handleResponse(resp, message, url, servicedMethodName);
-        }
-        catch (e) {
+        } catch (e) {
             console.error(`Error handling the API call: ${e.message}`);
         }
     }
 
-    async handleResponse(resp: Response, message: Discord.Message, url: string, servicedMethodName: string) {
+    private async handleResponse(resp: Response, message: Discord.Message, url: string, servicedMethodName: string) {
         if (resp === null) {
             console.warn(`Not handling ratelimits due to missing response.`);
             return;
@@ -237,7 +224,7 @@ export default class ApiUrlInterpreter {
             }
         }
 
-        if (resp.status != 200) {
+        if (resp.status !== 200) {
             message.edit(`The Riot API responded to ${url} with ${resp.status} ${resp.statusText}.`);
             return;
         }
@@ -248,7 +235,7 @@ export default class ApiUrlInterpreter {
             const localFile = `${this.personalSettings.webServer.relativeFolderLocation}${fileName}`;
 
             const json = {
-                url: url,
+                url,
                 method: servicedMethodName,
                 result: await resp.json(),
             };
@@ -264,8 +251,7 @@ export default class ApiUrlInterpreter {
             });
 
             this.iterator = (this.iterator % 50) + 1;
-        }
-        catch (e) {
+        } catch (e) {
             message.edit("Eh, something went wrong trying to upload this :(").catch((reason) => {
                 console.error(`Error occurred trying to edit the message when the upload failed, reason: ${reason}\nreason for failed upload: ${e}`);
             });
@@ -273,28 +259,26 @@ export default class ApiUrlInterpreter {
         }
     }
 
-    handleRatelimit(ratelimitType: string, methodName: string, startTime: number, countStrings: string[], limitStrings: string[]): RatelimitResult | null {
+    private handleRatelimit(ratelimitType: string, methodName: string, startTime: number, countStrings: string[], limitStrings: string[]): RatelimitResult | null {
 
         let found = false;
         let longestSpreadTime = 0;
         let resultStartTime: number | null = 0;
         let resultRatelimit = 0;
 
-        for (let i = 0; i < countStrings.length; i++) {
-            const splitCount = countStrings[i].split(":");
-            const count = parseInt(splitCount[0].trim());
-            const time = parseInt(splitCount[1].trim());
+        for (const cString of countStrings) {
+            const splitCount = cString.split(":");
+            const count = parseInt(splitCount[0].trim(), 10);
+            const time = parseInt(splitCount[1].trim(), 10);
 
-            const limit = limitStrings.find(function (element) {
-                return element.indexOf(`:${time}`) != -1;
-            });
+            const limit = limitStrings.find((e) => e.indexOf(`:${time}`) !== -1);
             if (!limit) {
                 console.warn(`Unable to find limits for the ${ratelimitType} ratelimit with time being ${time} on a result of ${methodName}.`);
                 continue;
             }
 
             const splitLimit = limit.split(":");
-            const max = parseInt(splitLimit[0].trim());
+            const max = parseInt(splitLimit[0].trim(), 10);
 
             if (count + 1 >= max) {
                 console.warn(`Hit ${ratelimitType} ratelimit with ${methodName}.`);
@@ -307,7 +291,7 @@ export default class ApiUrlInterpreter {
                 found = true;
                 longestSpreadTime = spreadTime;
 
-                let delay = spreadTime * 1000 + ApiUrlInterpreter.ratelimitErrorMs;
+                const delay = spreadTime * 1000 + ApiUrlInterpreter.ratelimitErrorMs;
                 resultRatelimit = Date.now() + delay;
                 if (count <= 1) resultStartTime = Date.now();
                 else resultStartTime = null;
@@ -315,6 +299,6 @@ export default class ApiUrlInterpreter {
         }
 
         if (found === false) return null;
-        return new RatelimitResult(resultRatelimit, resultStartTime)
+        return new RatelimitResult(resultRatelimit, resultStartTime);
     }
 }

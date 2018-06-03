@@ -105,8 +105,14 @@
     },
     "logger": {
         "server": "342988445498474498",
-        "logChannel": "dev-bot-log",
-        "errorChannel": "dev-bot-error"
+        "dev": {
+            "logChannel": "dev-bot-log",
+            "errorChannel": "dev-bot-error"
+        },
+        "prod": {
+            "logChannel": "prod-bot-log",
+            "errorChannel": "prod-bot-error"
+        }
     },
     "apiStatus": {
         "checkInterval": 300000,

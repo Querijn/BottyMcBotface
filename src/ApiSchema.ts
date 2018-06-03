@@ -1,6 +1,7 @@
 import Discord = require("discord.js");
 import fetch from "node-fetch";
 
+import levenshteinDistance from "./LevenshteinDistance";
 import { SharedSettings } from "./SharedSettings";
 
 import { clearTimeout, setTimeout } from "timers";
@@ -47,6 +48,18 @@ export class APISchema {
     constructor(sharedSettings: SharedSettings) {
         this.sharedSettings = sharedSettings;
         this.updateSchema();
+    }
+
+    public getClosestPlatform(platformParam: string) {
+        const validPlatform = new RegExp(this.platformRegexString, "g").exec(platformParam);
+        if (validPlatform) return null;
+
+        return this.platforms.map(p => {
+            return {
+                platform: p,
+                distance: levenshteinDistance(platformParam, p),
+            };
+        }).sort((a, b) => a.distance - b.distance)[0].platform;
     }
 
     public async onUpdateSchemaRequest(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
