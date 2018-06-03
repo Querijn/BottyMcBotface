@@ -479,7 +479,7 @@ export default class ApiUrlInterpreter {
         }
 
         validPath += "\\/?(\\?(.*))?"; // Allow urls to end with a trailing / or ?
-        validPath += "\\s"; // Message will always end in a whitespace, use this a delimiter at the end of valid paths
+        validPath += "\\s"; // Message will always end in a whitespace (is added if missing), use this a delimiter at the end of valid paths
 
         // If the last parameter is missing from the url, don't require the last / match for invalids.
         const lastIndex = invalidPath.lastIndexOf("\\/" + invalidWith);
