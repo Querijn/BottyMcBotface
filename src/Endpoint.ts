@@ -2,6 +2,7 @@ import Discord = require("discord.js");
 import fetch from "node-fetch";
 import { fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings, SharedSettings } from "./SharedSettings";
+import levenshteinDistance from "./LevenshteinDistance";
 
 type EndpointName = string;
 type Endpoints = EndpointName[];
@@ -20,12 +21,15 @@ export default class Endpoint {
     private baseUrl: string;
     private maxDistance: number;
     private aliases: { [key: string]: string[] };
+    private timeOut: NodeJS.Timer | null;
+    private timeOutDuration: number;
 
     public constructor(sharedSettings: SharedSettings, endpointFile: string) {
         console.log("Requested Endpoint extension.");
         this.baseUrl = sharedSettings.endpoint.baseUrl;
         this.maxDistance = sharedSettings.endpoint.maxDistance;
         this.aliases = sharedSettings.endpoint.aliases || {};
+        this.timeOutDuration = sharedSettings.endpoint.timeOutDuration;
         this.endpoints = fileBackedObject(endpointFile);
         this.updateEndpoints();
     }
@@ -62,51 +66,7 @@ export default class Endpoint {
     private calculateDistance(endpoint: string, input: string): number {
         endpoint = endpoint.replace(new RegExp("-", "g"), " ");
         input = input.replace(new RegExp("-", "g"), " ");
-
-        const d = new Array(endpoint.length + 1);
-
-        for (let i = 0; i < d.length; i++) {
-            d[i] = new Array(input.length + 1);
-        }
-
-        for (let i = 1; i <= endpoint.length; i++) {
-            d[i][0] = i;
-        }
-
-        for (let j = 1; j <= input.length; j++) {
-            d[0][j] = j;
-        }
-
-        d[0][0] = 0;
-        for (let j = 1;  j <= input.length; j++) {
-            for (let i = 1; i <= endpoint.length; i++) {
-
-                let substitutionCost = 0;
-                if (endpoint[i - 1] !== input[j - 1]) {
-                    substitutionCost = 1;
-                }
-
-                // deal with swapped chars
-                if (i > 1 && j > 1 && endpoint[i - 1] === input[j - 2] && endpoint[i - 2] === input[j - 1]) {
-                    d[i][j] = Math.min(
-                            d[i - 1][j] + 1, // delete
-                            d[i][j - 1] + 1, // insertion
-                            d[i - 1][j - 1] + substitutionCost, // substitution
-                            d[i - 2][j - 2] + 1 // transposition
-                        );
-                } else {
-                    d[i][j] = Math.min(
-                            d[i - 1][j] + 1, // deletion
-                            d[i][j - 1] + 1, // insertion
-                            d[i - 1][j - 1] + substitutionCost // substitution
-                        );
-                }
-
-            }
-        }
-
-        const result = d[endpoint.length][input.length];
-        return result;
+        return levenshteinDistance(endpoint, input);
     }
 
     /**
@@ -182,5 +142,14 @@ export default class Endpoint {
             console.error("Schema fetch error: " + e.message);
             throw e;
         }
+
+        if (this.timeOut) {
+            clearTimeout(this.timeOut);
+            this.timeOut = null;
+        }
+
+        // somehow TS 2.8.3 doesn't like this.timeOut = setTimeout(this.updateEndpoints.bind(this), this.timeOutDuration);
+        // (typeof this.timeout == Timer | null vs typeof setTimeout() == number...)
+        this.timeOut = setTimeout( (...args: any[]) => this.updateEndpoints.bind(this), this.timeOutDuration);
     }
 }

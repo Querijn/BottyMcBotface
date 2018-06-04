@@ -110,6 +110,7 @@ export interface SharedSettings {
 
     endpoint: {
         updateInterval: number,
+        timeOutDuration: number,
         baseUrl: string,
         maxDistance: number,
         aliases: { [key: string]: string[] },

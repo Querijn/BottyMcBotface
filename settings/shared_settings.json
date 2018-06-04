@@ -127,6 +127,7 @@
     },
     "endpoint": {
         "updateInterval": 86400,
+        "timeOutDuration": 10800000,
         "baseUrl": "https://developer.riotgames.com/api-methods/#",
         "maxDistance": 3,
         "aliases": {
