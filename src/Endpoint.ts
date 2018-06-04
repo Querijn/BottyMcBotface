@@ -3,6 +3,7 @@ import fetch from "node-fetch";
 import { fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings, SharedSettings } from "./SharedSettings";
 import levenshteinDistance from "./LevenshteinDistance";
+import { setTimeout } from "timers";
 
 type EndpointName = string;
 type Endpoints = EndpointName[];
@@ -148,8 +149,6 @@ export default class Endpoint {
             this.timeOut = null;
         }
 
-        // somehow TS 2.8.3 doesn't like this.timeOut = setTimeout(this.updateEndpoints.bind(this), this.timeOutDuration);
-        // (typeof this.timeout == Timer | null vs typeof setTimeout() == number...)
-        this.timeOut = setTimeout( (...args: any[]) => this.updateEndpoints.bind(this), this.timeOutDuration);
+        this.timeOut = setTimeout(this.updateEndpoints.bind(this), this.timeOutDuration);
     }
 }
