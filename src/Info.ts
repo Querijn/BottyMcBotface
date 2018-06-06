@@ -150,7 +150,7 @@ export default class Info {
             let reply = await message.channel.send("What category would you like to put it in?");
             if (reply instanceof Array) reply = reply[0];
 
-            this.reactionListeners.push({
+            this.addReactionListener({
                 user: message.author,
                 message: reply,
                 callback: (emoji: Discord.Emoji, listener: ReactionListener) => {
@@ -240,7 +240,7 @@ export default class Info {
 
         this.categorisedMessages[reply.id] = new CategorisedMessage(pages);
 
-        this.reactionListeners.push({
+        this.addReactionListener({
             user: message.author,
             message: reply,
             callback: (emoji: Discord.Emoji, listener: ReactionListener) => {
@@ -299,5 +299,15 @@ export default class Info {
 
         info.counter++;
         return info;
+    }
+
+    private addReactionListener(listener: ReactionListener) {
+        this.reactionListeners.push(listener);
+
+        // Remove old listeners.
+        if (this.reactionListeners.length > this.sharedSettings.info.maxListeners) {
+            const oldListener = this.reactionListeners.splice(0, 1)[0];
+            oldListener.message.delete();
+        }
     }
 }
