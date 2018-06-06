@@ -110,7 +110,7 @@ export default class Info {
             response = infoData.message;
             response = response.replace(/{ddragonVersion}/g, this.versionChecker.ddragonVersion);
             response = response.replace(/{gameVersion}/g, this.versionChecker.gameVersion);
-            response = response.replace(/{counter}/g, infoData.counter ? infoData.counter.toString() : "0");
+            response = response.replace(/{counter}/g, (infoData.counter || 0).toString());
         }
 
         // if we didnt get a valid note from fetchInfo, we return;
