@@ -119,7 +119,7 @@ export default class Info {
         message.channel.send(response);
     }
 
-    public onNote(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+    public async onNote(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
 
         // the note we are trying to fetch (or the sub-command)
         const action = args[0];
@@ -147,26 +147,23 @@ export default class Info {
             const name = args[1];
             const text = args.splice(2).join(" ");
 
-            message.channel.send("What category would you like to put it in?")
-                .then(async (reply) => {
-                    if (reply instanceof Array) reply = reply[0];
+            let reply = await message.channel.send("What category would you like to put it in?");
+            if (reply instanceof Array) reply = reply[0];
 
-                    this.reactionListeners.push({
-                        user: message.author,
-                        message: reply,
-                        callback: (emoji: Discord.Emoji, listener: ReactionListener) => {
+            this.reactionListeners.push({
+                user: message.author,
+                message: reply,
+                callback: (emoji: Discord.Emoji, listener: ReactionListener) => {
 
-                            if (!this.categories.find(c => emoji.identifier === c.icon))
-                                return; // Not a valid category.
+                    if (!this.categories.find(c => emoji.identifier === c.icon))
+                        return; // Not a valid category.
 
-                            message.channel.send(this.addInfo(name, text, emoji));
-                        },
-                    });
+                    message.channel.send(this.addInfo(name, text, emoji));
+                },
+            });
 
-                    for (const category of this.categories)
-                        await reply.react(category.icon).catch((reason) => console.log(`Cannot react with category '${category}', reason being: ${reason}`));
-                });
-
+            for (const category of this.categories)
+                await reply.react(category.icon).catch((reason) => console.log(`Cannot react with category '${category}', reason being: ${reason}`));
             return;
         }
 
