@@ -8,6 +8,7 @@
     "type": "git"
   },
   "scripts": {
+    "compile": "tslint -p . && tsc -p .",
     "start": "tsc -p . && node ./dist/app.js"
   },
   "author": "Querijn Heijmans <querijn@irule.at>",
@@ -25,6 +26,7 @@
     "@types/node": "^8.0.22",
     "@types/node-fetch": "^1.6.7",
     "@types/pretty-ms": "^3.0.0",
-    "typescript": "^2.4.2"
+    "typescript": "^2.4.2",
+    "tslint": "^5.10.0"
   }
 }
