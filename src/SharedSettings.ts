@@ -99,7 +99,7 @@ export interface SharedSettings {
             errorChannel: string,
             logChannel: string,
         }
-        
+
         errorChannel: string,
         logChannel: string,
     };

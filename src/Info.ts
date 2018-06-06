@@ -1,27 +1,27 @@
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 
+import Botty from "./Botty";
+import CategorisedMessage from "./CategorisedMessage";
 import Discord = require("discord.js");
 import levenshteinDistance from "./LevenshteinDistance";
 import VersionChecker from "./VersionChecker";
-import CategorisedMessage from "./CategorisedMessage";
-import Botty from "./Botty";
 
 interface InfoFile {
-    messages: InfoData[],
-    categories: Category[]
-};
+    messages: InfoData[];
+    categories: Category[];
+}
 
 interface Category {
-    icon: string,
-    explanation: string
-};
+    icon: string;
+    explanation: string;
+}
 
 export interface InfoData {
     command: string;
     message: string;
     counter: number;
-    categoryId: string
+    categoryId: string;
 }
 
 class ReactionListener {
@@ -75,9 +75,9 @@ export default class Info {
                     continue;
                 }
 
-                this.categories.push({ 
+                this.categories.push({
                     icon: emoji.identifier,
-                    explanation: category.explanation
+                    explanation: category.explanation,
                 });
             }
         });
@@ -85,10 +85,10 @@ export default class Info {
 
     public onReaction(messageReaction: Discord.MessageReaction, user: Discord.User) {
 
-        if (user.id == this.userId) return;
-        if (messageReaction.message.author.id != this.userId) return;
+        if (user.id === this.userId) return;
+        if (messageReaction.message.author.id !== this.userId) return;
 
-        const listener = this.reactionListeners.find(l => l.message.id == messageReaction.message.id && messageReaction.users.has(user.id));
+        const listener = this.reactionListeners.find(l => l.message.id === messageReaction.message.id && messageReaction.users.has(user.id));
         if (listener) {
             listener.callback(messageReaction.emoji, listener);
             messageReaction.remove(user);
@@ -156,11 +156,11 @@ export default class Info {
                         message: reply,
                         callback: (emoji: Discord.Emoji, listener: ReactionListener) => {
 
-                            if (!this.categories.find(c => emoji.identifier == c.icon)) 
+                            if (!this.categories.find(c => emoji.identifier === c.icon))
                                 return; // Not a valid category.
 
                             message.channel.send(this.addInfo(name, text, emoji));
-                        }
+                        },
                     });
 
                     for (const category of this.categories)
@@ -198,7 +198,7 @@ export default class Info {
             command,
             counter: 0,
             message,
-            categoryId: category.id
+            categoryId: category.id,
         };
 
         this.infos.push(newInfo);
@@ -222,16 +222,16 @@ export default class Info {
         const maxLength = 80;
 
         let firstPage: Discord.RichEmbed | null = null;
-        let pages: { [emoji: string]: Discord.RichEmbed} = {};
+        const pages: { [emoji: string]: Discord.RichEmbed } = {};
         for (const category of this.categories) {
-            const categoryItems = this.infos.filter(i => i.categoryId == category.icon);
-            
+            const categoryItems = this.infos.filter(i => i.categoryId === category.icon);
+
             const page = new Discord.RichEmbed();
             page.setTitle(category.explanation);
 
             for (const item of categoryItems) {
-                const message = item.message.length > maxLength ? item.message.substr(0, maxLength - 3) + "..." : item.message;
-                page.addField("!note " + item.command, message, false);
+                const content = item.message.length > maxLength ? item.message.substr(0, maxLength - 3) + "..." : item.message;
+                page.addField("!note " + item.command, content, false);
             }
 
             if (!firstPage) firstPage = page;
@@ -248,14 +248,13 @@ export default class Info {
             message: reply,
             callback: (emoji: Discord.Emoji, listener: ReactionListener) => {
 
-                const cat = this.categories.find(c => emoji.identifier == c.icon);
+                const cat = this.categories.find(c => emoji.identifier === c.icon);
                 if (!cat) return; // Not a valid category.
 
                 const page = this.categorisedMessages[listener.message.id].setPage(emoji);
 
-
                 listener.message.edit({ embed: page });
-            }
+            },
         });
 
         for (const category of this.categories)
