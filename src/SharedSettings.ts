@@ -61,6 +61,7 @@ export interface SharedSettings {
         allowedRoles: string[],
         command: string,
         maxScore: number,
+        maxListeners: number,
     };
 
     officehours: {
@@ -99,7 +100,7 @@ export interface SharedSettings {
             errorChannel: string,
             logChannel: string,
         }
-        
+
         errorChannel: string,
         logChannel: string,
     };

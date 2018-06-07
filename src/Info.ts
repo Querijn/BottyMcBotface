@@ -1,14 +1,33 @@
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 
+import Botty from "./Botty";
+import CategorisedMessage from "./CategorisedMessage";
 import Discord = require("discord.js");
 import levenshteinDistance from "./LevenshteinDistance";
 import VersionChecker from "./VersionChecker";
+
+interface InfoFile {
+    messages: InfoData[];
+    categories: Category[];
+}
+
+interface Category {
+    icon: string;
+    explanation: string;
+}
 
 export interface InfoData {
     command: string;
     message: string;
     counter: number;
+    categoryId: string;
+}
+
+class ReactionListener {
+    public user: Discord.User;
+    public message: Discord.Message;
+    public callback: (emoji: Discord.ReactionEmoji | Discord.Emoji, listener: ReactionListener) => void;
 }
 
 const findOne = (arr1: Discord.Collection<string, Discord.Role>, arr2: any[]) => {
@@ -16,19 +35,64 @@ const findOne = (arr1: Discord.Collection<string, Discord.Role>, arr2: any[]) =>
 };
 
 export default class Info {
+    private userId: string;
     private infos: InfoData[];
+    private categories: Category[] = [];
     private sharedSettings: SharedSettings;
     private command: string;
     private versionChecker: VersionChecker;
 
-    constructor(sharedSettings: SharedSettings, userFile: string, versionChecker: VersionChecker) {
+    private reactionListeners: ReactionListener[] = [];
+    private categorisedMessages: { [msgId: string]: CategorisedMessage } = {};
+
+    constructor(botty: Botty, sharedSettings: SharedSettings, userFile: string, versionChecker: VersionChecker) {
         console.log("Requested Info extension..");
         this.command = sharedSettings.info.command;
         this.versionChecker = versionChecker;
         this.sharedSettings = sharedSettings;
 
-        this.infos = fileBackedObject(userFile);
+        const file = fileBackedObject<InfoFile>(userFile);
+        this.infos = file.messages;
+
         console.log("Successfully loaded info file.");
+
+        botty.client.on("messageReactionAdd", this.onReaction.bind(this));
+        botty.client.on("ready", () => {
+
+            this.userId = botty.client.user.id;
+
+            for (const category of file.categories) {
+
+                if (category.icon.indexOf("%") >= 0) {
+                    // TODO: Better identifier for Unicode emojis
+                    this.categories.push(category);
+                    continue;
+                }
+
+                const emoji = botty.client.emojis.get(category.icon);
+                if (!emoji) {
+                    console.warn(`Cannot find emoji ${category} for the info categories!`);
+                    continue;
+                }
+
+                this.categories.push({
+                    icon: emoji.identifier,
+                    explanation: category.explanation,
+                });
+            }
+        });
+    }
+
+    public onReaction(messageReaction: Discord.MessageReaction, user: Discord.User) {
+
+        if (user.id === this.userId) return;
+        if (messageReaction.message.author.id !== this.userId) return;
+
+        const listener = this.reactionListeners.find(l => l.message.id === messageReaction.message.id && messageReaction.users.has(user.id));
+        if (listener) {
+            listener.callback(messageReaction.emoji, listener);
+            messageReaction.remove(user);
+        }
     }
 
     public onAll(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
@@ -46,7 +110,7 @@ export default class Info {
             response = infoData.message;
             response = response.replace(/{ddragonVersion}/g, this.versionChecker.ddragonVersion);
             response = response.replace(/{gameVersion}/g, this.versionChecker.gameVersion);
-            response = response.replace(/{counter}/g, infoData.counter.toString());
+            response = response.replace(/{counter}/g, (infoData.counter || 0).toString());
         }
 
         // if we didnt get a valid note from fetchInfo, we return;
@@ -55,14 +119,14 @@ export default class Info {
         message.channel.send(response);
     }
 
-    public onNote(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+    public async onNote(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
 
         // the note we are trying to fetch (or the sub-command)
         const action = args[0];
 
         // if no params, we print the list
         if (args.length === 0) {
-            message.channel.send(this.listInfo());
+            this.listInfo(message);
             return;
         }
 
@@ -83,7 +147,23 @@ export default class Info {
             const name = args[1];
             const text = args.splice(2).join(" ");
 
-            message.channel.send(this.addInfo(name, text));
+            let reply = await message.channel.send("What category would you like to put it in?");
+            if (Array.isArray(reply)) reply = reply[0];
+
+            this.addReactionListener({
+                user: message.author,
+                message: reply,
+                callback: (emoji: Discord.Emoji, listener: ReactionListener) => {
+
+                    if (!this.categories.find(c => emoji.identifier === c.icon))
+                        return; // Not a valid category.
+
+                    message.channel.send(this.addInfo(name, text, emoji));
+                },
+            });
+
+            for (const category of this.categories)
+                await reply.react(category.icon).catch((reason) => console.log(`Cannot react with category '${category}', reason being: ${reason}`));
             return;
         }
 
@@ -100,14 +180,14 @@ export default class Info {
         }
 
         if (action === "list") {
-            message.channel.send(this.listInfo());
+            this.listInfo(message);
             return;
         }
 
         return this.onAll(message, isAdmin, command, args);
     }
 
-    private addInfo(command: string, message: string) {
+    private addInfo(command: string, message: string, category: Discord.Emoji) {
         const alreadyExists = this.infos.some(info => info.command === command);
         if (alreadyExists) return;
 
@@ -115,11 +195,12 @@ export default class Info {
             command,
             counter: 0,
             message,
+            categoryId: category.id,
         };
 
         this.infos.push(newInfo);
         this.infos.sort((a, b) => a.command.localeCompare(b.command));
-        return `Successfully added ${command}`;
+        return `Successfully added ${command} with category ${category}`;
     }
 
     private removeInfo(command: string) {
@@ -133,22 +214,54 @@ export default class Info {
         return `Successfully removed ${command}`;
     }
 
-    private listInfo() {
-        const index = this.infos;
+    private async listInfo(message: Discord.Message) {
 
-        let message = `The available info commands are: \n`;
+        const maxLength = 80;
 
-        for (const info of this.infos) {
-            message += `- \`!${this.command} ${info.command}\`\n`;
+        let firstPage: Discord.RichEmbed | null = null;
+        const pages: { [emoji: string]: Discord.RichEmbed } = {};
+        for (const category of this.categories) {
+            const categoryItems = this.infos.filter(i => i.categoryId === category.icon);
+
+            const page = new Discord.RichEmbed();
+            page.setTitle(category.explanation);
+
+            for (const item of categoryItems) {
+                const content = item.message.length > maxLength ? item.message.substr(0, maxLength - 3) + "..." : item.message;
+                page.addField("!note " + item.command, content, false);
+            }
+
+            if (!firstPage) firstPage = page;
+            pages[category.icon] = page;
         }
 
-        return message;
+        let reply = await message.channel.send({ embed: firstPage });
+        if (Array.isArray(reply)) reply = reply[0];
+
+        this.categorisedMessages[reply.id] = new CategorisedMessage(pages);
+
+        this.addReactionListener({
+            user: message.author,
+            message: reply,
+            callback: (emoji: Discord.Emoji, listener: ReactionListener) => {
+
+                const cat = this.categories.find(c => emoji.identifier === c.icon);
+                if (!cat) return; // Not a valid category.
+
+                const page = this.categorisedMessages[listener.message.id].setPage(emoji);
+
+                listener.message.edit({ embed: page });
+            },
+        });
+
+        for (const category of this.categories)
+            await reply.react(category.icon).catch((reason) => console.log(`Cannot react with category '${category}', reason being: ${reason}`));
     }
 
     private fetchInfo(command: string): InfoData | null {
 
         if (command.length === 0) return null;
-        if (command.length > 300) return { message: `Stop it. Get some help.`, counter: 0, command };
+        if (command.length > 300) return { message: `Stop it. Get some help.`, counter: 0, command, categoryId: "" };
 
         const info = this.infos.find(inf => {
             return inf.command === command;
@@ -173,10 +286,10 @@ export default class Info {
             if (data.length !== 0) {
                 let message = "Did you mean: ";
                 message += data.map(s => "`" + s.command + "`").join(", ") + "?";
-                return { message, counter: 0, command };
+                return { message, counter: 0, command, categoryId: "" };
             }
 
-            return { message: `No note with the name ${command} was found.`, counter: 0, command };
+            return { message: `No note with the name ${command} was found.`, counter: 0, command, categoryId: "" };
         }
 
         // Backwards compatibility
@@ -186,5 +299,15 @@ export default class Info {
 
         info.counter++;
         return info;
+    }
+
+    private addReactionListener(listener: ReactionListener) {
+        this.reactionListeners.push(listener);
+
+        // Remove old listeners.
+        if (this.reactionListeners.length > this.sharedSettings.info.maxListeners) {
+            const oldListener = this.reactionListeners.splice(0, 1)[0];
+            oldListener.message.delete();
+        }
     }
 }

@@ -43,7 +43,7 @@ controller.registerCommand(commandList.keyFinder, keyFinder.onKeyList.bind(keyFi
 const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
 controller.registerCommand(commandList.welcome, joinMessaging.onWelcome.bind(joinMessaging));
 
-const notes = new Info(sharedSettings, "data/info_data.json", versionChecker);
+const notes = new Info(bot, sharedSettings, "data/info_data.json", versionChecker);
 controller.registerCommand(commandList.info.note, notes.onNote.bind(notes));
 controller.registerCommand(commandList.info.all, notes.onAll.bind(notes));
 

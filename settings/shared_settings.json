@@ -59,7 +59,8 @@
             "347539422943903755"
         ],
         "command": "note",
-        "maxScore": 2
+        "maxScore": 2,
+        "maxListeners": 15
     },
     "officehours": {
         "allowedRoles": [
