@@ -148,7 +148,7 @@ export default class Info {
             const text = args.splice(2).join(" ");
 
             let reply = await message.channel.send("What category would you like to put it in?");
-            if (reply instanceof Array) reply = reply[0];
+            if (Array.isArray(reply)) reply = reply[0];
 
             this.addReactionListener({
                 user: message.author,
@@ -236,7 +236,7 @@ export default class Info {
         }
 
         let reply = await message.channel.send({ embed: firstPage });
-        if (reply instanceof Array) reply = reply[0];
+        if (Array.isArray(reply)) reply = reply[0];
 
         this.categorisedMessages[reply.id] = new CategorisedMessage(pages);
 
