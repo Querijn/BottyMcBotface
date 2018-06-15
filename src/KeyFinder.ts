@@ -31,10 +31,10 @@ export default class KeyFinder {
                 if (channel) {
                     this.channel = channel;
                 } else {
-                    console.error(`KeyFinder: Incorrect setting for the channel: ${this.sharedSettings.keyFinder.reportChannel}`);
+                    console.error(`KeyFinder: Unable to find channel: ${this.sharedSettings.keyFinder.reportChannel}`);
                 }
             } else {
-                console.error(`KeyFinder: Incorrect setting for the server: ${this.sharedSettings.server}`);
+                console.error(`KeyFinder: Unable to find server: ${this.sharedSettings.server}`);
             }
 
             console.log("KeyFinder extension loaded.");

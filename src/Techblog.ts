@@ -27,13 +27,13 @@ export default class Techblog {
 
             const guild = this.bot.guilds.get(this.sharedSettings.server);
             if (!guild) {
-                console.error(`TechBlog: Invalid settings for guild ID ${this.sharedSettings.server}`);
+                console.error(`TechBlog: Unable to find server: ${this.sharedSettings.server}`);
                 return;
             }
 
             this.channel = guild.channels.find("name", this.sharedSettings.techBlog.channel) as Discord.TextChannel;
             if (!this.channel) {
-                console.error(`TechBlog: Incorrect setting for the channel: ${this.sharedSettings.techBlog.channel}`);
+                console.error(`TechBlog: Unable to find channel: ${this.sharedSettings.techBlog.channel}`);
                 return;
             }
 
