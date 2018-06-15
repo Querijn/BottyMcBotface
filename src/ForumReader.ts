@@ -58,7 +58,7 @@ export default class ForumReader {
         bot.on("ready", () => {
             const guild = bot.guilds.get(this.sharedSettings.server);
             if (!guild) {
-                console.error(`ForumReader: Unable to find server: ${this.sharedSettings.server}`);
+                console.error(`ForumReader: Unable to find server with ID: ${this.sharedSettings.server}`);
                 return;
             }
 

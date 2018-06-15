@@ -27,7 +27,7 @@ export default class Techblog {
 
             const guild = this.bot.guilds.get(this.sharedSettings.server);
             if (!guild) {
-                console.error(`TechBlog: Unable to find server: ${this.sharedSettings.server}`);
+                console.error(`TechBlog: Unable to find server with ID: ${this.sharedSettings.server}`);
                 return;
             }
 

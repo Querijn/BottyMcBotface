@@ -32,7 +32,7 @@ export default class AutoReact {
     public onBot() {
         const guild = this.bot.guilds.get(this.sharedSettings.logger.server);
         if (!guild) {
-            console.error(`Logger: Unable to find server: ${this.sharedSettings.logger.server}`);
+            console.error(`Logger: Unable to find server with ID: ${this.sharedSettings.logger.server}`);
             return;
         }
 

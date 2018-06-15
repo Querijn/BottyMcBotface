@@ -31,7 +31,7 @@ export default class VersionChecker {
     private onBot() {
         const guild = this.bot.guilds.get(this.sharedSettings.server);
         if (!guild) {
-            console.error(`VersionChecker: Unable to find server: ${this.sharedSettings.server}`);
+            console.error(`VersionChecker: Unable to find server with ID: ${this.sharedSettings.server}`);
             return;
         }
 

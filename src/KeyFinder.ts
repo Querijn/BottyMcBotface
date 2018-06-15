@@ -34,7 +34,7 @@ export default class KeyFinder {
                     console.error(`KeyFinder: Unable to find channel: ${this.sharedSettings.keyFinder.reportChannel}`);
                 }
             } else {
-                console.error(`KeyFinder: Unable to find server: ${this.sharedSettings.server}`);
+                console.error(`KeyFinder: Unable to find server with ID: ${this.sharedSettings.server}`);
             }
 
             console.log("KeyFinder extension loaded.");
