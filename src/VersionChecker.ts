@@ -31,13 +31,13 @@ export default class VersionChecker {
     private onBot() {
         const guild = this.bot.guilds.get(this.sharedSettings.server);
         if (!guild) {
-            console.error(`VersionChecker: Incorrect settings for guild ID ${this.sharedSettings.server}`);
+            console.error(`VersionChecker: Unable to find server with ID: ${this.sharedSettings.server}`);
             return;
         }
 
         const channel = guild.channels.find("name", this.sharedSettings.forum.channel);
         if (!channel || !(channel instanceof Discord.TextChannel)) {
-            console.error(`VersionChecker: Incorrect setting for the channel: ${this.sharedSettings.forum.channel}`);
+            console.error(`VersionChecker: Unable to find channel: ${this.sharedSettings.forum.channel}`);
             return;
         }
 

@@ -58,15 +58,16 @@ export default class ForumReader {
         bot.on("ready", () => {
             const guild = bot.guilds.get(this.sharedSettings.server);
             if (!guild) {
-                console.error(`ForumReader: Incorrect settings for guild ID ${this.sharedSettings.server}`);
+                console.error(`ForumReader: Unable to find server with ID: ${this.sharedSettings.server}`);
                 return;
             }
 
             const channel = guild.channels.find("name", this.sharedSettings.forum.channel);
             if (!channel || !(channel instanceof Discord.TextChannel)) {
-                console.error(`ForumReader: Incorrect setting for the channel: ${this.sharedSettings.forum.channel}`);
+                console.error(`ForumReader: Unable to find channel: ${this.sharedSettings.forum.channel}`);
                 return;
             }
+
             this.channel = channel as Discord.TextChannel;
 
             this.fetchForumData();
