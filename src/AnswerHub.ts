@@ -1,4 +1,6 @@
 import fetch from "node-fetch";
+import TurndownService = require("turndown");
+import gfm = require("turndown-plugin-gfm");
 
 export default class AnswerHubAPI {
     /** The base AnswerHub URL (with a trailing slash) */
@@ -6,20 +8,18 @@ export default class AnswerHubAPI {
     /** The value of the "Authorization" header to be included with all AnswerHubAPI requests */
     private readonly auth: string;
 
-    // this line might need changing, but I dont have access to the forum api to test it
-    private turndown = new (require("turndown"))();
+    private turndownService = new TurndownService();
 
     public constructor(url: string, username: string, password: string) {
         // Add a trailing / if missing
         this.baseURL = url.substr(url.length - 1) === "/" ? url : url + "/";
         this.auth = `Basic ${new Buffer(username + ":" + password, "binary").toString("base64")}`;
 
-        const gfm = require("turndown-plugin-gfm").gfm;
-        this.turndown.use(gfm);
+        this.turndownService.use(gfm.gfm);
     }
 
     public formatQuestionBody(body: string): string {
-        let markdown = this.turndown(body);
+        let markdown = this.turndownService.turndown(body);
         // Format code blocks
         markdown = markdown.replace(/<pre>/g, "```").replace(/<\/pre>/g, "```");
         // Replace relative URIs in links with absolute URIs
