@@ -65,11 +65,11 @@ export default class OfficeHours {
     }
 
     public onAskFor(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-        const asker = message.mentions.members.first();
+        const asker = message.mentions.users.first();
         if (!asker) return;
 
         const question = args.slice(1).join(" ");
-        this.storeQuestion(question, message, asker.toString(), asker.user.username, message.author.username);
+        this.storeQuestion(question, message, asker.toString(), asker.username, message.author.username);
     }
 
     public onQuestionList(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
