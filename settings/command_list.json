@@ -14,7 +14,7 @@
             "description": "Prints all the commands"
         }
     },
-    "apiUrlInterpreter": {
+    "apiSchema": {
         "updateSchema": {
             "admin": true,
             "aliases": [
