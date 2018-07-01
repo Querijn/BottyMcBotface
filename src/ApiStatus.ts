@@ -164,10 +164,8 @@ export default class ApiStatus {
             }
         }
 
-        // pad to minimum length
-        const pad = "                  ";
-        retStr += pad;
-        retStr = retStr.substring(0, pad.length);
+        if (retStr.length == 0)
+            return "None";
         return retStr;
     }
 
