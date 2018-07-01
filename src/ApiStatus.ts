@@ -123,11 +123,11 @@ export default class ApiStatus {
             let retStr = "";
             if (regionStates.troubled.length > 0) {
                 allApisOK = false;
-                retStr += ":warning:" + this.joinArray(regionStates.troubled) + "\n";
+                retStr += ":warning: " + this.joinRegions(regionStates.troubled) + "\n";
             }
             if (regionStates.down.length > 0) {
                 allApisOK = false;
-                retStr += ":x:" + this.joinArray(regionStates.down) + "\n";
+                retStr += ":x: " + this.joinRegions(regionStates.down) + "\n";
             }
             if (regionStates.up.length > 0) {
                 allApisIssues = false;
@@ -153,7 +153,7 @@ export default class ApiStatus {
         return statusEmbed;
     }
 
-    private joinArray(arr: string[]): string {
+    private joinRegions(arr: string[]): string {
         let retStr = "";
         for (let j = 0; j < arr.length; j++) {
             const a = arr[j];
