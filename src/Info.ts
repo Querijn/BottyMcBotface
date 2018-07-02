@@ -86,13 +86,14 @@ export default class Info {
     public onReaction(messageReaction: Discord.MessageReaction, user: Discord.User) {
 
         if (user.id === this.userId) return;
-        if (messageReaction.message.author.id !== this.userId) return;
 
         const listener = this.reactionListeners.find(l => l.message.id === messageReaction.message.id && messageReaction.users.has(user.id));
-        if (listener) {
+        if (!listener) return;
+
+        if (listener.user.id === user.id) {
             listener.callback(messageReaction.emoji, listener);
-            messageReaction.remove(user);
         }
+        messageReaction.remove(user);
     }
 
     public onAll(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
