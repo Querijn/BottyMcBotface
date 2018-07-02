@@ -1,4 +1,14 @@
 {
+    "botty": {
+        "restart": {
+            "admin": true,
+            "aliases": [
+                "restart",
+                "reboot"
+            ],
+            "description": "Restarts Botty."
+        }
+    },
     "controller": {
         "toggle": {
             "admin": true,

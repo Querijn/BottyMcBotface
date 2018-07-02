@@ -39,6 +39,8 @@ const apiUrlInterpreter = new ApiUrlInterpreter(bot.client, sharedSettings, apiS
 controller.registerCommand(commandList.controller.toggle, controller.onToggle.bind(controller));
 controller.registerCommand(commandList.controller.help, controller.onHelp.bind(controller));
 
+controller.registerCommand(commandList.botty.restart, bot.onRestart.bind(bot));
+
 controller.registerCommand(commandList.apiSchema.updateSchema, apiSchema.onUpdateSchemaRequest.bind(apiSchema));
 controller.registerCommand(commandList.keyFinder, keyFinder.onKeyList.bind(keyFinder));
 

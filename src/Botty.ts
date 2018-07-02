@@ -4,6 +4,8 @@ import { PersonalSettings, SharedSettings } from "./SharedSettings";
 import Discord = require("discord.js");
 import { GuildMember } from "discord.js";
 
+import { exec } from "child_process";
+
 export interface BottySettings {
     Discord: {
         Key: string;
@@ -35,6 +37,22 @@ export default class Botty {
 
     public start() {
         return this.client.login(this.personalSettings.discord.key);
+    }
+
+    public async onRestart(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+
+        if (!isAdmin) return;
+
+        await message.channel.send("Restarting...");
+        exec("pm2 restart .", (err, stdout, stderr) => {
+            if (err) {
+                console.error(err.message);
+                return;
+            }
+            
+            if (stdout.length !== 0) console.log(`onRestart: ${stdout}`);
+            if (stderr.length !== 0) console.error(`onRestart: ${stderr}`);
+        });
     }
 
     private initListeners() {

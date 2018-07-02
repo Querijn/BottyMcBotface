@@ -27,6 +27,9 @@ export interface CommandList {
         toggle: Command;
         help: Command;
     };
+    botty: {
+        restart: Command;
+    };
     apiSchema: {
         updateSchema: Command;
     };
