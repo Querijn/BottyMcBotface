@@ -164,7 +164,7 @@ export default class ApiStatus {
             }
         }
 
-        if (retStr.length == 0)
+        if (retStr.length === 0)
             return "None";
         return retStr;
     }
