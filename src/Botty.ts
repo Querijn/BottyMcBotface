@@ -49,7 +49,7 @@ export default class Botty {
                 console.error(err.message);
                 return;
             }
-            
+
             if (stdout.length !== 0) console.log(`onRestart: ${stdout}`);
             if (stderr.length !== 0) console.error(`onRestart: ${stderr}`);
         });
