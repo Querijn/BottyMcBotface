@@ -74,6 +74,6 @@ const libraries = new RiotAPILibraries(sharedSettings);
 controller.registerCommand(commandList.riotApiLibraries, libraries.onLibs.bind(libraries));
 
 // start bot
-bot.start().catch((reason) => {
+bot.start().catch((reason: any) => {
     console.error(`Unable to run botty: ${reason}.`);
 });
