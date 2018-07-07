@@ -60,6 +60,11 @@ export default class Botty {
 
         this.client.on("guildMemberRemove", user => console.log(`${user.displayName} left (or was removed) from the server.`));
 
+        this.client.on("guildBanAdd", (guild: Discord.Guild, user: Discord.User) => console.log(`${user.username} (${user.id}) has been banned from ${guild.name}.`));
+        this.client.on("guildBanRemove", (guild: Discord.Guild, user: Discord.User) => console.log(`${user.username} (${user.id}) has been unbanned from ${guild.name}.`));
+        this.client.on("messageDelete", (message: Discord.Message) => console.log(`${message.author.username}'s message was deleted. Contents: \`\`\`${message.content}\`\`\``));
+        this.client.on("messageUpdate", (oldMessage: Discord.Message, newMessage: Discord.Message) => console.log(`${oldMessage.author.username}'s message was changed from: \`\`\`${oldMessage.content}\`\`\` To: \`\`\`${newMessage.content}\`\`\``));
+
         this.client.on("guildMemberUpdate", (oldMember: GuildMember, newMember: GuildMember) => {
 
             if (oldMember.displayName !== newMember.displayName) {
