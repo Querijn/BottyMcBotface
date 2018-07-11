@@ -30,6 +30,9 @@ export interface CommandList {
     apiUrlInterpreter: {
         updateSchema: Command;
     };
+    botty: {
+        version: Command;
+    };
     keyFinder: Command;
     welcome: Command;
     uptime: Command;
