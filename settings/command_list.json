@@ -1,4 +1,12 @@
 {
+    "botty": {
+        "version": {
+            "aliases": [
+                "version"
+            ],
+            "description":"Prints the git version the bot was built from"
+        }
+    },
     "controller": {
         "toggle": {
             "admin": true,
