@@ -18,11 +18,14 @@ export default class Botty {
     public readonly client = new Discord.Client();
     private personalSettings: PersonalSettings;
     private sharedSettings: SharedSettings;
+    private version: string;
 
     constructor(sharedSettings: SharedSettings) {
         this.personalSettings = sharedSettings.botty;
         this.sharedSettings = sharedSettings;
         console.log("Successfully loaded bot settings.");
+        
+        require("fs").readFile("version", "utf-8", (err,data) => this.version = data);
 
         this.client
             .on("error", console.error)
@@ -96,6 +99,10 @@ export default class Botty {
             }
         });
         console.log("Initialised listeners.");
+    }
+    
+     public onVersion(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        message.channel.send(this.version);
     }
 
     private onConnect() {

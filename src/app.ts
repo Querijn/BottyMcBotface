@@ -48,9 +48,11 @@ controller.registerCommand(commandList.controller.help, controller.onHelp.bind(c
 
 // Botty commands
 controller.registerCommand(commandList.botty.restart, bot.onRestart.bind(bot));
+controller.registerCommand(commandList.botty.version, bot.onVersion.bind(bot));
 
 // API schema commands
 controller.registerCommand(commandList.apiSchema.updateSchema, apiSchema.onUpdateSchemaRequest.bind(apiSchema));
+controller.registerCommand(commandList.apiUrlInterpreter.updateSchema, apiUrlInterpreter.onUpdateSchemaRequest.bind(apiUrlInterpreter));
 
 // Keyfinder commands
 controller.registerCommand(commandList.keyFinder, keyFinder.onKeyList.bind(keyFinder));

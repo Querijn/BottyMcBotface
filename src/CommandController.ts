@@ -29,6 +29,7 @@ export interface CommandList {
     };
     botty: {
         restart: Command;
+        version: Command;
     };
     apiSchema: {
         updateSchema: Command;

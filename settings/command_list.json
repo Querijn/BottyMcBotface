@@ -1,5 +1,11 @@
 {
     "botty": {
+        "version": {
+            "aliases": [
+                "version"
+            ],
+            "description":"Prints the git version the bot was built from"
+        },
         "restart": {
             "admin": true,
             "aliases": [
