@@ -29,12 +29,10 @@ export interface CommandList {
     };
     botty: {
         restart: Command;
+        version: Command;
     };
     apiSchema: {
         updateSchema: Command;
-    };
-    botty: {
-        version: Command;
     };
     keyFinder: Command;
     welcome: Command;
