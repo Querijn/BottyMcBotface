@@ -32,7 +32,7 @@
                 "updateschema"
             ],
             "description": "Loads an updated api url schema",
-            "cooldown":300000
+            "cooldown": 300000
         }
     },
     "keyFinder": {
@@ -64,7 +64,7 @@
             "welcome"
         ],
         "description": "Prints out a copy of the welcome message.",
-        "cooldown":300000
+        "cooldown": 300000
     },
     "uptime": {
         "aliases": [
@@ -150,6 +150,6 @@
             "apistatus"
         ],
         "description": "Prints the status of the Riot Games API",
-        "cooldown":300000
+        "cooldown": 300000
     }
 }

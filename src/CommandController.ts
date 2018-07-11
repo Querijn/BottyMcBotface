@@ -184,19 +184,19 @@ export default class CommandController {
     }
 
     private checkCooldown(holder: CommandHolder, message: Discord.Message): boolean {
-        if (holder.cooldown) {
-            const last = holder.lastUsed;
-            const wait = holder.cooldown;
-            const now = Date.now();
-            const remaining = last + wait - now;
+        if (!holder.cooldown) return true;
 
-            if (last + wait - now > 0) {
-                message.author.send(`This command is currently on cooldown (${remaining / 1000} seconds remaining)`);
-                return false;
-            }
+        const last = holder.lastUsed;
+        const wait = holder.cooldown;
+        const now = Date.now();
+        const remaining = last + wait - now;
 
-            holder.lastUsed = now;
+        if (remaining > 0) {
+            message.author.send(`This command is currently on cooldown (${(remaining / 1000).toFixed(2)} seconds remaining)`);
+            return false;
         }
+
+        holder.lastUsed = now;
         return true;
     }
 
