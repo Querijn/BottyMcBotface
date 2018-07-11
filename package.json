@@ -9,7 +9,7 @@
   },
   "scripts": {
     "compile": "tslint -p . && tsc -p .",
-    "start": "tsc -p . && node ./dist/app.js"
+    "start": "tsc -p . && node saveVersion.js && node ./dist/app.js"
   },
   "author": "Querijn Heijmans <querijn@irule.at>",
   "license": "MIT",
