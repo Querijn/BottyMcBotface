@@ -2,36 +2,16 @@ import Discord = require("discord.js");
 import fs = require("fs");
 import fetch from "node-fetch";
 import prettyMs = require("pretty-ms");
-import levenshteinDistance from "./LevenshteinDistance";
 
 import { ENODATA } from "constants";
 import { Response } from "node-fetch";
 import { platform } from "os";
 import { clearTimeout, setTimeout } from "timers";
+
+import { APISchema, Path } from "./ApiSchema";
 import { fileBackedObject } from "./FileBackedObject";
+import levenshteinDistance from "./LevenshteinDistance";
 import { PersonalSettings, SharedSettings } from "./SharedSettings";
-
-class PathRegexCollection {
-    public invalid: string;
-    public valid: string;
-
-    constructor(validString: string, invalidString: string) {
-        this.valid = validString;
-        this.invalid = invalidString;
-    }
-}
-
-class SchemaRegexCollection extends PathRegexCollection {
-    public name: string;
-    public schema: any;
-
-    constructor(name: string, schema: any, validString: string, invalidString: string) {
-        super(validString, invalidString);
-
-        this.name = name;
-        this.schema = schema;
-    }
-}
 
 class RatelimitResult {
     public rateLimit: number;
@@ -43,41 +23,28 @@ class RatelimitResult {
     }
 }
 
-class Path {
-    public methodType: "GET" | "POST";
-    public regex: PathRegexCollection;
-    public parameterInfo: SchemaRegexCollection[];
-    public method: string;
-    public name: string;
-}
-
 export default class ApiUrlInterpreter {
     private static ratelimitErrorMs = 100;
 
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
     private personalSettings: PersonalSettings;
-    private timeOut: NodeJS.Timer | null;
+    private apiSchema: APISchema;
     private iterator: number = 1;
-
-    private baseUrl: string;
-    private platforms: string[];
-    private platformRegexString: string;
 
     private applicationRatelimitLastTime: number = 0;
     private methodRatelimitLastTime: { [method: string]: number } = {};
     private applicationStartTime: number = 0;
     private methodStartTime: { [method: string]: number } = {};
 
-    private paths: Path[] = [];
-
     private fetchSettings: object;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings) {
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings, apiSchema: APISchema) {
         console.log("Requested API URL Interpreter extension..");
 
         this.sharedSettings = sharedSettings;
         this.personalSettings = sharedSettings.botty;
+        this.apiSchema = apiSchema;
         console.log("Successfully loaded API URL Interpreter settings.");
 
         this.fetchSettings = {
@@ -89,33 +56,13 @@ export default class ApiUrlInterpreter {
         this.bot = bot;
         this.bot.on("ready", this.onBot.bind(this));
         this.bot.on("message", this.onMessage.bind(this));
-
-        this.updateSchema();
     }
 
     public onBot() {
         console.log("API URL Interpreter extension loaded.");
     }
 
-    public async onUpdateSchemaRequest(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-        const replyMessagePromise = message.channel.send("Updating schema..");
-
-        console.log(`${message.author.username} requested a schema update.`);
-        await this.updateSchema();
-
-        const newMessage = "Updated schema.";
-        const replyMessage = await replyMessagePromise;
-
-        // Could be an array? Would be weird.
-        if (Array.isArray(replyMessage)) {
-            console.warn("replyMessage is an array, what do you know?");
-            for (const replyMessageContent of replyMessage) {
-                replyMessageContent.edit(newMessage);
-            }
-        } else replyMessage.edit(newMessage);
-    }
-
-    public onMessage(message: Discord.Message) {
+    private onMessage(message: Discord.Message) {
         if (message.author.bot) return;
 
         this.onRiotApiURL(message);
@@ -129,7 +76,7 @@ export default class ApiUrlInterpreter {
 
         if (content.indexOf("https://") === -1) return; // We're about to do ~80 regex tests, better make sure that it's on a message with a URL
 
-        for (const path of this.paths) {
+        for (const path of this.apiSchema.paths) {
 
             // Check if path was valid
             const validMatch = new RegExp(path.regex.valid, "g").exec(content);
@@ -148,8 +95,7 @@ export default class ApiUrlInterpreter {
             }
         }
 
-        for (const path of this.paths) {
-
+        for (const path of this.apiSchema.paths) {
             // Now check if it's the same path, but with incorrect parameters.
             const invalidMatch = new RegExp(path.regex.invalid, "g").exec(content);
             if (invalidMatch && invalidMatch.length > 0) {
@@ -158,10 +104,10 @@ export default class ApiUrlInterpreter {
                 const mistakes = [];
 
                 // Get closest platform if incorrect
-                const closestPlatform = this.getClosestPlatform(invalidMatch[1]);
+                const closestPlatform = this.apiSchema.getClosestPlatform(invalidMatch[1]);
                 if (closestPlatform) {
                     errorIdentified = true;
-                    mistakes.push(`- The platform \`${invalidMatch[1]}\` is invalid, did you mean: \`${closestPlatform}\`? Expected one of the following values: \`${this.platforms.join(", ")}\``);
+                    mistakes.push(`- The platform \`${invalidMatch[1]}\` is invalid, did you mean: \`${closestPlatform}\`? Expected one of the following values: \`${this.apiSchema.platforms.join(", ")}\``);
                 }
 
                 invalidMatch.splice(0, 2); // Remove url and platform from array
@@ -202,19 +148,6 @@ export default class ApiUrlInterpreter {
                 return;
             }
         }
-    }
-
-    private getClosestPlatform(platformParam: string) {
-        const validPlatform = new RegExp(this.platformRegexString, "g").exec(platformParam);
-        if (validPlatform) return null;
-
-        return this.platforms.map(p => {
-            return {
-                platform: p,
-                distance: levenshteinDistance(platformParam, p),
-            };
-        })
-            .sort((a, b) => a.distance - b.distance)[0].platform;
     }
 
     private async makeRequest(path: Path, region: string, url: string, message: Discord.Message) {
@@ -367,131 +300,5 @@ export default class ApiUrlInterpreter {
 
         if (found === false) return null;
         return new RatelimitResult(resultRatelimit, resultStartTime);
-    }
-
-    private async updateSchema() {
-        try {
-            const response = await fetch(`http://www.mingweisamuel.com/riotapi-schema/openapi-3.0.0.json`, {
-                method: "GET",
-                headers: {
-                    "Accept": "application/json",
-                    "Content-Type": "application/json",
-                },
-            });
-
-            if (response.status !== 200) {
-                console.error("HTTP Error trying to get schema: " + response.status);
-                return;
-            }
-
-            const schema = await response.json();
-
-            const baseUrlRegex = this.constructBaseUrlRegex(schema);
-            const invalidBaseUrlRegex = this.constructInvalidBaseUrlRegex(schema);
-
-            this.paths = [];
-
-            for (const pathName in schema.paths) {
-                const pathSchema = schema.paths[pathName];
-                const methodSchema = pathSchema.get ? pathSchema.get : pathSchema.post;
-
-                if (!methodSchema) continue; // Only handle GET/POST
-                if (methodSchema.operationId.startsWith("tournament")) continue;
-
-                const path = new Path();
-                path.methodType = pathSchema.get ? "GET" : "POST";
-                path.method = methodSchema.operationId;
-                this.constructRegex(path, baseUrlRegex, invalidBaseUrlRegex, pathName, methodSchema);
-                console.assert(path.regex, "Path Regex should be set");
-
-                this.paths.push(path);
-            }
-
-            // This fixes the issue where it would match getAllChampionsMasteries before a specific champion mastery (which starts the same but has extra parameters)
-            this.paths = this.paths.sort((a, b) => b.name.length - a.name.length);
-        } catch (e) {
-            console.error("Schema fetch error: " + e.message);
-        }
-
-        if (this.timeOut) {
-            clearTimeout(this.timeOut);
-            this.timeOut = null;
-        }
-        this.timeOut = setTimeout(this.updateSchema.bind(this), this.sharedSettings.apiUrlInterpreter.timeOutDuration);
-    }
-
-    private constructBaseUrlRegex(schema: any): string {
-        const baseUrl = this.escapeRegex(schema.servers[0].url);
-        this.platforms = schema.servers[0].variables.platform.enum;
-
-        // This makes a regex string from all the platform options
-        this.platformRegexString = `(${this.platforms.join("|")})`;
-
-        return baseUrl.replace(/{platform}/g, this.platformRegexString);
-    }
-
-    private constructInvalidBaseUrlRegex(schema: any): string {
-        const baseUrl = this.escapeRegex(schema.servers[0].url);
-        return baseUrl.replace(/{platform}/g, "(.*?)");
-    }
-
-    private constructRegex(path: Path, validBase: string, invalidBase: string, pathName: string, methodSchema: any) {
-
-        path.name = pathName;
-        path.parameterInfo = [];
-
-        let invalidPath = invalidBase + this.escapeRegex(pathName);
-        let validPath = validBase + this.escapeRegex(pathName);
-
-        if (!methodSchema.parameters) {
-            path.regex = new PathRegexCollection(validPath, invalidPath);
-            return;
-        }
-
-        const invalidWith = "([^\\s^\\/]*)";
-        for (const parameter of methodSchema.parameters) {
-            if (parameter.required === false) continue;
-
-            const parameterReplace = new RegExp(`{${parameter.name}}`, "g");
-
-            let validWith = "([^\\s^\\/]+)";
-
-            if (parameter.schema.enum) {
-                validWith = `(${parameter.schema.enum.join("|")})`;
-            } else {
-                switch (parameter.schema.type) {
-                    default:
-                        console.warn(`Unhandled schema parameter in ${pathName}: ${parameter.name} is a ${parameter.schema.type}`);
-                        break;
-
-                    case "string":
-                        break;
-
-                    case "integer":
-                        validWith = "([0-9]+)";
-                        break;
-                }
-            }
-
-            invalidPath = invalidPath.replace(parameterReplace, invalidWith);
-            validPath = validPath.replace(parameterReplace, validWith);
-
-            path.parameterInfo.push(new SchemaRegexCollection(parameter.name, parameter.schema, validWith, invalidWith));
-        }
-
-        validPath += "\\/?(\\?(.*))?"; // Allow urls to end with a trailing / or ?
-        validPath += "\\s"; // Message will always end in a whitespace (is added if missing), use this a delimiter at the end of valid paths
-
-        // If the last parameter is missing from the url, don't require the last / match for invalids.
-        const lastIndex = invalidPath.lastIndexOf("\\/" + invalidWith);
-        if (lastIndex !== -1) {
-            invalidPath = invalidPath.substr(0, lastIndex) + "\\/?" + invalidWith;
-        }
-
-        path.regex = new PathRegexCollection(validPath, invalidPath);
-    }
-
-    private escapeRegex(regex: string): string {
-        return regex.replace(/[\-\[\]\/\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
     }
 }

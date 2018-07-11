@@ -4,8 +4,12 @@ import fs = require("fs");
 import CommandController from "./CommandController";
 
 import { GuildMember } from "discord.js";
-import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
+
+interface Messagable {
+    send(content?: Discord.StringResolvable, options?: Discord.MessageOptions | Discord.RichEmbed | Discord.Attachment): Promise<Discord.Message | Discord.Message[]>;
+    send(options?: Discord.MessageOptions | Discord.RichEmbed | Discord.Attachment): Promise<Discord.Message | Discord.Message[]>;
+}
 
 export default class JoinMessaging {
     private bot: Discord.Client;
@@ -27,8 +31,12 @@ export default class JoinMessaging {
     }
 
     public onWelcome(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-        message.channel.send(this.messageContents);
-        this.commandContents.forEach(embed => message.channel.send({ embed }));
+        this.sendWelcomeMessage(message.channel);
+    }
+
+    public sendWelcomeMessage(channel: Messagable) {
+        channel.send(this.messageContents, { split: true });
+        this.commandContents.forEach(embed => channel.send({ embed, split: true }));
     }
 
     private onBot() {
@@ -37,12 +45,12 @@ export default class JoinMessaging {
             this.commandContents = this.commandController.getHelp();
 
             this.bot.on("guildMemberAdd", (user: GuildMember) => {
-                user.send(this.messageContents);
-                this.commandContents.forEach(embed => user.send({ embed }));
+                this.sendWelcomeMessage(user);
             });
 
             console.log("Join message extension loaded.");
-        } catch (e) {
+        }
+        catch (e) {
             console.error("Something went wrong loading the message for new users: " + e.toString());
         }
     }

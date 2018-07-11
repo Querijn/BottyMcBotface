@@ -27,7 +27,10 @@ export interface CommandList {
         toggle: Command;
         help: Command;
     };
-    apiUrlInterpreter: {
+    botty: {
+        restart: Command;
+    };
+    apiSchema: {
         updateSchema: Command;
     };
     botty: {

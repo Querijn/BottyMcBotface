@@ -5,6 +5,14 @@
                 "version"
             ],
             "description":"Prints the git version the bot was built from"
+        },
+        "restart": {
+            "admin": true,
+            "aliases": [
+                "restart",
+                "reboot"
+            ],
+            "description": "Restarts Botty."
         }
     },
     "controller": {
@@ -22,7 +30,7 @@
             "description": "Prints all the commands"
         }
     },
-    "apiUrlInterpreter": {
+    "apiSchema": {
         "updateSchema": {
             "admin": true,
             "aliases": [
