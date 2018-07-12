@@ -93,7 +93,11 @@ export default class Info {
         if (listener.user.id === user.id) {
             listener.callback(messageReaction.emoji, listener);
         }
-        messageReaction.remove(user);
+        
+        // Remove reaction if we're on our server.
+        if (messageReaction.message.guild.id == this.sharedSettings.server) {
+            messageReaction.remove(user);
+        }
     }
 
     public onAll(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
