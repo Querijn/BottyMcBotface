@@ -93,14 +93,14 @@ export default class Info {
         if (listener.user.id === user.id) {
             listener.callback(messageReaction.emoji, listener);
         }
-        
+
         // Remove reaction if we're on our server.
-        if (messageReaction.message.guild.id == this.sharedSettings.server) {
+        if (messageReaction.message.guild.id === this.sharedSettings.server) {
             messageReaction.remove(user);
         }
     }
 
-    public onAll(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+    public async onAll(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         let response: string | undefined;
         if (args.length === 0) return;
         const name = args[0];
@@ -120,7 +120,7 @@ export default class Info {
 
         // if we didnt get a valid note from fetchInfo, we return;
         if (!response) return;
-        
+
         try {
             await message.channel.send(response);
         }
