@@ -101,9 +101,9 @@ export default class AutoReact {
         this.oldLog(message, ...optionalParams);
 
         try {
-            this.logChannel.send(`[${(new Date()).toUTCString()}] Log: ${message.toString()}`);
+            this.logChannel.send(`[${(new Date()).toUTCString()}] Log: ${message.toString()}`, { split: true });
             for (let i = 0; i < optionalParams.length; i++) {
-                this.logChannel.send(`[${(new Date()).toUTCString()}] Log param ${(i + 1)}: {optionalParams.toString()}`);
+                this.logChannel.send(`[${(new Date()).toUTCString()}] Log param ${(i + 1)}: {optionalParams.toString()}`, { split: true });
             }
         } catch (e) {
             this.oldError(`Error trying to send a log message: ${e.toString()}`);
@@ -114,9 +114,9 @@ export default class AutoReact {
         this.oldWarning(message, ...optionalParams);
 
         try {
-            this.errorChannel.send(`[${(new Date()).toUTCString()}] Warning: ${message.toString()}`);
+            this.errorChannel.send(`[${(new Date()).toUTCString()}] Warning: ${message.toString()}`, { split: true });
             for (let i = 0; i < optionalParams.length; i++) {
-                this.errorChannel.send(`[${(new Date()).toUTCString()}] Warning param ${(i + 1)}: ${optionalParams.toString()}`);
+                this.errorChannel.send(`[${(new Date()).toUTCString()}] Warning param ${(i + 1)}: ${optionalParams.toString()}`, { split: true });
             }
         } catch (e) {
             this.oldError(`Error trying to send a warning message: ${e.toString()}`);
@@ -127,9 +127,9 @@ export default class AutoReact {
         this.oldError(message, ...optionalParams);
 
         try {
-            this.errorChannel.send(`[${(new Date()).toUTCString()}] Error: ${message.toString()}`);
+            this.errorChannel.send(`[${(new Date()).toUTCString()}] Error: ${message.toString()}`, { split: true });
             for (let i = 0; i < optionalParams.length; i++) {
-                this.errorChannel.send(`[${(new Date()).toUTCString()}] Error param ${(i + 1)}: ${optionalParams.toString()}`);
+                this.errorChannel.send(`[${(new Date()).toUTCString()}] Error param ${(i + 1)}: ${optionalParams.toString()}`, { split: true });
             }
         } catch (e) {
             this.oldError(`Error trying to send an error message: ${e.toString()}`);
