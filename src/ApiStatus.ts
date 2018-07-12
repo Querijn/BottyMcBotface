@@ -79,7 +79,17 @@ export default class ApiStatus {
             embedContent.image = { url: this.pickRandomOnFireImage() };
         }
 
-        message.channel.send({ embed: embedContent });
+        try {
+            await message.channel.send({ embed: embedContent });
+        }
+        catch (e) {
+            if (e instanceof Discord.DiscordAPIError) {
+                console.error(`Received DiscordAPIError while returning the current API status: ${e.code} "${e.message}"`);
+            }
+            else {
+                console.error(`Received unknown error while returning the current API status: ${e}"`);
+            }
+        }
     }
 
     private getLastUpdate(): string {

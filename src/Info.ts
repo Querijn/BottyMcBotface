@@ -120,8 +120,18 @@ export default class Info {
 
         // if we didnt get a valid note from fetchInfo, we return;
         if (!response) return;
-
-        message.channel.send(response);
+        
+        try {
+            await message.channel.send(response);
+        }
+        catch (e) {
+            if (e instanceof Discord.DiscordAPIError) {
+                console.error(`Received DiscordAPIError while outputting an info ticket: ${e.code} "${e.message}"`);
+            }
+            else {
+                console.error(`Received unknown error while outputting an info ticket: ${e}"`);
+            }
+        }
     }
 
     public async onNote(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
@@ -158,12 +168,22 @@ export default class Info {
             this.addReactionListener({
                 user: message.author,
                 message: reply,
-                callback: (emoji: Discord.Emoji, listener: ReactionListener) => {
+                callback: async (emoji: Discord.Emoji, listener: ReactionListener) => {
 
                     if (!this.categories.find(c => emoji.identifier === c.icon))
                         return; // Not a valid category.
 
-                    message.channel.send(this.addInfo(name, text, emoji));
+                    try {
+                        await message.channel.send(this.addInfo(name, text, emoji));
+                    }
+                    catch (e) {
+                        if (e instanceof Discord.DiscordAPIError) {
+                            console.error(`Received DiscordAPIError while outputting an add info message: ${e.code} "${e.message}"`);
+                        }
+                        else {
+                            console.error(`Received unknown error while outputting an add info message: ${e}"`);
+                        }
+                    }
                 },
             });
 
