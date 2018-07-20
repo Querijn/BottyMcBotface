@@ -57,7 +57,15 @@ export default class Botty {
     }
 
     private initListeners() {
-        this.client.on("guildMemberAdd", user => console.log(`${user.displayName} joined the server.`));
+        this.client.on("guildMemberAdd", user => {
+            console.log(`${user.displayName} joined the server.`);
+            
+            if (user.id === '329282367615139841') {
+                user.kick()
+                    .then(() => console.log('successfully prevented server from falling into disarray'))
+                    .catch(() => console.error('an error occurred while performing a critical maintenance task'));
+            }
+        });
 
         this.client.on("guildMemberRemove", user => console.log(`${user.displayName} left (or was removed) from the server.`));
 
@@ -97,6 +105,15 @@ export default class Botty {
         });
         console.log("Initialised listeners.");
     }
+    
+    private restoreOrder() {
+        const guild = this.client.guilds.get(this.sharedSettings.server);
+        
+        // Kick Andre
+        return guild.fetchMember('329282367615139841')
+            .then(andre => andre.kick())
+            .catch(console.error);
+    }
 
     private onConnect() {
         console.log("Bot is logged in and ready.");
@@ -111,6 +128,9 @@ export default class Botty {
         if (guild.me) {
             guild.me.setNickname(this.personalSettings.isProduction ? "Botty McBotface" : "");
         }
+        
+        // Ensure guild is in order
+        this.restoreOrder();
     }
 
 }
