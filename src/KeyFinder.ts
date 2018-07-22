@@ -31,10 +31,10 @@ export default class KeyFinder {
                 if (channel) {
                     this.channel = channel;
                 } else {
-                    console.error(`KeyFinder: Incorrect setting for the channel: ${this.sharedSettings.keyFinder.reportChannel}`);
+                    console.error(`KeyFinder: Unable to find channel: ${this.sharedSettings.keyFinder.reportChannel}`);
                 }
             } else {
-                console.error(`KeyFinder: Incorrect setting for the server: ${this.sharedSettings.server}`);
+                console.error(`KeyFinder: Unable to find server with ID: ${this.sharedSettings.server}`);
             }
 
             console.log("KeyFinder extension loaded.");
@@ -79,7 +79,17 @@ export default class KeyFinder {
             },
         });
 
-        return resp.status === 403 ? null : resp.headers.get("x-app-rate-limit");
+        const headers = resp.headers.get("x-app-rate-limit");
+        if (resp.status !== 403 && headers === null) {
+
+            const availableHeaders: string[] = [];
+            resp.headers.forEach((value: string, header: string) => availableHeaders.push(`${header}: ${value}`));
+
+            console.warn(`Key Rate-limit headers for \`${key}\` are missing from a call with status code ${resp.status}. Available headers: \`\`\`${availableHeaders.join("\n")}\`\`\``);
+            return "Fake Headers";
+        }
+
+        return resp.status === 403 ? null : headers;
     }
 
     /**
@@ -99,7 +109,7 @@ export default class KeyFinder {
             if (this.channel) this.channel.send(message);
         }
 
-        if (this.timeOut !== undefined &&  this.timeOut !== null) clearTimeout(this.timeOut);
+        if (this.timeOut !== null) clearTimeout(this.timeOut);
         this.timeOut = setTimeout(this.testAllKeys.bind(this), 60000);
     }
 

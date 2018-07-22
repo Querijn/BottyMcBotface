@@ -65,11 +65,11 @@ export default class OfficeHours {
     }
 
     public onAskFor(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-        const asker = message.mentions.members.first();
+        const asker = message.mentions.users.first();
         if (!asker) return;
 
         const question = args.slice(1).join(" ");
-        this.storeQuestion(question, message, asker.toString(), asker.user.username, message.author.username);
+        this.storeQuestion(question, message, asker.toString(), asker.username, message.author.username);
     }
 
     public onQuestionList(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
@@ -115,13 +115,13 @@ export default class OfficeHours {
     private setupOpenState() {
         this.guild = this.bot.guilds.get(this.sharedSettings.server) as Discord.Guild;
         if (!this.guild) {
-            console.warn(`Cannot determine main guild (${this.sharedSettings.server}), isOpen state of OfficeHours could not be determined!`);
+            console.error(`OfficeHours: Unable to find server with ID: ${this.sharedSettings.server}`);
             return;
         }
 
         const officeHoursChannel = this.guild.channels.find("name", "office-hours");
         if (!officeHoursChannel) {
-            console.warn(`Cannot determine office hours channel of "${this.guild.name}", isOpen state of OfficeHours could not be determined!`);
+            console.error(`OfficeHours: Unable to find channel #office-hours`);
             return;
         }
 

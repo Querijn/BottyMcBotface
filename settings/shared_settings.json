@@ -59,7 +59,8 @@
             "347539422943903755"
         ],
         "command": "note",
-        "maxScore": 2
+        "maxScore": 2,
+        "maxListeners": 15
     },
     "officehours": {
         "allowedRoles": [
@@ -105,8 +106,14 @@
     },
     "logger": {
         "server": "342988445498474498",
-        "logChannel": "dev-bot-log",
-        "errorChannel": "dev-bot-error"
+        "dev": {
+            "logChannel": "dev-bot-log",
+            "errorChannel": "dev-bot-error"
+        },
+        "prod": {
+            "logChannel": "prod-bot-log",
+            "errorChannel": "prod-bot-error"
+        }
     },
     "apiStatus": {
         "checkInterval": 300000,

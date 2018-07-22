@@ -42,7 +42,8 @@ export default class JoinMessaging {
             });
 
             console.log("Join message extension loaded.");
-        } catch (e) {
+        }
+        catch (e) {
             console.error("Something went wrong loading the message for new users: " + e.toString());
         }
     }

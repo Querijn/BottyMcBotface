@@ -1,4 +1,14 @@
 {
+    "botty": {
+        "restart": {
+            "admin": true,
+            "aliases": [
+                "restart",
+                "reboot"
+            ],
+            "description": "Restarts Botty."
+        }
+    },
     "controller": {
         "toggle": {
             "admin": true,
@@ -14,16 +24,19 @@
             "description": "Prints all the commands"
         }
     },
-    "apiUrlInterpreter": {
+    "apiSchema": {
         "updateSchema": {
+            "admin": true,
             "aliases": [
                 "update_schema",
                 "updateschema"
             ],
-            "description": "Loads an updated api url schema"
+            "description": "Loads an updated api url schema",
+            "cooldown": 300000
         }
     },
     "keyFinder": {
+        "admin": true,
         "aliases": [
             "active_keys",
             "activekeys"
@@ -50,7 +63,8 @@
         "aliases": [
             "welcome"
         ],
-        "description": "Prints out a copy of the welcome message."
+        "description": "Prints out a copy of the welcome message.",
+        "cooldown": 300000
     },
     "uptime": {
         "aliases": [
@@ -87,7 +101,7 @@
             "description": "Close #office-hours"
         },
         "question_list": {
-            "admin": false,
+            "admin": true,
             "aliases": [
                 "question_list"
             ],
@@ -133,13 +147,14 @@
     "apiStatus": {
         "aliases": [
             "status",
-            "apistatus"
+            "apistatus",
         ],
-        "description": "Prints the status of the Riot Games API"
+        "description": "Prints the status of the Riot Games API",
+        "cooldown": 300000,
     },
     "endpoint": {
         "aliases": [
-            "endpoint"
+            "endpoint",
         ]
     }
 }

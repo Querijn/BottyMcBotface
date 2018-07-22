@@ -5,22 +5,21 @@
     ],
     "jsRules": {},
     "rules": {
+        "ordered-imports": false,
         "interface-name": false,
         "no-empty-interface": false,
         "no-console": false,
         "forin": false,
         "arrow-parens": false,
+        "max-classes-per-file": false,
         "array-type": {
             "options": [
                 "array"
             ]
         },
         "object-literal-sort-keys": false,
-        "curly": {
-            "options": [
-                "ignore-same-line"
-            ]
-        },
+        "curly": false,
+        "one-line": false,
         "max-line-length": {
             "options": [
                 280

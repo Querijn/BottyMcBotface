@@ -32,20 +32,39 @@ export default class AutoReact {
     public onBot() {
         const guild = this.bot.guilds.get(this.sharedSettings.logger.server);
         if (!guild) {
-            console.error(`Logger: Incorrect settings for guild ID ${this.sharedSettings.logger.server}`);
+            console.error(`Logger: Unable to find server with ID: ${this.sharedSettings.logger.server}`);
             return;
         }
 
-        const errorChannel = guild.channels.find("name", this.sharedSettings.logger.errorChannel);
+        const isProduction = this.sharedSettings.botty.isProduction;
+        let environment: {
+            errorChannel: string;
+            logChannel: string;
+        };
+
+        if (isProduction && this.sharedSettings.logger.prod) {
+            environment = this.sharedSettings.logger.prod;
+        }
+
+        else if (!isProduction && this.sharedSettings.logger.dev) {
+            environment = this.sharedSettings.logger.dev;
+        }
+
+        // Fallback to old style
+        else /*if (!this.sharedSettings.logger.prod && !this.sharedSettings.logger.dev)*/ {
+            environment = this.sharedSettings.logger;
+        }
+
+        const errorChannel = guild.channels.find("name", environment.errorChannel);
         if (!errorChannel || !(errorChannel instanceof Discord.TextChannel)) {
-            console.error(`Logger: Incorrect setting for the channel: ${this.sharedSettings.logger.errorChannel}`);
+            console.error(`Logger: Incorrect setting for the error channel: ${environment.errorChannel}, isProduction: ${isProduction}`);
             return;
         }
         this.errorChannel = errorChannel as Discord.TextChannel;
 
-        const logChannel = guild.channels.find("name", this.sharedSettings.logger.logChannel);
+        const logChannel = guild.channels.find("name", environment.logChannel);
         if (!logChannel || !(logChannel instanceof Discord.TextChannel)) {
-            console.error(`Logger: Incorrect setting for the channel: ${this.sharedSettings.logger.logChannel}`);
+            console.error(`Logger: Incorrect setting for the log channel: ${environment.logChannel}, isProduction: ${isProduction}`);
             return;
         }
         this.logChannel = logChannel as Discord.TextChannel;
@@ -82,9 +101,9 @@ export default class AutoReact {
         this.oldLog(message, ...optionalParams);
 
         try {
-            this.logChannel.send(`[${(new Date()).toUTCString()}] Log: ${message.toString()}`);
+            this.logChannel.send(`[${(new Date()).toUTCString()}] Log: ${message.toString()}`, { split: true });
             for (let i = 0; i < optionalParams.length; i++) {
-                this.logChannel.send(`[${(new Date()).toUTCString()}] Log param ${(i + 1)}: {optionalParams.toString()}`);
+                this.logChannel.send(`[${(new Date()).toUTCString()}] Log param ${(i + 1)}: {optionalParams.toString()}`, { split: true });
             }
         } catch (e) {
             this.oldError(`Error trying to send a log message: ${e.toString()}`);
@@ -95,9 +114,9 @@ export default class AutoReact {
         this.oldWarning(message, ...optionalParams);
 
         try {
-            this.errorChannel.send(`[${(new Date()).toUTCString()}] Warning: ${message.toString()}`);
+            this.errorChannel.send(`[${(new Date()).toUTCString()}] Warning: ${message.toString()}`, { split: true });
             for (let i = 0; i < optionalParams.length; i++) {
-                this.errorChannel.send(`[${(new Date()).toUTCString()}] Warning param ${(i + 1)}: ${optionalParams.toString()}`);
+                this.errorChannel.send(`[${(new Date()).toUTCString()}] Warning param ${(i + 1)}: ${optionalParams.toString()}`, { split: true });
             }
         } catch (e) {
             this.oldError(`Error trying to send a warning message: ${e.toString()}`);
@@ -108,9 +127,9 @@ export default class AutoReact {
         this.oldError(message, ...optionalParams);
 
         try {
-            this.errorChannel.send(`[${(new Date()).toUTCString()}] Error: ${message.toString()}`);
+            this.errorChannel.send(`[${(new Date()).toUTCString()}] Error: ${message.toString()}`, { split: true });
             for (let i = 0; i < optionalParams.length; i++) {
-                this.errorChannel.send(`[${(new Date()).toUTCString()}] Error param ${(i + 1)}: ${optionalParams.toString()}`);
+                this.errorChannel.send(`[${(new Date()).toUTCString()}] Error param ${(i + 1)}: ${optionalParams.toString()}`, { split: true });
             }
         } catch (e) {
             this.oldError(`Error trying to send an error message: ${e.toString()}`);
