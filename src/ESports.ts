@@ -46,7 +46,16 @@ export default class ESportsAPI {
         const data = args[0].split("/");
         const key = `${data[0]} ${data[1]} ${new Date().getFullYear()}`;
 
-        console.log(this.schedule[key]);
+        let output = "Games being played today:\n```";
+        const padLeague = Object.keys(this.schedule[key]).reduce((a, b) => a.length > b.length ? a : b).length;
+        Object.keys(this.schedule[key]).forEach(league => {
+            const games = this.schedule[key][league];
+            for (const game of games) {
+                output += `[${league.padEnd(padLeague)}] ${game.teamA.padEnd(3)} vs ${game.teamB.padEnd(3)} -- ${game.time}\n`;
+            }
+        });
+        output += "```";
+        message.channel.send(output);
     }
 
     private postInfo() {
