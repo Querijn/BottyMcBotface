@@ -9,6 +9,8 @@ export interface CommandHolder {
     command: Command;
     handler: SingleCommand;
     prefix: string;
+    cooldown: number;
+    lastUsed: number;
 }
 
 enum CommandStatus {
@@ -20,6 +22,7 @@ export interface Command {
     description: string;
     prefix: string;
     admin: boolean;
+    cooldown: number;
 }
 
 export interface CommandList {
@@ -145,8 +148,10 @@ export default class CommandController {
         this.commands.push({
             identifier: commandHandler.name,
             command: newCommand,
+            cooldown: newCommand.cooldown,
             handler: commandHandler,
             prefix: newCommand.prefix || this.sharedSettings.commands.default_prefix,
+            lastUsed: 0,
         });
     }
 
@@ -165,12 +170,34 @@ export default class CommandController {
             if (holder.prefix !== prefix) return;
 
             // handlers that register the "*" command will get all commands with that prefix (unless they already have gotten it once)
+
             if (holder.command.aliases.some(x => x === command)) {
-                holder.handler.call(null, message, isAdmin, command, parts.slice(1));
+                if (this.checkCooldown(holder, message)) {
+                    holder.handler.call(null, message, isAdmin, command, parts.slice(1));
+                }
             } else if (holder.command.aliases.some(x => x === "*")) {
-                holder.handler.call(null, message, isAdmin, "*", Array<string>().concat(command, parts.slice(1)));
+                if (this.checkCooldown(holder, message)) {
+                    holder.handler.call(null, message, isAdmin, "*", Array<string>().concat(command, parts.slice(1)));
+                }
             }
         });
+    }
+
+    private checkCooldown(holder: CommandHolder, message: Discord.Message): boolean {
+        if (!holder.cooldown) return true;
+
+        const last = holder.lastUsed;
+        const wait = holder.cooldown;
+        const now = Date.now();
+        const remaining = last + wait - now;
+
+        if (remaining > 0) {
+            message.author.send(`This command is currently on cooldown (${(remaining / 1000).toFixed(2)} seconds remaining)`);
+            return false;
+        }
+
+        holder.lastUsed = now;
+        return true;
     }
 
     private getStatus(holder: CommandHolder): CommandStatus {
