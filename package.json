@@ -15,8 +15,10 @@
   "license": "MIT",
   "dependencies": {
     "bufferutil": "^3.0.0",
+    "cheerio": "^1.0.0-rc.2",
     "discord.js": "11.3.2",
     "feed-read": "^0.0.1",
+    "moment": "^2.22.2",
     "node-fetch": "^1.7.2",
     "pretty-ms": "^3.0.0",
     "turndown": "^4.0.2",
@@ -24,6 +26,7 @@
     "uws": "9.14.0"
   },
   "devDependencies": {
+    "@types/cheerio": "^0.22.8",
     "@types/node": "^8.0.22",
     "@types/node-fetch": "^1.6.7",
     "@types/pretty-ms": "^3.0.0",

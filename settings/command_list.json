@@ -9,6 +9,14 @@
             "description": "Restarts Botty."
         }
     },
+    "esports": {
+        "date": {
+            "aliases": [
+                "esports"
+            ],
+            "description": "Print out esport games on that date"
+        }
+    },
     "controller": {
         "toggle": {
             "admin": true,

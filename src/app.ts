@@ -14,6 +14,7 @@ import RiotAPILibraries from "./RiotAPILibraries";
 import Techblog from "./Techblog";
 import Uptime from "./Uptime";
 import VersionChecker from "./VersionChecker";
+import ESportsAPI from "./ESports";
 
 import { APISchema } from "./ApiSchema";
 import { CommandList } from "./CommandController";
@@ -41,6 +42,7 @@ const react = new AutoReact(bot.client, sharedSettings, "data/thinking_data.json
 const uptime = new Uptime(sharedSettings, "data/uptime_data.json");
 const status = new ApiStatus(sharedSettings);
 const libraries = new RiotAPILibraries(sharedSettings);
+const esports = new ESportsAPI(bot.client, sharedSettings);
 
 // Commands controller commands
 controller.registerCommand(commandList.controller.toggle, controller.onToggle.bind(controller));
@@ -48,6 +50,9 @@ controller.registerCommand(commandList.controller.help, controller.onHelp.bind(c
 
 // Botty commands
 controller.registerCommand(commandList.botty.restart, bot.onRestart.bind(bot));
+
+// Esport commands
+controller.registerCommand(commandList.esports.date, esports.onCheckNext.bind(esports));
 
 // API schema commands
 controller.registerCommand(commandList.apiSchema.updateSchema, apiSchema.onUpdateSchemaRequest.bind(apiSchema));

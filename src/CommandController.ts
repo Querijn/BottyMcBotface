@@ -27,6 +27,9 @@ export interface CommandList {
         toggle: Command;
         help: Command;
     };
+    esports: {
+        date: Command;
+    };
     botty: {
         restart: Command;
     };
