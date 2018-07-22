@@ -60,6 +60,7 @@ export interface CommandList {
     apiStatus: Command;
     endpointManager: {
         endpoint: Command;
+        endpoints: Command;
     };
 }
 

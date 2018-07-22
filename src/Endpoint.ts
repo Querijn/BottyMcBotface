@@ -59,6 +59,21 @@ export default class Endpoint {
         }
     }
 
+    public onList(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        if (this.endpoints.endpoints === undefined) {
+            message.channel.send("Sorry, endpoints are not yet initialized!");
+            return;
+        }
+
+        let content = "";
+
+        for (const endpoint of this.endpoints.endpoints) {
+            content += `- ${endpoint}: ${this.baseUrl + endpoint}\n`;
+        }
+
+        message.channel.send(`The Riot API has the following endpoints available:\n${content}`);
+    }
+
     /**
      * Levenshtein Distance with some simple modifications for endpoint & input
      * @param endpoint

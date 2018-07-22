@@ -88,6 +88,7 @@ controller.registerCommand(commandList.riotApiLibraries, libraries.onLibs.bind(l
 
 // Endpoint commands
 controller.registerCommand(commandList.endpointManager.endpoint, endpoint.onEndpoint.bind(endpoint));
+controller.registerCommand(commandList.endpointManager.endpoints, endpoint.onList.bind(endpoint));
 
 // start bot
 bot.start().catch((reason: any) => {
