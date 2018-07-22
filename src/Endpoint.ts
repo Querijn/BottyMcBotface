@@ -37,7 +37,7 @@ export default class Endpoint {
 
     public onEndpoint(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         if (this.endpoints.endpoints === undefined) {
-            message.reply("Sorry, endpoints are not yet initialized!");
+            message.channel.send("Sorry, endpoints are not yet initialized!");
             return;
         }
 
@@ -59,9 +59,9 @@ export default class Endpoint {
         }
 
         if (minEndpoint != null && minDist < this.maxDistance) {
-            message.reply(this.baseUrl + minEndpoint);
+            message.channel.send(this.baseUrl + minEndpoint);
         } else {
-            message.reply("Could not find requested endpoint!");
+            message.channel.send("Could not find requested endpoint!");
         }
     }
 
