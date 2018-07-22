@@ -40,7 +40,13 @@ export default class Endpoint {
             message.reply("Sorry, endpoints are not yet initialized!");
             return;
         }
+
+        // If message is empty, send back list
         const argsString = args.reduce((prev, current) => prev + current, "");
+        if (argsString.length === 0) {
+            return this.onList(message, isAdmin, command, args);
+        }
+
         let minDist = Infinity;
         let minEndpoint = null;
 
