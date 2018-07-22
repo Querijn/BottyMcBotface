@@ -192,7 +192,7 @@ export default class CommandController {
         const remaining = last + wait - now;
 
         if (remaining > 0) {
-            message.author.send(`This command is currently on cooldown (${(remaining / 1000).toFixed(2)} seconds remaining)`);
+            message.channel.send(`This command is currently on cooldown. (${Math.floor(remaining / 1000)} seconds remaining)`);
             return false;
         }
 
