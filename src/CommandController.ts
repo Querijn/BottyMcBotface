@@ -152,7 +152,7 @@ export default class CommandController {
         this.commands.push({
             identifier: commandHandler.name,
             command: newCommand,
-            cooldown: newCommand.cooldown,
+            cooldown: newCommand.cooldown || 0,
             handler: commandHandler,
             prefix: newCommand.prefix || this.sharedSettings.commands.default_prefix,
             lastUsed: 0,
