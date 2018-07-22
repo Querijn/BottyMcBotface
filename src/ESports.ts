@@ -23,8 +23,7 @@ export default class ESportsAPI {
     private bot: Discord.Client;
     private settings: SharedSettings;
 
-    // Map<String, Map<String, ESportsLeagueSchedule>>
-    private schedule: { [date: string]: { [league: string]: ESportsLeagueSchedule[] } } = {};
+    private schedule: Map<string, Map<string, ESportsLeagueSchedule[]>> = new Map();
 
     constructor(bot: Discord.Client, settings: SharedSettings) {
         this.bot = bot;
@@ -39,14 +38,14 @@ export default class ESportsAPI {
     public onCheckNext(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         if (args.length !== 1) return;
 
-        // day / month
-        const formatCheck = new RegExp("\\d\\d/\\d\\d");
+        // YYYY/MM/DD
+        const formatCheck = /\d{4}\/\d{2}\/\d{2}/;
         if (!formatCheck.test(args[0])) return;
 
         const data = args[0].split("/");
-        const date = `${data[0]} ${data[1]} ${new Date().getFullYear()}`;
+        const date = `${data[0]} ${data[1]} ${data[2]}`;
 
-        this.sendPrintout(message.channel as Discord.TextChannel, this.schedule[date], date);
+        this.sendPrintout(message.channel as Discord.TextChannel, this.schedule.get(date), date);
     }
 
     private postInfo() {
@@ -56,28 +55,51 @@ export default class ESportsAPI {
             return;
         }
 
-        const now = new Date();
-        const date = `${now.getDate()} ${("0" + (now.getMonth() + 1)).slice(-2)} ${now.getFullYear()}`;
+        const tomorrow = new Date();
+        tomorrow.setHours(tomorrow.getHours() + 12);
+        tomorrow.setMinutes(0);
 
-        // filter old games
-        const prints: { [league: string]: ESportsLeagueSchedule[] } = {};
-        Object.keys(this.schedule[date]).forEach(league => {
-            prints[league] = this.schedule[date][league].filter(e => e.time.indexOf("ago") === -1);
-        });
+        let tellDate = "";
 
-        this.sendPrintout(esports as Discord.TextChannel, prints, date);
-        setTimeout(this.postInfo, 3600000);
+        // filter to only show new games (up-to one day in advance)
+        const prints: Map<string, ESportsLeagueSchedule[]> = new Map();
+        for (const [dateKey, entries] of this.schedule.entries()) {
+            if (new Date(dateKey) > tomorrow) break;
+
+            tellDate = dateKey;
+            for (const [league, entryList] of entries) {
+                for (const item of entryList) {
+
+                    if (!item.time.includes("ago")) {
+                        if (!prints.get(league)) {
+                            prints.set(league, Array());
+                        }
+
+                        prints.get(league)!.push(item);
+                    }
+                }
+            }
+        }
+
+        this.sendPrintout(esports as Discord.TextChannel, prints, tellDate);
+        setTimeout(this.postInfo, 1000 * 60 * 60 * 1); // once per hour
     }
 
-    private sendPrintout(channel: Discord.TextChannel, data: { [league: string]: ESportsLeagueSchedule[] }, date: string) {
+    private sendPrintout(channel: Discord.TextChannel, data: Map<string, ESportsLeagueSchedule[]> | undefined, date: string) {
+
+        if (!data) {
+            channel.send("No games played on this date.");
+            return;
+        }
+
         let output = `Games being played ${date.split(" ").join("/")}:\n\`\`\``;
-        const padLeague = Object.keys(data).reduce((a, b) => a.length > b.length ? a : b).length;
-        Object.keys(data).forEach(league => {
-            const games = data[league];
+        const padLeague = Array.from(data!.keys()).reduce((a, b) => a.length > b.length ? a : b).length;
+
+        for (const [league, games] of data!) {
             for (const game of games) {
                 output += `[${league.padEnd(padLeague)}] ${game.teamA.padEnd(3)} vs ${game.teamB.padEnd(3)} -- ${game.time}\n`;
             }
-        });
+        }
         output += "```";
 
         channel.send(output);
@@ -88,7 +110,7 @@ export default class ESportsAPI {
         // pull data
         const data = await fetch("https://eu.lolesports.com/en/api/widget/schedule?timezone=Europe%2FOslo&leagues=26&leagues=3&leagues=2&leagues=6&leagues=7&leagues=5&leagues=4&leagues=9&leagues=10&leagues=1&leagues=43&slug=all");
         const html = (await data.json() as ESportsAPIReturnData).fixturesHtml;
-        const schedule: { [date: string]: { [league: string]: ESportsLeagueSchedule[] } } = {};
+        const schedule: Map<string, Map<string, ESportsLeagueSchedule[]>> = new Map();
 
         // for each date
         const asHtml = CheerioAPI.load(html);
@@ -101,8 +123,8 @@ export default class ESportsAPI {
             // hack to get month number from text
             const month = ("0" + ("JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(date[2].substr(0, 3)) / 3 + 1)).slice(-2);
 
-            const realDate = `${date[1]} ${month} ${new Date().getFullYear()}`;
-            schedule[realDate] = {};
+            const realDate = `${new Date().getFullYear()} ${month} ${date[1]}`;
+            schedule.set(realDate, new Map());
 
             // for each league
             const titles = elemRoot.find(".schedule__row--title");
@@ -113,7 +135,7 @@ export default class ESportsAPI {
                 // league title
                 const titleRoot = CheerioAPI.load(titleRow).root();
                 const title = titleRoot.find("h3 a").text();
-                schedule[realDate][title] = Array();
+                schedule.get(realDate)!.set(title, Array());
 
                 // league games
                 const tableRoot = CheerioAPI.load(tableRow).root();
@@ -126,10 +148,8 @@ export default class ESportsAPI {
 
                     // game start time
                     const start = gameRoot.find(".schedule__table-cell--time .time").last().text().trim();
-
-                    // RFC2822 timestamp to avoid error in momentjs
                     const timestamp = realDate + ` ${start}`;
-                    const difference = momentjs(timestamp, "DD MM YYYY HH:mm Z").fromNow();
+                    const difference = momentjs(timestamp, "YYYY MM DD HH:mm Z").fromNow();
 
                     // teams
                     const content = gameRoot.find(".schedule__table-cell--content .team a");
@@ -142,11 +162,11 @@ export default class ESportsAPI {
                         teamA,
                         teamB,
                     };
-                    schedule[realDate][title].push(gameData);
+                    schedule.get(realDate)!.get(title)!.push(gameData);
                 }
             }
         });
         this.schedule = schedule;
-        setTimeout(this.loadData, 3600000);
+        setTimeout(this.loadData, 1000 * 60 * 60 * 5); // 5 hours
     }
 }
