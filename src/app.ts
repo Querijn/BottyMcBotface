@@ -42,6 +42,7 @@ const react = new AutoReact(bot.client, sharedSettings, "data/thinking_data.json
 const uptime = new Uptime(sharedSettings, "data/uptime_data.json");
 const status = new ApiStatus(sharedSettings);
 const libraries = new RiotAPILibraries(sharedSettings);
+const endpoint = new Endpoint(sharedSettings, "data/endpoints.json");
 
 // Commands controller commands
 controller.registerCommand(commandList.controller.toggle, controller.onToggle.bind(controller));
@@ -85,8 +86,8 @@ controller.registerCommand(commandList.apiStatus, status.onStatus.bind(status));
 // Riot API libraries commands.
 controller.registerCommand(commandList.riotApiLibraries, libraries.onLibs.bind(libraries));
 
-const endpoint = new Endpoint(sharedSettings, "data/endpoints.json");
-controller.registerCommand(commandList.endpoint, endpoint.onEndpoint.bind(endpoint));
+// Endpoint commands
+controller.registerCommand(commandList.endpointManager.endpoint, endpoint.onEndpoint.bind(endpoint));
 
 // start bot
 bot.start().catch((reason: any) => {
