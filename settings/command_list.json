@@ -147,10 +147,10 @@
     "apiStatus": {
         "aliases": [
             "status",
-            "apistatus",
+            "apistatus"
         ],
         "description": "Prints the status of the Riot Games API",
-        "cooldown": 300000,
+        "cooldown": 300000
     },
     "endpointManager": {
         "endpoint": {
