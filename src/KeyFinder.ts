@@ -79,7 +79,17 @@ export default class KeyFinder {
             },
         });
 
-        return resp.status === 403 ? null : resp.headers.get("x-app-rate-limit");
+        const headers = resp.headers.get("x-app-rate-limit");
+        if (resp.status !== 403 && headers === null) {
+
+            const availableHeaders: string[] = [];
+            resp.headers.forEach((value: string, header: string) => availableHeaders.push(`${header}: ${value}`));
+
+            console.warn(`Key Rate-limit headers for \`${key}\` are missing from a call with status code ${resp.status}. Available headers: \`\`\`${availableHeaders.join("\n")}\`\`\``);
+            return "Fake Headers";
+        }
+
+        return resp.status === 403 ? null : headers;
     }
 
     /**

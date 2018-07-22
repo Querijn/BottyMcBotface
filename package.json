@@ -1,8 +1,6 @@
 {
   "name": "botty-mcbotface",
-  "version": "1.0.0",
   "description": "A bot for the Riot Games API Discord.",
-  "main": "dist/app.js",
   "repository": {
     "url": "git@github.com:Querijn/BottyMcBotface.git",
     "type": "git"

@@ -160,7 +160,17 @@ export default class ForumReader {
         this.keyFinder.findKey(username, activity.body, embed.url as string, activity.creationDate);
         embed.setTimestamp(new Date(activity.creationDate)).setThumbnail(avatar);
 
-        await this.channel.send({ embed });
+        try {
+            await this.channel.send({ embed });
+        }
+        catch (e) {
+            if (e instanceof Discord.DiscordAPIError) {
+                console.error(`Received DiscordAPIError while outputting the current activity: ${e.code} "${e.message}"`);
+            }
+            else {
+                console.error(`Received unknown error while outputting the current activity: ${e}"`);
+            }
+        }
     }
 
     /**

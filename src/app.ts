@@ -15,6 +15,7 @@ import Techblog from "./Techblog";
 import Uptime from "./Uptime";
 import VersionChecker from "./VersionChecker";
 import ESportsAPI from "./ESports";
+import Endpoint from "./Endpoint";
 
 import { APISchema } from "./ApiSchema";
 import { CommandList } from "./CommandController";
@@ -43,6 +44,7 @@ const uptime = new Uptime(sharedSettings, "data/uptime_data.json");
 const status = new ApiStatus(sharedSettings);
 const libraries = new RiotAPILibraries(sharedSettings);
 const esports = new ESportsAPI(bot.client, sharedSettings);
+const endpoint = new Endpoint(sharedSettings, "data/endpoints.json");
 
 // Commands controller commands
 controller.registerCommand(commandList.controller.toggle, controller.onToggle.bind(controller));
@@ -88,6 +90,10 @@ controller.registerCommand(commandList.apiStatus, status.onStatus.bind(status));
 
 // Riot API libraries commands.
 controller.registerCommand(commandList.riotApiLibraries, libraries.onLibs.bind(libraries));
+
+// Endpoint commands
+controller.registerCommand(commandList.endpointManager.endpoint, endpoint.onEndpoint.bind(endpoint));
+controller.registerCommand(commandList.endpointManager.endpoints, endpoint.onList.bind(endpoint));
 
 // start bot
 bot.start().catch((reason: any) => {

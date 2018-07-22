@@ -63,22 +63,22 @@ export default class Botty {
 
         this.client.on("guildBanAdd", (guild: Discord.Guild, user: Discord.User) => console.log(`${user.username} (${user.id}) has been banned from ${guild.name}.`));
         this.client.on("guildBanRemove", (guild: Discord.Guild, user: Discord.User) => console.log(`${user.username} (${user.id}) has been unbanned from ${guild.name}.`));
-        
-        this.client.on("messageDelete", (message: Discord.Message) => {
-            
-            if (message.author.bot) return; // Ignore bot in general
-            if (message.channel.type == "dm" || message.channel.type == "group") return; // Don't output DMs
 
-            console.log(`${message.author.username}'s message in ${message.channel} was deleted. Contents: \`\`\`${message.content}\`\`\``)
+        this.client.on("messageDelete", (message: Discord.Message) => {
+
+            if (message.author.bot) return; // Ignore bot in general
+            if (message.channel.type === "dm" || message.channel.type === "group") return; // Don't output DMs
+
+            console.log(`${message.author.username}'s message in ${message.channel} was deleted. Contents: \`\`\`${message.content}\`\`\``);
         });
 
         this.client.on("messageUpdate", (oldMessage: Discord.Message, newMessage: Discord.Message) => {
-            
-            if (levenshteinDistance(oldMessage.content, newMessage.content) == 0) return; // To prevent page turning and embed loading to appear in changelog
-            if (oldMessage.author.bot) return; // Ignore bot in general
-            if (oldMessage.channel.type == "dm" || oldMessage.channel.type == "group") return; // Don't output DMs
 
-            console.log(`${oldMessage.author.username}'s message in ${oldMessage.channel} was changed from: \`\`\`${oldMessage.content}\`\`\` To: \`\`\`${newMessage.content}\`\`\``)
+            if (levenshteinDistance(oldMessage.content, newMessage.content) === 0) return; // To prevent page turning and embed loading to appear in changelog
+            if (oldMessage.author.bot) return; // Ignore bot in general
+            if (oldMessage.channel.type === "dm" || oldMessage.channel.type === "group") return; // Don't output DMs
+
+            console.log(`${oldMessage.author.username}'s message in ${oldMessage.channel} was changed from: \`\`\`${oldMessage.content}\`\`\` To: \`\`\`${newMessage.content}\`\`\``);
         });
 
         this.client.on("guildMemberUpdate", (oldMember: GuildMember, newMember: GuildMember) => {
