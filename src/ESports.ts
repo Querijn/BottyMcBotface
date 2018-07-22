@@ -44,18 +44,9 @@ export default class ESportsAPI {
         if (!formatCheck.test(args[0])) return;
 
         const data = args[0].split("/");
-        const key = `${data[0]} ${data[1]} ${new Date().getFullYear()}`;
+        const date = `${data[0]} ${data[1]} ${new Date().getFullYear()}`;
 
-        let output = "Games being played today:\n```";
-        const padLeague = Object.keys(this.schedule[key]).reduce((a, b) => a.length > b.length ? a : b).length;
-        Object.keys(this.schedule[key]).forEach(league => {
-            const games = this.schedule[key][league];
-            for (const game of games) {
-                output += `[${league.padEnd(padLeague)}] ${game.teamA.padEnd(3)} vs ${game.teamB.padEnd(3)} -- ${game.time}\n`;
-            }
-        });
-        output += "```";
-        message.channel.send(output);
+        this.sendPrintout(message.channel as Discord.TextChannel, this.schedule[date], date);
     }
 
     private postInfo() {
@@ -66,26 +57,30 @@ export default class ESportsAPI {
         }
 
         const now = new Date();
-        const key = `${now.getDate()} ${("0" + (now.getMonth() + 1)).slice(-2)} ${now.getFullYear()}`;
+        const date = `${now.getDate()} ${("0" + (now.getMonth() + 1)).slice(-2)} ${now.getFullYear()}`;
 
         // filter old games
         const prints: { [league: string]: ESportsLeagueSchedule[] } = {};
-        Object.keys(this.schedule[key]).forEach(league => {
-            prints[league] = this.schedule[key][league].filter(e => e.time.indexOf("ago") === -1);
+        Object.keys(this.schedule[date]).forEach(league => {
+            prints[league] = this.schedule[date][league].filter(e => e.time.indexOf("ago") === -1);
         });
 
-        let output = "Games being played today:\n```";
-        const padLeague = Object.keys(prints).reduce((a, b) => a.length > b.length ? a : b).length;
-        Object.keys(prints).forEach(league => {
-            const games = prints[league];
+        this.sendPrintout(esports as Discord.TextChannel, prints, date);
+        setTimeout(this.postInfo, 3600000);
+    }
+
+    private sendPrintout(channel: Discord.TextChannel, data: { [league: string]: ESportsLeagueSchedule[] }, date: string) {
+        let output = `Games being played ${date.split(" ").join("/")}:\n\`\`\``;
+        const padLeague = Object.keys(data).reduce((a, b) => a.length > b.length ? a : b).length;
+        Object.keys(data).forEach(league => {
+            const games = data[league];
             for (const game of games) {
                 output += `[${league.padEnd(padLeague)}] ${game.teamA.padEnd(3)} vs ${game.teamB.padEnd(3)} -- ${game.time}\n`;
             }
         });
         output += "```";
-        (esports as Discord.TextChannel).send(output);
 
-        setTimeout(this.postInfo, 3600000);
+        channel.send(output);
     }
 
     // this can also check for older games by using resultsHtml instead of fixures
