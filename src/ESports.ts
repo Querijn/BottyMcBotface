@@ -52,7 +52,7 @@ export default class ESportsAPI {
     private postInfo() {
         const esports = this.bot.guilds.get(this.settings.server)!.channels.find("name", "esports-spoilers");
         if (!esports) {
-            console.error(`OfficeHours: Unable to find channel #esports-spoilers`);
+            console.error(`Esports: Unable to find channel #esports-spoilers`);
             return;
         }
 
