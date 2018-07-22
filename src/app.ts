@@ -14,7 +14,7 @@ import RiotAPILibraries from "./RiotAPILibraries";
 import Techblog from "./Techblog";
 import Uptime from "./Uptime";
 import VersionChecker from "./VersionChecker";
-import Endpoint from "./Endpoint"
+import Endpoint from "./Endpoint";
 
 import { APISchema } from "./ApiSchema";
 import { CommandList } from "./CommandController";

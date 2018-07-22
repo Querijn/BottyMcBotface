@@ -109,8 +109,8 @@ export default class Endpoint {
                 method: "GET",
                 headers: {
                     "Accept": "application/json",
-                    "Content-Type": "application/json"
-                }
+                    "Content-Type": "application/json",
+                },
             });
 
             if (response.status !== 200) {
