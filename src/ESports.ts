@@ -117,6 +117,8 @@ export default class ESportsAPI {
         // for each date
         const asHtml = CheerioAPI.load(html);
         const parents = asHtml.root().find(".schedule__row-group");
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth() + 1;
         parents.each((_, dayGroup) => {
             // the current date
             const dayRoot = CheerioAPI.load(dayGroup).root();
@@ -124,9 +126,13 @@ export default class ESportsAPI {
 
             // hack to get month number from text
             // const month = ("0" + ("JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(date[2].substr(0, 3)) / 3 + 1)).slice(-2);
-            const month = new Date(`${date[1]} ${date[2]}`).getMonth() + 1;
+            const gameMonth = new Date(`${date[1]} ${date[2]}`).getMonth() + 1;
+            if(gameMonth < currentMonth) {
+                currentMonth = gameMonth;
+                currentYear++;
+            }
 
-            const realDate = `${new Date().getFullYear()} ${month} ${date[1]}`;
+            const realDate = `${currentYear} ${gameMonth} ${date[1]}`;
             schedule.set(realDate, new Map());
 
             // for each league
