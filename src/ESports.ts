@@ -52,7 +52,7 @@ export default class ESportsAPI {
         const channel = this.settings.esports.printChannel;
         const esports = this.bot.guilds.get(this.settings.server)!.channels.find("name", channel);
         if (!esports) {
-            console.error(`${channel}: Unable to find channel #esports-spoilers`);
+            console.error(`Esports: Unable to find channel #${channel}`);
             return;
         }
 
@@ -117,8 +117,8 @@ export default class ESportsAPI {
         // for each date
         const asHtml = CheerioAPI.load(html);
         const parents = asHtml.root().find(".schedule__row-group");
-        const currentYear = new Date().getFullYear();
-        const currentMonth = new Date().getMonth() + 1;
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth() + 1;
         parents.each((_, dayGroup) => {
             // the current date
             const dayRoot = CheerioAPI.load(dayGroup).root();
