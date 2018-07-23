@@ -49,14 +49,16 @@ export default class ESportsAPI {
     }
 
     private postInfo() {
-        const esports = this.bot.guilds.get(this.settings.server)!.channels.find("name", "esports-spoilers");
+        const channel = this.settings.esports.printChannel;
+        const esports = this.bot.guilds.get(this.settings.server)!.channels.find("name", channel);
         if (!esports) {
-            console.error(`Esports: Unable to find channel #esports-spoilers`);
+            console.error(`${channel}: Unable to find channel #esports-spoilers`);
             return;
         }
 
         const tomorrow = new Date();
-        tomorrow.setHours(tomorrow.getHours() + 12);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0);
         tomorrow.setMinutes(0);
 
         let tellDate = "";
@@ -82,7 +84,7 @@ export default class ESportsAPI {
         }
 
         this.sendPrintout(esports as Discord.TextChannel, prints, tellDate);
-        setTimeout(this.postInfo, 1000 * 60 * 60 * 1); // once per hour
+        setTimeout(this.postInfo, this.settings.esports.printToChannelTimeout); // once per hour 1000 * 60 * 60 * 1
     }
 
     private sendPrintout(channel: Discord.TextChannel, data: Map<string, ESportsLeagueSchedule[]> | undefined, date: string) {
@@ -115,19 +117,20 @@ export default class ESportsAPI {
         // for each date
         const asHtml = CheerioAPI.load(html);
         const parents = asHtml.root().find(".schedule__row-group");
-        parents.each((indexed, elem) => {
+        parents.each((_, dayGroup) => {
             // the current date
-            const elemRoot = CheerioAPI.load(elem).root();
-            const date = elemRoot.find(".schedule__row--date").find("h2").text().split(" ");
+            const dayRoot = CheerioAPI.load(dayGroup).root();
+            const date = dayRoot.find(".schedule__row--date").find("h2").text().split(" ");
 
             // hack to get month number from text
-            const month = ("0" + ("JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(date[2].substr(0, 3)) / 3 + 1)).slice(-2);
+            // const month = ("0" + ("JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(date[2].substr(0, 3)) / 3 + 1)).slice(-2);
+            const month = new Date(`${date[1]} ${date[2]}`).getMonth() + 1;
 
             const realDate = `${new Date().getFullYear()} ${month} ${date[1]}`;
             schedule.set(realDate, new Map());
 
             // for each league
-            const titles = elemRoot.find(".schedule__row--title");
+            const titles = dayRoot.find(".schedule__row--title");
             for (let index = 0; index < titles.length; index++) {
                 const titleRow = titles.get(index);
                 const tableRow = titleRow.next;
@@ -167,6 +170,6 @@ export default class ESportsAPI {
             }
         });
         this.schedule = schedule;
-        setTimeout(this.loadData, 1000 * 60 * 60 * 5); // 5 hours
+        setTimeout(this.loadData, this.settings.esports.updateTimeout); // 5 hours 1000 * 60 * 60 * 5
     }
 }

@@ -35,6 +35,11 @@
             "347539422943903755"
         ]
     },
+    "esports": {
+        "printChannel": "esports-spoilers",
+        "updateTimeout": 18000000,
+        "printToChannelTimeout": 3600000
+    },
     "uptimeSettings": {
         "checkInterval": 60000
     },

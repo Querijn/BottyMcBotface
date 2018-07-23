@@ -32,6 +32,12 @@ export interface SharedSettings {
         checkInterval: number,
     };
 
+    esports: {
+        printChannel: string;
+        updateTimeout: number;
+        printToChannelTimeout: number;
+    };
+
     commands: {
         default_prefix: string,
         adminRoles: string[];
