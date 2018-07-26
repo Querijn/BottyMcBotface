@@ -74,7 +74,7 @@ export default class ESportsAPI {
 
                     if (!item.time.includes("ago")) {
                         if (!prints.get(league)) {
-                            prints.set(league, Array());
+                            prints.set(league, []);
                         }
 
                         prints.get(league)!.push(item);
@@ -84,7 +84,7 @@ export default class ESportsAPI {
         }
 
         this.sendPrintout(esports as Discord.TextChannel, prints, tellDate);
-        setTimeout(this.postInfo, this.settings.esports.printToChannelTimeout); // once per hour 1000 * 60 * 60 * 1
+        setTimeout(this.postInfo.bind(this), this.settings.esports.printToChannelTimeout); // once per hour 1000 * 60 * 60 * 1
     }
 
     private sendPrintout(channel: Discord.TextChannel, data: Map<string, ESportsLeagueSchedule[]> | undefined, date: string) {
@@ -95,8 +95,7 @@ export default class ESportsAPI {
         }
 
         let output = `Games being played ${date.split(" ").join("/")}:\n\`\`\``;
-        const padLeague = Array.from(data!.keys()).reduce((a, b) => a.length > b.length ? a : b).length;
-
+        const padLeague = Math.max(...Array.from(data!.keys()).map((x: string) => x.length));
         for (const [league, games] of data!) {
             for (const game of games) {
                 output += `[${league.padEnd(padLeague)}] ${game.teamA.padEnd(3)} vs ${game.teamB.padEnd(3)} -- ${game.time}\n`;
@@ -127,7 +126,7 @@ export default class ESportsAPI {
             // hack to get month number from text
             // const month = ("0" + ("JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(date[2].substr(0, 3)) / 3 + 1)).slice(-2);
             const gameMonth = new Date(`${date[1]} ${date[2]}`).getMonth() + 1;
-            if(gameMonth < currentMonth) {
+            if (gameMonth < currentMonth) {
                 currentMonth = gameMonth;
                 currentYear++;
             }
@@ -144,7 +143,7 @@ export default class ESportsAPI {
                 // league title
                 const titleRoot = CheerioAPI.load(titleRow).root();
                 const title = titleRoot.find("h3 a").text();
-                schedule.get(realDate)!.set(title, Array());
+                schedule.get(realDate)!.set(title, []);
 
                 // league games
                 const tableRoot = CheerioAPI.load(tableRow).root();
