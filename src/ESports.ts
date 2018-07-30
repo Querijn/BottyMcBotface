@@ -87,7 +87,7 @@ export default class ESportsAPI {
         }
 
         this.sendPrintout(esports as Discord.TextChannel, prints, tellDate);
-        setTimeout(this.postInfo.bind(this), this.settings.esports.printToChannelTimeout); // once per hour 1000 * 60 * 60 * 1
+        setTimeout(this.postInfo.bind(this), this.settings.esports.printToChannelTimeout);
     }
 
     private sendPrintout(channel: Discord.TextChannel, data: Map<string, ESportsLeagueSchedule[]> | undefined, date: string) {
@@ -126,8 +126,7 @@ export default class ESportsAPI {
             const dayRoot = CheerioAPI.load(dayGroup).root();
             const date = dayRoot.find(".schedule__row--date").find("h2").text().split(" ");
 
-            // hack to get month number from text
-            // const month = ("0" + ("JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(date[2].substr(0, 3)) / 3 + 1)).slice(-2);
+            // get month number from text
             const gameMonth = new Date(`${date[1]} ${date[2]}`).getMonth() + 1;
             if (gameMonth < currentMonth) {
                 currentMonth = gameMonth;
@@ -178,6 +177,6 @@ export default class ESportsAPI {
             }
         });
         this.schedule = schedule;
-        setTimeout(this.loadData, this.settings.esports.updateTimeout); // 5 hours 1000 * 60 * 60 * 5
+        setTimeout(this.loadData, this.settings.esports.updateTimeout);
     }
 }
