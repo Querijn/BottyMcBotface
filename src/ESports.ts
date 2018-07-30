@@ -40,7 +40,10 @@ export default class ESportsAPI {
 
         // YYYY/MM/DD
         const formatCheck = /\d{4}\/\d{2}\/\d{2}/;
-        if (!formatCheck.test(args[0])) return;
+        if (!formatCheck.test(args[0])) {
+            message.channel.send("The date you specified didnt match the format needed. (YYYY/MM/DD)");
+            return;
+        }
 
         const data = args[0].split("/");
         const date = `${data[0]} ${data[1]} ${data[2]}`;
