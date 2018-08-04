@@ -3,7 +3,6 @@ import Discord = require("discord.js");
 import { SharedSettings } from "./SharedSettings";
 import * as CheerioAPI from "cheerio";
 import * as momentjs from "moment";
-import Botty from "./Botty";
 
 interface ESportsAPIReturnData {
     resultsHtml: string;
