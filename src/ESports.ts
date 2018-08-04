@@ -40,10 +40,24 @@ export default class ESportsAPI {
 
         const data = args[0].trim().split(/[\/ -]/g);
         let date;
+
+        const fullCheck = /\d{4}\/\d{1,2}\/\d{1,2}/;
+        const curYearCheck = /\d{1,2}\/\d{1,2}/;
+
         // YYYY/MM/DD
-        const formatCheck = /\d{4}\/\d{2}\/\d{2}/;
-        if (!formatCheck.test(args[0])) {
-            message.channel.send("The date you specified didn't match the format needed. (YYYY/MM/DD)");
+        if (fullCheck.test(args[0])) {
+            date = `${data[0]} ${parseInt(data[1], 10)} ${parseInt(data[2], 10)}`;
+        }
+
+        // MM/DD
+        else if (curYearCheck.test(args[0])) {
+            const currentYear = new Date().getFullYear();
+            date = `${currentYear} ${parseInt(data[0], 10)} ${parseInt(data[1], 10)}`;
+        }
+
+        // No match
+        else {
+            message.channel.send("The date you specified didn't match the format needed. (MM/DD or YYYY/MM/DD)");
             return;
         }
 
