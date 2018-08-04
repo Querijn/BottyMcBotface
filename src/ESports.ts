@@ -69,7 +69,8 @@ export default class ESportsAPI {
             return;
         }
 
-        this.sendPrintout(message.channel as Discord.TextChannel, this.schedule.get(date), date);
+        const schedule = this.schedule.get(date);
+        this.sendPrintout(message.channel as Discord.TextChannel, schedule, date);
     }
 
     private postInfo() {
