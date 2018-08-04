@@ -121,7 +121,6 @@ export default class ESportsAPI {
 
         const embed = new Discord.RichEmbed();
         embed.title = `Games being played ${date.split(" ").join("/")}:`;
-        if (!embed.fields) embed.fields = [];
         embed.color = 0x9b311a;
 
         for (const [name, games] of data) {
