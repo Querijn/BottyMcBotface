@@ -61,6 +61,13 @@ export default class ESportsAPI {
             return;
         }
 
+        const jsDate = new Date(date);
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        if (jsDate < now) {
+            message.channel.send("The date has to be in the future.");
+            return;
+        }
 
         this.sendPrintout(message.channel as Discord.TextChannel, this.schedule.get(date), date);
     }
