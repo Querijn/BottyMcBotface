@@ -1,46 +1,54 @@
 import Discord = require("discord.js");
 import fetch from "node-fetch";
+import XRegExp = require("xregexp");
 
 import levenshteinDistance from "./LevenshteinDistance";
 import { SharedSettings } from "./SharedSettings";
 
 import { clearTimeout, setTimeout } from "timers";
 
-class PathRegexCollection {
-    public invalid: string;
-    public valid: string;
-
-    constructor(validString: string, invalidString: string) {
-        this.valid = validString;
-        this.invalid = invalidString;
-    }
-}
-
-class SchemaRegexCollection extends PathRegexCollection {
-    public name: string;
-    public schema: any;
-
-    constructor(name: string, schema: any, validString: string, invalidString: string) {
-        super(validString, invalidString);
-
-        this.name = name;
-        this.schema = schema;
-    }
-}
-
 export class Path {
-    public methodType: "GET" | "POST";
-    public regex: PathRegexCollection;
-    public parameterInfo: SchemaRegexCollection[];
-    public method: string;
     public name: string;
+    public methodType: "GET" | "POST";
+    public regex: RegExp;
+    public pathParameters: Map<string, Parameter>;
+    public queryParameters: Map<string, Parameter>;
+}
+
+export class Parameter {
+    public name: string;
+    public required: boolean;
+    public type: ParameterType;
+}
+
+export class ParameterType {
+    /** A human readable description (e.g. "a positive integer") */
+    public description: string;
+
+    constructor(description: string, isValidValue: (value: string) => boolean){
+        this.description = description;
+        this.isValidValue = isValidValue;
+    }
+    /** A function that returns a boolean indicating if the specified value is a valid value for this type of parameter */
+    public isValidValue(value: string | string[]): boolean { return false; }
 }
 
 export class APISchema {
 
+    private static PARAMETER_TYPES = {
+        ANY: new ParameterType("anything", (value) => true),
+        STRING: new ParameterType("a string", (value) => !Array.isArray(value)),
+        INTEGER: new ParameterType("an integer", (value) => Number.isInteger(+value)),
+        BOOLEAN: new ParameterType("a boolean", (value) => value === "true" || value === "false"),
+        SET: new ParameterType("a set specified like `paramName=value1&paramName=value2`", (value) => {
+            if (Array.isArray(value)) return true;
+            // Check if a common delimiter was erroneously specified. If one wasn't, it means the value is likely just a single element in a set.
+            return !(value.includes(",") || value.includes("+"));
+        }),
+    };
+
     public paths: Path[] = [];
     public platforms: string[];
-    public platformRegexString: string;
 
     private sharedSettings: SharedSettings;
     private timeOut: NodeJS.Timer | null;
@@ -51,7 +59,7 @@ export class APISchema {
     }
 
     public getClosestPlatform(platformParam: string) {
-        const validPlatform = new RegExp(this.platformRegexString, "g").exec(platformParam);
+        const validPlatform = this.platforms.includes(platformParam.toLowerCase());
         if (validPlatform) return null;
 
         return this.platforms.map(p => {
@@ -95,9 +103,7 @@ export class APISchema {
 
             const schema = await response.json();
 
-            const baseUrlRegex = this.constructBaseUrlRegex(schema);
-            const invalidBaseUrlRegex = this.constructInvalidBaseUrlRegex(schema);
-
+            this.platforms = schema.servers[0].variables.platform.enum;
             this.paths = [];
 
             for (const pathName in schema.paths) {
@@ -105,13 +111,26 @@ export class APISchema {
                 const methodSchema = pathSchema.get ? pathSchema.get : pathSchema.post;
 
                 if (!methodSchema) continue; // Only handle GET/POST
-                if (methodSchema.operationId.startsWith("tournament")) continue;
+                if (methodSchema.operationId.startsWith("tournament-v3")) continue;
 
                 const path = new Path();
+                path.name = pathName;
                 path.methodType = pathSchema.get ? "GET" : "POST";
-                path.method = methodSchema.operationId;
-                this.constructRegex(path, baseUrlRegex, invalidBaseUrlRegex, pathName, methodSchema);
-                console.assert(path.regex, "Path Regex should be set");
+                path.regex = this.constructRegex(pathName, methodSchema);
+
+                path.queryParameters = new Map();
+                path.pathParameters = new Map();
+                if (methodSchema.parameters) {
+                    for (const parameter of methodSchema.parameters) {
+                        if (parameter.in === "path") {
+                            this.addParameter(path.pathParameters, parameter);
+                        } else if (parameter.in === "query") {
+                            this.addParameter(path.queryParameters, parameter);
+                        } else {
+                            console.warn(`Unknown parameter location "${parameter.in}"`);
+                        }
+                    }
+                }
 
                 this.paths.push(path);
             }
@@ -129,78 +148,42 @@ export class APISchema {
         this.timeOut = setTimeout(this.updateSchema.bind(this), this.sharedSettings.apiUrlInterpreter.timeOutDuration);
     }
 
-    private constructBaseUrlRegex(schema: any): string {
-        const baseUrl = this.escapeRegex(schema.servers[0].url);
-        this.platforms = schema.servers[0].variables.platform.enum;
+    /**
+     * Constructs a regex that will match an API endpoint and store each path parameter in a named group.
+     */
+    private constructRegex(path: string, methodSchema: any): RegExp {
+        // Allow an optional trailing slash
+        let regex = path + "/?";
+        // Escape slashes
+        regex = regex.replace(/\//g, "\\/");
+        // Replace each parameter with a named regex group
+        regex = regex.replace(/\{(.*?)\}/, (match, p2) => `(?<${p2}>[^\\/?\\s]*)`);
 
-        // This makes a regex string from all the platform options
-        this.platformRegexString = `(${this.platforms.join("|")})`;
-
-        return baseUrl.replace(/{platform}/g, this.platformRegexString);
+        return XRegExp(regex);
     }
 
-    private constructRegex(path: Path, validBase: string, invalidBase: string, pathName: string, methodSchema: any) {
+    private addParameter(map: Map<string, Parameter>, parameterSchema: any) {
+        const parameter = new Parameter();
+        parameter.name = parameterSchema.name;
+        parameter.required = parameterSchema.required;
+        parameter.type = this.getParameterType(parameterSchema.schema.type);
 
-        path.name = pathName;
-        path.parameterInfo = [];
-
-        let invalidPath = invalidBase + this.escapeRegex(pathName);
-        let validPath = validBase + this.escapeRegex(pathName);
-
-        if (!methodSchema.parameters) {
-            path.regex = new PathRegexCollection(validPath, invalidPath);
-            return;
-        }
-
-        const invalidWith = "([^\\s^\\/]*)";
-        for (const parameter of methodSchema.parameters) {
-            if (parameter.required === false) continue;
-
-            const parameterReplace = new RegExp(`{${parameter.name}}`, "g");
-
-            let validWith = "([^\\s^\\/]+)";
-
-            if (parameter.schema.enum) {
-                validWith = `(${parameter.schema.enum.join("|")})`;
-            } else {
-                switch (parameter.schema.type) {
-                    default:
-                        console.warn(`Unhandled schema parameter in ${pathName}: ${parameter.name} is a ${parameter.schema.type}`);
-                        break;
-
-                    case "string":
-                        break;
-
-                    case "integer":
-                        validWith = "([0-9]+)";
-                        break;
-                }
-            }
-
-            invalidPath = invalidPath.replace(parameterReplace, invalidWith);
-            validPath = validPath.replace(parameterReplace, validWith);
-
-            path.parameterInfo.push(new SchemaRegexCollection(parameter.name, parameter.schema, validWith, invalidWith));
-        }
-
-        validPath += "\\/?"; // Allow urls to end with a trailing /
-        validPath += "\\s"; // Message will always end in a whitespace, use this a delimiter at the end of valid paths
-
-        // If the last parameter is missing from the url, don't require the last / match for invalids.
-        const lastIndex = invalidPath.lastIndexOf("\\/" + invalidWith);
-        if (lastIndex !== -1) {
-            invalidPath = invalidPath.substr(0, lastIndex) + "\\/?" + invalidWith;
-        }
-
-        path.regex = new PathRegexCollection(validPath, invalidPath);
+        map.set(parameter.name, parameter);
     }
 
-    private constructInvalidBaseUrlRegex(schema: any): string {
-        const baseUrl = this.escapeRegex(schema.servers[0].url);
-        return baseUrl.replace(/{platform}/g, "(.*?)");
-    }
-
-    private escapeRegex(regex: string): string {
-        return regex.replace(/[\-\[\]\/\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+    private getParameterType(type: string): ParameterType {
+        switch (type) {
+            case "integer":
+                return APISchema.PARAMETER_TYPES.INTEGER;
+            case "string":
+                return APISchema.PARAMETER_TYPES.STRING;
+            case "boolean":
+                return APISchema.PARAMETER_TYPES.BOOLEAN;
+            case "array":
+                return APISchema.PARAMETER_TYPES.SET;
+            default:
+                console.warn(`No suitable ParameterType found for parameter "${type}" - defaulting to any type`);
+                return APISchema.PARAMETER_TYPES.ANY;
+        }
     }
 }

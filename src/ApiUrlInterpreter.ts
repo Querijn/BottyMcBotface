@@ -2,6 +2,7 @@ import Discord = require("discord.js");
 import fs = require("fs");
 import fetch from "node-fetch";
 import prettyMs = require("pretty-ms");
+import XRegExp = require("xregexp");
 
 import { ENODATA } from "constants";
 import { Response } from "node-fetch";
@@ -25,6 +26,15 @@ class RatelimitResult {
 
 export default class ApiUrlInterpreter {
     private static ratelimitErrorMs = 100;
+    /**
+     * Matches Riot API call for each match found:
+     * The 1st group is named "https" and indicates if the URL is using HTTP or HTTPS (it will be "s" or "S" if HTTPS, and empty if HTTP).
+     * The 2nd group is named "platform" and is the platform ID (e.g "na1").
+     * The 3rd group is named "path" and is the URL path (e.g. "/lol/summoner/v3/summoners/41271279").
+     * The 4th group is named "query" and is the URL query (e.g. "api_key=aaaaaa&ayy=lmao"). If there is no URL query, this group will not exist.
+     * https://regex101.com/r/WGLmBG/10/
+     */
+    private static API_CALL_REGEX = XRegExp("(?:http(?<https>s?):\\/\\/(?<platform>\\w+)\\.api\\.riotgames\\.com)(?<path>\\/[^\\s?]*)(?:\\?(?<query>\\S*))?", "gim");
 
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
@@ -65,89 +75,115 @@ export default class ApiUrlInterpreter {
     private onMessage(message: Discord.Message) {
         if (message.author.bot) return;
 
-        this.onRiotApiURL(message);
+        // const urls = message.content.match(ApiUrlInterpreter.API_CALL_REGEX);
+        const urls = XRegExp.match(message.content, ApiUrlInterpreter.API_CALL_REGEX);
+        if (!urls) return;
+        for (const url of urls) {
+            this.testRiotApiUrl(url, message);
+        }
     }
 
-    private async onRiotApiURL(message: Discord.Message, content: string | null = null) {
+    private async testRiotApiUrl(url: string, message: Discord.Message) {
+        // The type must be `any` because the regex contains named groups
+        const urlMatch: any = XRegExp.exec(url, ApiUrlInterpreter.API_CALL_REGEX);
 
-        // Init message if missing, also append with space.
-        if (!content) content = message.content.replace(/(`){1,3}([.\s\S]*?)(`){1,3}/gm, "") + " ";
-        // if (!content) content = message.content.replace(/`{1,3}(.*?)`{1,3}/g, "") + " ";
+        /** Indicates if there is a problem with this URL that guarantees the call will fail. */
+        let fatalError: boolean = false;
+        const mistakes = [];
 
-        if (content.indexOf("https://") === -1) return; // We're about to do ~80 regex tests, better make sure that it's on a message with a URL
-
-        for (const path of this.apiSchema.paths) {
-
-            // Check if path was valid
-            const validMatch = new RegExp(path.regex.valid, "g").exec(content);
-            if (validMatch && validMatch.length > 0) {
-
-                const replyMessageContent = `Making a request to ${path.method}..`;
-
-                const replyMessages = await message.channel.send(replyMessageContent);
-                const replyMessage = Array.isArray(replyMessages) ? replyMessages[0] : replyMessages;
-
-                const region = validMatch[1];
-
-                // Path works fine, make a request
-                await this.makeRequest(path, region, validMatch[0], replyMessage);
-                return;
-            }
+        // Check if the URL is using HTTPS
+        // `urlMatch.https` will be empty (falsy) if HTTP is being used
+        if (!urlMatch.https) {
+            mistakes.push(`- This URL is using HTTP. All API calls must be made over HTTPS.`);
+            fatalError = true;
         }
 
-        for (const path of this.apiSchema.paths) {
-            // Now check if it's the same path, but with incorrect parameters.
-            const invalidMatch = new RegExp(path.regex.invalid, "g").exec(content);
-            if (invalidMatch && invalidMatch.length > 0) {
-                let errorIdentified = false;
+        // Check if the platform is valid
+        const platformId: string = urlMatch.platform;
+        if (!this.apiSchema.platforms.includes(platformId.toLowerCase())) {
+            // Get closest platform if incorrect
+            const closestPlatform = this.apiSchema.getClosestPlatform(platformId);
+            mistakes.push(`- The platform \`${platformId}\` is invalid, did you mean: \`${closestPlatform}\`? Expected one of the following values: \`${this.apiSchema.platforms.join(", ")}\``);
+            fatalError = true;
+        }
 
-                const mistakes = [];
+        // Check if the path is valid and validate parameters
+        let path: Path | null = null;
+        for (const testPath of this.apiSchema.paths) {
+            // The type must be `any` because the regex contains named groups
+            const pathMatch: any = XRegExp.exec(urlMatch.path, testPath.regex);
+            if (!pathMatch || pathMatch.length === 0) {
+                continue;
+            }
+            path = testPath;
 
-                // Get closest platform if incorrect
-                const closestPlatform = this.apiSchema.getClosestPlatform(invalidMatch[1]);
-                if (closestPlatform) {
-                    errorIdentified = true;
-                    mistakes.push(`- The platform \`${invalidMatch[1]}\` is invalid, did you mean: \`${closestPlatform}\`? Expected one of the following values: \`${this.apiSchema.platforms.join(", ")}\``);
-                }
-
-                invalidMatch.splice(0, 2); // Remove url and platform from array
-
-                // This now contains all required parameters.
-                for (let j = 0; j < Math.max(path.parameterInfo.length, invalidMatch.length); j++) {
-
-                    const parameter = path.parameterInfo[j]; // All info about this parameter
-                    const value = invalidMatch[j];
-
-                    // If it's correct, don't bother
-                    const parameterCorrect = new RegExp(parameter.valid, "g").exec(value);
-                    if (parameterCorrect) continue;
-
-                    // Find the location of the parameter in the URL
-                    const start = path.name.indexOf(`/{${parameter.name}}`); // Find /${leagueId}
-                    const end = path.name.lastIndexOf("/", start - 1); // Find the / before it
-                    const location = path.name.substr(end + 1, start - end); // Make a `leagues/` string.
-
-                    // Get type
-                    let type = parameter.schema.type; // Usually this is enough
-                    if (parameter.schema.enum) { // If there are limited options what it could be, show them
-                        type = parameter.schema.enum.join("/");
+            // Check if path parameters are valid
+            for (const param of testPath.pathParameters.values()) {
+                const paramValue: string = pathMatch[param.name];
+                if (paramValue) {
+                    if (!param.type.isValidValue(paramValue)) {
+                        mistakes.push(`- The value \`${paramValue}\` is not applicable for \`${param.name}\`: the value must be ${param.type.description}.`);
+                        fatalError = true;
                     }
-
-                    mistakes.push(`- Parameter ${j + 1}, expected \`${parameter.name} (${type})\` right after \`${location}\`, got "${value}".`);
-                    errorIdentified = true;
                 }
-
-                if (!errorIdentified) {
-                    message.channel.send(`I see you've posted a Riot Games API url (\`${path.method}\` if I am not mistaken), but I identified it as invalid.. Unfortunately I can't exactly tell why. This might be a bug!`);
-                    console.warn("Could not identify the issue with the Riot API url from the following message `" + message.content + "`");
-                    return;
-                }
-
-                const replyMessageContent = `I see you've posted a Riot Games API url (\`${path.method}\` if I am not mistaken), but it seems to have ${mistakes.length} mistake${mistakes.length !== 1 ? "s" : ""}:\n` + mistakes.join("\n");
-                message.channel.send(replyMessageContent);
-                return;
+                // There's no need to check if path params are missing since the regex wouldn't have matched if they were.
             }
+
+            const queryParams: Map<string, string | string[]> = new Map();
+            for (const pair of urlMatch.query.split("&")) {
+                const [key, value] = pair.split("=");
+                // If a key is specified multiple times, it means the value is a set
+                if (queryParams.has(key)) {
+                    // Turn the parameter into a set if it isn't already one
+                    if (!Array.isArray(queryParams.get(key))) {
+                        queryParams.set(key, [queryParams.get(key) as string]);
+                    }
+                    (queryParams.get(key) as string[]).push(value);
+                } else {
+                    queryParams.set(key, value);
+                }
+            }
+
+            // Check if specified query parameters are of the correct type, and all required parameters are specified
+            for (const param of path.queryParameters.values()) {
+                const paramValue = queryParams.get(param.name);
+                if (paramValue) {
+                    if (!param.type.isValidValue(paramValue)) {
+                        mistakes.push(`- The value \`${paramValue}\` is not applicable for \`${param.name}\`: the value must be ${param.type.description}.`);
+                    }
+                } else if (param.required) {
+                    mistakes.push(`- The query parameter \`${param.name}\` is required but was not specified.`);
+                }
+            }
+
+            const validParams = Array.from(path.queryParameters.keys());
+            // Check if any specified query parameters don't do exist for this method
+            for (const key of queryParams.keys()) {
+                // The `api_key` parameter is always valid
+                if (key === "api_key") continue;
+                if (!validParams.includes(key)) {
+                    mistakes.push(`- The specified query parameter \`${key}\` does not exist for this method. Although this shouldn't stop the request from working, it means that the request likely won't do what you want it to do.`);
+                    // This is not a fatal error
+                }
+            }
+
+            break;
         }
+        if (!path) {
+            mistakes.push(`- This URL does not appear to be using a valid endpoint`);
+            fatalError = true;
+        }
+
+        if (mistakes.length !== 0) {
+            const replyMessageContent = `The API call ${url} seems to have ${mistakes.length} mistake${mistakes.length !== 1 ? "s" : ""}:\n` + mistakes.join("\n");
+            message.channel.send(replyMessageContent);
+        }
+        if (fatalError) return;
+
+        const replyMessages = await message.channel.send(`Making a request to ${path!.name}`);
+        const replyMessage = Array.isArray(replyMessages) ? replyMessages[0] : replyMessages;
+
+        await this.makeRequest(path!, platformId, urlMatch[0], replyMessage);
     }
 
     private async makeRequest(path: Path, region: string, url: string, message: Discord.Message) {
@@ -159,7 +195,7 @@ export default class ApiUrlInterpreter {
             return;
         }
 
-        const servicedMethodName = `${region}.${path.method}`;
+        const servicedMethodName = `${region}:${path.name}`;
         if (this.methodRatelimitLastTime[servicedMethodName] && currentTime < this.methodRatelimitLastTime[servicedMethodName]) {
             const timeDiff = prettyMs(this.methodRatelimitLastTime[servicedMethodName] - currentTime, { verbose: true });
             message.edit(`We are ratelimited by the method (${servicedMethodName}), please wait ${timeDiff}.`);
