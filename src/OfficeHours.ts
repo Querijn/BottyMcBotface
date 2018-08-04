@@ -132,6 +132,12 @@ export default class OfficeHours {
     }
 
     private storeQuestion(question: string, message: Discord.Message, authorId: string, authorName: string, requester: string | null = null) {
+
+        if (question.length === 0) {
+            message.reply("You forgot to ask a question...");
+            return;
+        }
+
         const questionData = {
             authorId,
             authorName,
