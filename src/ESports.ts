@@ -38,6 +38,8 @@ export default class ESportsAPI {
     public onCheckNext(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         if (args.length !== 1) return;
 
+        const data = args[0].trim().split(/[\/ -]/g);
+        let date;
         // YYYY/MM/DD
         const formatCheck = /\d{4}\/\d{2}\/\d{2}/;
         if (!formatCheck.test(args[0])) {
@@ -45,8 +47,6 @@ export default class ESportsAPI {
             return;
         }
 
-        const data = args[0].split("/");
-        const date = `${data[0]} ${data[1]} ${data[2]}`;
 
         this.sendPrintout(message.channel as Discord.TextChannel, this.schedule.get(date), date);
     }
