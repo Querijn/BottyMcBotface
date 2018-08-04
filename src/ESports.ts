@@ -114,8 +114,9 @@ export default class ESportsAPI {
 
     private sendPrintout(channel: Discord.TextChannel, data: Map<string, ESportsLeagueSchedule[]> | undefined, date: string) {
 
+        date = date.split(" ").join("/");
         if (!data) {
-            channel.send("No games played on this date.");
+            channel.send(`No games played on ${date}.`);
             return;
         }
 
