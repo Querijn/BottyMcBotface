@@ -120,16 +120,25 @@ export default class ESportsAPI {
             return;
         }
 
-        let output = `Games being played ${date.split(" ").join("/")}:\n\`\`\``;
-        const padLeague = Math.max(...Array.from(data!.keys()).map((x: string) => x.length));
-        for (const [league, games] of data!) {
-            for (const game of games) {
-                output += `[${league.padEnd(padLeague)}] ${game.teamA.padEnd(3)} vs ${game.teamB.padEnd(3)} -- ${game.time}\n`;
-            }
-        }
-        output += "```";
+        const embed = new Discord.RichEmbed();
+        embed.title = `Games being played ${date.split(" ").join("/")}:`;
+        if (!embed.fields) embed.fields = [];
+        embed.color = 0x9b311a;
 
-        channel.send(output);
+        for (const [name, games] of data) {
+
+            let output = "";
+            for (const game of games) {
+                output += `${game.teamA.padEnd(3)} vs ${game.teamB.padEnd(3)}, ${game.time}\n`;
+            }
+
+            embed.fields.push({
+                name,
+                value: output,
+            });
+        }
+
+        channel.send({ embed });
     }
 
     // this can also check for older games by using resultsHtml instead of fixures
