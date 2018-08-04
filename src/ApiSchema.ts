@@ -8,32 +8,87 @@ import { SharedSettings } from "./SharedSettings";
 import { clearTimeout, setTimeout } from "timers";
 
 export class Path {
+    /**
+     * Constructs a regex that will match an API endpoint and store each path parameter in a named group.
+     */
+    public static constructRegex(path: string, methodSchema: any): RegExp {
+        // Allow an optional trailing slash
+        let regex = path + "/?";
+        // Escape slashes
+        regex = regex.replace(/\//g, "\\/");
+        // Replace each parameter with a named regex group
+        regex = regex.replace(/\{(.*?)\}/, (match, p2) => `(?<${p2}>[^\\/?\\s]*)`);
+
+        return XRegExp(regex);
+    }
+
     public name: string;
     public methodType: "GET" | "POST";
     public regex: RegExp;
-    public pathParameters: Map<string, Parameter>;
-    public queryParameters: Map<string, Parameter>;
+    public pathParameters: Map<string, Parameter> = new Map();
+    public queryParameters: Map<string, Parameter> = new Map();
+    /** Indicates if Botty may make calls to the API method. This will be `false` if Botty doesn't have access to the API or if there are other concerns. */
+    public canUse: boolean;
+
+    public constructor(name: string, methodSchema: any, methodType: "GET" | "POST") {
+        this.name = name;
+        this.methodType = methodType;
+        this.canUse = !methodSchema.operationId.startsWith("tournament-v3");
+
+        this.regex = Path.constructRegex(name, methodSchema);
+
+        if (methodSchema.parameters) {
+            for (const parameter of methodSchema.parameters) {
+                this.addParameter(parameter.in, parameter);
+            }
+        }
+    }
+
+    public addParameter(type: "query" | "path", parameterSchema: any) {
+        const parameter = new Parameter(parameterSchema);
+
+        let map: Map<string, Parameter>;
+        if (type === "path") {
+            map = this.pathParameters;
+        } else if (type === "query") {
+            map = this.queryParameters;
+        } else {
+            console.warn(`Unknown parameter location "${type}"`);
+            return;
+        }
+
+        map.set(parameter.name, parameter);
+    }
 }
 
 export class Parameter {
     public name: string;
     public required: boolean;
     public type: ParameterType;
+
+    public constructor(parameterSchema: any) {
+        this.name = parameterSchema.name;
+        this.required = parameterSchema.required;
+        this.type = ParameterType.getParameterType(parameterSchema.schema.type);
+    }
 }
 
 export class ParameterType {
-    /** A human readable description (e.g. "a positive integer") */
-    public description: string;
-
-    constructor(description: string, isValidValue: (value: string) => boolean){
-        this.description = description;
-        this.isValidValue = isValidValue;
+    public static getParameterType(type: string): ParameterType {
+        switch (type) {
+            case "integer":
+                return ParameterType.PARAMETER_TYPES.INTEGER;
+            case "string":
+                return ParameterType.PARAMETER_TYPES.STRING;
+            case "boolean":
+                return ParameterType.PARAMETER_TYPES.BOOLEAN;
+            case "array":
+                return ParameterType.PARAMETER_TYPES.SET;
+            default:
+                console.warn(`No suitable ParameterType found for parameter "${type}" - defaulting to any type`);
+                return ParameterType.PARAMETER_TYPES.ANY;
+        }
     }
-    /** A function that returns a boolean indicating if the specified value is a valid value for this type of parameter */
-    public isValidValue(value: string | string[]): boolean { return false; }
-}
-
-export class APISchema {
 
     private static PARAMETER_TYPES = {
         ANY: new ParameterType("anything", (value) => true),
@@ -47,6 +102,19 @@ export class APISchema {
         }),
     };
 
+    /** A human readable description (e.g. "a positive integer") */
+    public description: string;
+
+    constructor(description: string, isValidValue: (value: string) => boolean){
+        this.description = description;
+        this.isValidValue = isValidValue;
+    }
+
+    /** A function that returns a boolean indicating if the specified value is a valid value for this type of parameter */
+    public isValidValue(value: string | string[]): boolean { return false; }
+}
+
+export class APISchema {
     public paths: Path[] = [];
     public platforms: string[];
 
@@ -111,28 +179,8 @@ export class APISchema {
                 const methodSchema = pathSchema.get ? pathSchema.get : pathSchema.post;
 
                 if (!methodSchema) continue; // Only handle GET/POST
-                if (methodSchema.operationId.startsWith("tournament-v3")) continue;
 
-                const path = new Path();
-                path.name = pathName;
-                path.methodType = pathSchema.get ? "GET" : "POST";
-                path.regex = this.constructRegex(pathName, methodSchema);
-
-                path.queryParameters = new Map();
-                path.pathParameters = new Map();
-                if (methodSchema.parameters) {
-                    for (const parameter of methodSchema.parameters) {
-                        if (parameter.in === "path") {
-                            this.addParameter(path.pathParameters, parameter);
-                        } else if (parameter.in === "query") {
-                            this.addParameter(path.queryParameters, parameter);
-                        } else {
-                            console.warn(`Unknown parameter location "${parameter.in}"`);
-                        }
-                    }
-                }
-
-                this.paths.push(path);
+                this.paths.push(new Path(pathName, methodSchema, pathSchema.get ? "GET" : "POST"));
             }
 
             // This fixes the issue where it would match getAllChampionsMasteries before a specific champion mastery (which starts the same but has extra parameters)
@@ -146,44 +194,5 @@ export class APISchema {
             this.timeOut = null;
         }
         this.timeOut = setTimeout(this.updateSchema.bind(this), this.sharedSettings.apiUrlInterpreter.timeOutDuration);
-    }
-
-    /**
-     * Constructs a regex that will match an API endpoint and store each path parameter in a named group.
-     */
-    private constructRegex(path: string, methodSchema: any): RegExp {
-        // Allow an optional trailing slash
-        let regex = path + "/?";
-        // Escape slashes
-        regex = regex.replace(/\//g, "\\/");
-        // Replace each parameter with a named regex group
-        regex = regex.replace(/\{(.*?)\}/, (match, p2) => `(?<${p2}>[^\\/?\\s]*)`);
-
-        return XRegExp(regex);
-    }
-
-    private addParameter(map: Map<string, Parameter>, parameterSchema: any) {
-        const parameter = new Parameter();
-        parameter.name = parameterSchema.name;
-        parameter.required = parameterSchema.required;
-        parameter.type = this.getParameterType(parameterSchema.schema.type);
-
-        map.set(parameter.name, parameter);
-    }
-
-    private getParameterType(type: string): ParameterType {
-        switch (type) {
-            case "integer":
-                return APISchema.PARAMETER_TYPES.INTEGER;
-            case "string":
-                return APISchema.PARAMETER_TYPES.STRING;
-            case "boolean":
-                return APISchema.PARAMETER_TYPES.BOOLEAN;
-            case "array":
-                return APISchema.PARAMETER_TYPES.SET;
-            default:
-                console.warn(`No suitable ParameterType found for parameter "${type}" - defaulting to any type`);
-                return APISchema.PARAMETER_TYPES.ANY;
-        }
     }
 }

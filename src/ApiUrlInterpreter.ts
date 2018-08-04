@@ -88,7 +88,7 @@ export default class ApiUrlInterpreter {
         const urlMatch: any = XRegExp.exec(url, ApiUrlInterpreter.API_CALL_REGEX);
 
         /** Indicates if there is a problem with this URL that guarantees the call will fail. */
-        let fatalError: boolean = false;
+        let fatalError = false;
         const mistakes = [];
 
         // Check if the URL is using HTTPS
@@ -130,17 +130,19 @@ export default class ApiUrlInterpreter {
             }
 
             const queryParams: Map<string, string | string[]> = new Map();
-            for (const pair of urlMatch.query.split("&")) {
-                const [key, value] = pair.split("=");
-                // If a key is specified multiple times, it means the value is a set
-                if (queryParams.has(key)) {
-                    // Turn the parameter into a set if it isn't already one
-                    if (!Array.isArray(queryParams.get(key))) {
-                        queryParams.set(key, [queryParams.get(key) as string]);
+            if (urlMatch.query) {
+                for (const pair of urlMatch.query.split("&")) {
+                    const [key, value] = pair.split("=");
+                    // If a key is specified multiple times, it means the value is a set
+                    if (queryParams.has(key)) {
+                        // Turn the parameter into a set if it isn't already one
+                        if (!Array.isArray(queryParams.get(key))) {
+                            queryParams.set(key, [queryParams.get(key) as string]);
+                        }
+                        (queryParams.get(key) as string[]).push(value);
+                    } else {
+                        queryParams.set(key, value);
                     }
-                    (queryParams.get(key) as string[]).push(value);
-                } else {
-                    queryParams.set(key, value);
                 }
             }
 
@@ -180,10 +182,15 @@ export default class ApiUrlInterpreter {
         }
         if (fatalError) return;
 
+        if (!path!.canUse) {
+            message.channel.send(`I cannot make an API call to ${url} for you (likely because I don't have access to this endpoint)`);
+            return;
+        }
+
         const replyMessages = await message.channel.send(`Making a request to ${path!.name}`);
         const replyMessage = Array.isArray(replyMessages) ? replyMessages[0] : replyMessages;
 
-        await this.makeRequest(path!, platformId, urlMatch[0], replyMessage);
+        await this.makeRequest(path!, platformId, url, replyMessage);
     }
 
     private async makeRequest(path: Path, region: string, url: string, message: Discord.Message) {
