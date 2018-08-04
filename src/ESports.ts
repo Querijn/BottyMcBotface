@@ -128,7 +128,7 @@ export default class ESportsAPI {
 
             let output = "";
             for (const game of games) {
-                output += `${game.teamA.padEnd(3)} vs ${game.teamB.padEnd(3)}, ${game.time}\n`;
+                output += `${game.teamA} vs ${game.teamB}, ${game.time}\n`;
             }
 
             embed.fields.push({
