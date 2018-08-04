@@ -124,7 +124,7 @@ export default class ESportsAPI {
         if (!embed.fields) embed.fields = [];
         embed.color = 0x9b311a;
 
-        for (const [name, games] of data) {
+        for (const [league, games] of data) {
 
             let output = "";
             for (const game of games) {
@@ -132,8 +132,8 @@ export default class ESportsAPI {
             }
 
             embed.fields.push({
-                name,
-                value: output,
+                name: league,
+                value: output + `[More about ${league} here](${this.getUrlByLeague(league)})\n`,
             });
         }
 
@@ -209,5 +209,9 @@ export default class ESportsAPI {
         });
         this.schedule = schedule;
         setTimeout(this.loadData, this.settings.esports.updateTimeout);
+    }
+
+    private getUrlByLeague(leagueName: string) {
+        return "https://eu.lolesports.com/en/league/" + leagueName.replace(/ /g, "-").toLowerCase();
     }
 }
