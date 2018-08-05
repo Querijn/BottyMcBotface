@@ -93,7 +93,8 @@
                 "ts"
             ],
             "c-sharp": [
-                "c#"
+                "c#",
+                "csharp"
             ],
             "objective-c": [
                 "objc"
