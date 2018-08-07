@@ -288,7 +288,7 @@ export default class Info {
         if (command.length === 0) return null;
         if (command.length > 300) return { message: `Stop it. Get some help.`, counter: 0, command, categoryId: "" };
 
-        const info = this.infos.find(inf => {
+        let info = this.infos.find(inf => {
             return inf.command === command;
         });
 
@@ -304,8 +304,8 @@ export default class Info {
                 .sort((a, b) => a.score - b.score);
 
             if (data.length === 1) {
-                // if theres only one similar note, we might as well print it..
-                return this.infos.find(x => x.command === data[0].command)!;
+                // if theres only one similar note, use it for further setup..
+                info = this.infos.find(x => x.command === data[0].command)!;
             }
 
             if (data.length !== 0) {
@@ -314,7 +314,9 @@ export default class Info {
                 return { message, counter: 0, command, categoryId: "" };
             }
 
-            return { message: `No note with the name ${command} was found.`, counter: 0, command, categoryId: "" };
+            if (!info) {
+                return { message: `No note with the name ${command} was found.`, counter: 0, command, categoryId: "" };
+            }
         }
 
         // Backwards compatibility
