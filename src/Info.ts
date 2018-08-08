@@ -303,15 +303,16 @@ export default class Info {
                 .filter(s => s.score <= this.sharedSettings.info.maxScore)
                 .sort((a, b) => a.score - b.score);
 
-            if (data.length === 1) {
-                // if theres only one similar note, use it for further setup..
-                info = this.infos.find(x => x.command === data[0].command)!;
-            }
-
-            if (data.length !== 0) {
+            // if there is more than one note, print the list
+            if (data.length > 1) {
                 let message = "Did you mean: ";
                 message += data.map(s => "`" + s.command + "`").join(", ") + "?";
                 return { message, counter: 0, command, categoryId: "" };
+            }
+
+            if (data.length === 1) {
+                // if theres only one note, use it..
+                info = this.infos.find(x => x.command === data[0].command)!;
             }
 
             if (!info) {
