@@ -54,6 +54,17 @@ export default class ESportsAPI {
             date = `${currentYear} ${parseInt(data[0], 10)} ${parseInt(data[1], 10)}`;
         }
 
+        else if (args[0].toLowerCase() === "today") {
+            const today = new Date();
+            date = `${today.getFullYear()} ${today.getMonth() + 1} ${today.getDate()}`;
+        }
+
+        else if (args[0].toLowerCase() === "tomorrow") {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            date = `${tomorrow.getFullYear()} ${tomorrow.getMonth() + 1} ${tomorrow.getDate()}`;
+        }
+
         // No match
         else {
             message.channel.send("The date you specified didn't match the format needed. (MM/DD or YYYY/MM/DD)");
