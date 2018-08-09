@@ -103,7 +103,7 @@ export default class AutoReact {
         try {
             this.logChannel.send(`[${(new Date()).toUTCString()}] Log: ${message.toString()}`, { split: true });
             for (let i = 0; i < optionalParams.length; i++) {
-                this.logChannel.send(`[${(new Date()).toUTCString()}] Log param ${(i + 1)}: {optionalParams.toString()}`, { split: true });
+                this.logChannel.send(`[${(new Date()).toUTCString()}] Log param ${(i + 1)}: ${optionalParams.toString()}`, { split: true });
             }
         } catch (e) {
             this.oldError(`Error trying to send a log message: ${e.toString()}`);
