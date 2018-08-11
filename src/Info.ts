@@ -313,6 +313,7 @@ export default class Info {
             if (data.length === 1) {
                 // if theres only one note, use it..
                 info = this.infos.find(x => x.command === data[0].command)!;
+                info.message = `Assuming you meant \`${info.command}\`: ${info.message}`;
             }
 
             if (!info) {
