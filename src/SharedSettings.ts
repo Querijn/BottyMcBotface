@@ -21,6 +21,7 @@ export interface PersonalSettings {
     };
 
     isProduction: boolean;
+    appName: string;
 }
 
 export interface SharedSettings {

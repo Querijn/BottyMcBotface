@@ -24,7 +24,8 @@
             "username": "Querijn",
             "password": ""
         },
-        "isProduction": false
+        "isProduction": false,
+        "appName": "app"
     },
     "commands": {
         "default_prefix": "!",

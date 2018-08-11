@@ -45,7 +45,7 @@ export default class Botty {
         if (!isAdmin) return;
 
         await message.channel.send("Restarting...");
-        exec("pm2 restart .", (err, stdout, stderr) => {
+        exec("pm2 restart " + this.personalSettings.appName, (err, stdout, stderr) => {
             if (err) {
                 console.error(err.message);
                 return;
