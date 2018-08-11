@@ -312,11 +312,13 @@ export default class Info {
 
             if (data.length === 1) {
                 // if theres only one note, use it..
-                info = this.infos.find(x => x.command === data[0].command)!;
-                info.counter = info.counter != null ? info.counter + 1 : 0; 
+                const orig = this.infos.find(x => x.command === data[0].command)!;
 
-                info = Object.assign({}, info); // Copy
+                // Return a copy
+                info = Object.assign({}, orig); 
                 info.message = `Assuming you meant \`${info.command}\`: ${info.message}`;
+
+                orig.counter = orig.counter != null ? orig.counter + 1 : 0;
             }
 
             if (!info) {
