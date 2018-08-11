@@ -219,7 +219,7 @@ export default class ESportsAPI {
             }
         });
         this.schedule = schedule;
-        setTimeout(this.loadData, this.settings.esports.updateTimeout);
+        setTimeout(this.loadData.bind(this), this.settings.esports.updateTimeout);
     }
 
     private getUrlByLeague(leagueName: string) {
