@@ -313,6 +313,9 @@ export default class Info {
             if (data.length === 1) {
                 // if theres only one note, use it..
                 info = this.infos.find(x => x.command === data[0].command)!;
+                info.counter = info.counter != null ? info.counter + 1 : 0; 
+
+                info = Object.assign({}, info); // Copy
                 info.message = `Assuming you meant \`${info.command}\`: ${info.message}`;
             }
 
