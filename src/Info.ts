@@ -112,10 +112,17 @@ export default class Info {
 
         // if we got a valid note, replace variables
         if (infoData) {
-            response = infoData.message;
-            response = response.replace(/{ddragonVersion}/g, this.versionChecker.ddragonVersion);
-            response = response.replace(/{gameVersion}/g, this.versionChecker.gameVersion);
-            response = response.replace(/{counter}/g, (infoData.counter || 0).toString());
+            // Extract these variables for legacy notes.
+            const ddragonVersion = this.versionChecker.ddragonVersion;
+            const gameVersion = this.versionChecker.gameVersion;
+            const counter = infoData.counter || 0;
+            
+            // Eval both single and double brackets. Double brackets
+            // are here so we can use javascript objects inside the extract without
+            // it breaking completely. Single brackets are for legacy notes.
+            response = infoData.message
+                .replace(/{{(.*?)}}/g, (_, match) => eval(match))
+                .replace(/{(.*?)}/g, (_, match) => eval(match));
         }
 
         // if we didnt get a valid note from fetchInfo, we return;
