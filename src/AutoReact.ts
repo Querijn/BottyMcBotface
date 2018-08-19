@@ -156,6 +156,14 @@ export default class AutoReact {
             return;
         }
 
+        // only react once per hour
+        const oneHourAgo = new Date();
+        oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+        const lastMessage = message.author.lastMessage;
+        if (lastMessage && lastMessage.createdAt > oneHourAgo) {
+            return;
+        }
+
         message.react(this.greetingEmoji);
     }
 
