@@ -23,18 +23,18 @@ export default class ESportsAPI {
     private settings: SharedSettings;
 
     private schedule: Map<string, Map<string, ESportsLeagueSchedule[]>> = new Map();
+    private lastLoad: Date = new Date(0);
 
     constructor(bot: Discord.Client, settings: SharedSettings) {
         this.bot = bot;
         this.settings = settings;
 
         bot.on("ready", async () => {
-            await this.loadData();
             this.postInfo();
         });
     }
 
-    public onCheckNext(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+    public async onCheckNext(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         if (args.length !== 1) return;
 
         const data = args[0].trim().split(/[\/ -]/g);
@@ -79,17 +79,20 @@ export default class ESportsAPI {
             return;
         }
 
+        await this.loadData();
         const schedule = this.schedule.get(date);
         this.sendPrintout(message.channel as Discord.TextChannel, schedule, date);
     }
 
-    private postInfo() {
+    private async postInfo() {
         const channel = this.settings.esports.printChannel;
         const esports = this.bot.guilds.get(this.settings.server)!.channels.find("name", channel);
         if (!esports) {
             console.error(`Esports: Unable to find channel #${channel}`);
             return;
         }
+
+        await this.loadData();
 
         const tomorrow = new Date();
         tomorrow.setDate(tomorrow.getDate() + 1);
@@ -124,9 +127,9 @@ export default class ESportsAPI {
 
     private sendPrintout(channel: Discord.TextChannel, data: Map<string, ESportsLeagueSchedule[]> | undefined, date: string) {
 
-        date = date.split(" ").join("/");
-        if (!data) {
-            channel.send(`No games played on ${date}.`);
+        date = (date || momentjs().format("YYYY M D")).split(" ").join("/");
+        if (!data || data.size === 0) {
+            channel.send(`No games played on ${date}`);
             return;
         }
 
@@ -153,6 +156,13 @@ export default class ESportsAPI {
 
     // this can also check for older games by using resultsHtml instead of fixures
     private async loadData() {
+
+        const now = new Date();
+        now.setMilliseconds(now.getMilliseconds() - this.settings.esports.updateTimeout);
+        if (now < this.lastLoad) {
+            return;
+        }
+
         // pull data
         const data = await fetch("https://eu.lolesports.com/en/api/widget/schedule?timezone=Europe%2FOslo&leagues=26&leagues=3&leagues=2&leagues=6&leagues=7&leagues=5&leagues=4&leagues=9&leagues=10&leagues=1&leagues=43&slug=all");
         const html = (await data.json() as ESportsAPIReturnData).fixturesHtml;
@@ -219,7 +229,7 @@ export default class ESportsAPI {
             }
         });
         this.schedule = schedule;
-        setTimeout(this.loadData.bind(this), this.settings.esports.updateTimeout);
+        this.lastLoad = new Date();
     }
 
     private getUrlByLeague(leagueName: string) {
