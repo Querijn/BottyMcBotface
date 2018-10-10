@@ -107,7 +107,8 @@ export default class ESportsAPI {
             for (const [league, entryList] of entries) {
                 for (const item of entryList) {
 
-                    if (!item.time.includes("ago")) {
+                    const time = momentjs(item.time, "YYYY MM DD HH:mm Z").fromNow();
+                    if (!time.includes("ago")) {
                         if (!prints.get(league)) {
                             prints.set(league, []);
                         }
@@ -125,11 +126,11 @@ export default class ESportsAPI {
     private sendPrintout(channel: Discord.TextChannel, data: Map<string, ESportsLeagueSchedule[]> | undefined, date: string) {
 
         date = (date || momentjs().format("YYYY M D"))
-          .split(" ")
-          .join("/");
+            .split(" ")
+            .join("/");
         if (!data || data.size === 0) {
-          channel.send(`No games played on ${date}`);
-          return;
+            channel.send(`No games played on ${date}`);
+            return;
         }
         const embed = new Discord.RichEmbed();
         embed.title = `Games being played ${date.split(" ").join("/")}:`;
@@ -148,11 +149,6 @@ export default class ESportsAPI {
                 value: output + `[More about ${league} here](${this.getUrlByLeague(league)})\n`,
             });
         }
-
-        embed.fields.push({
-            name: "Stelar",
-            value: "If you notice anything weird, reach out to @stelar7#1424"
-        })
 
         channel.send({ embed });
     }
