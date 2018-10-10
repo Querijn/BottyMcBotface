@@ -5,6 +5,7 @@
     ],
     "jsRules": {},
     "rules": {
+        "no-eval": false,
         "ordered-imports": false,
         "interface-name": false,
         "no-empty-interface": false,
