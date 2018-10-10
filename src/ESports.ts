@@ -139,7 +139,7 @@ export default class ESportsAPI {
 
             let output = "";
             for (const game of games) {
-                output += `${game.teamA} vs ${game.teamB}, ${game.time}\n`;
+                output += `${game.teamA} vs ${game.teamB}, ${momentjs(game.time, "YYYY MM DD HH:mm Z").fromNow()}\n`;
             }
 
             embed.fields.push({
@@ -206,7 +206,6 @@ export default class ESportsAPI {
                     // game start time
                     const start = gameRoot.find(".schedule__table-cell--time .time").last().text().trim();
                     const timestamp = realDate + ` ${start}`;
-                    const difference = momentjs(timestamp, "YYYY MM DD HH:mm Z").fromNow();
 
                     // teams
                     const content = gameRoot.find(".schedule__table-cell--content .team a");
@@ -215,7 +214,7 @@ export default class ESportsAPI {
 
                     const gameData: ESportsLeagueSchedule = {
                         league: title,
-                        time: difference,
+                        time: timestamp,
                         teamA,
                         teamB,
                     };
