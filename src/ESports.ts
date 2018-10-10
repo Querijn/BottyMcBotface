@@ -107,7 +107,8 @@ export default class ESportsAPI {
             for (const [league, entryList] of entries) {
                 for (const item of entryList) {
 
-                    if (!item.time.includes("ago")) {
+                    const time = momentjs(item.time, "YYYY MM DD HH:mm Z").fromNow();
+                    if (!time.includes("ago")) {
                         if (!prints.get(league)) {
                             prints.set(league, []);
                         }
@@ -124,12 +125,13 @@ export default class ESportsAPI {
 
     private sendPrintout(channel: Discord.TextChannel, data: Map<string, ESportsLeagueSchedule[]> | undefined, date: string) {
 
-        date = date.split(" ").join("/");
-        if (!data) {
-            channel.send(`No games played on ${date}.`);
+        date = (date || momentjs().format("YYYY M D"))
+            .split(" ")
+            .join("/");
+        if (!data || data.size === 0) {
+            channel.send(`No games played on ${date}`);
             return;
         }
-
         const embed = new Discord.RichEmbed();
         embed.title = `Games being played ${date.split(" ").join("/")}:`;
         if (!embed.fields) embed.fields = [];
@@ -139,7 +141,7 @@ export default class ESportsAPI {
 
             let output = "";
             for (const game of games) {
-                output += `${game.teamA} vs ${game.teamB}, ${game.time}\n`;
+                output += `${game.teamA} vs ${game.teamB}, ${momentjs(game.time, "YYYY MM DD HH:mm Z").fromNow()}\n`;
             }
 
             embed.fields.push({
@@ -201,7 +203,6 @@ export default class ESportsAPI {
                     // game start time
                     const start = gameRoot.find(".schedule__table-cell--time .time").last().text().trim();
                     const timestamp = realDate + ` ${start}`;
-                    const difference = momentjs(timestamp, "YYYY MM DD HH:mm Z").fromNow();
 
                     // teams
                     const content = gameRoot.find(".schedule__table-cell--content .team a");
@@ -210,7 +211,7 @@ export default class ESportsAPI {
 
                     const gameData: ESportsLeagueSchedule = {
                         league: title,
-                        time: difference,
+                        time: timestamp,
                         teamA,
                         teamB,
                     };
