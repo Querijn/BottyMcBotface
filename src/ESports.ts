@@ -146,7 +146,6 @@ export default class ESportsAPI {
                 name: league,
                 value: output + `[More about ${league} here](${this.getUrlByLeague(league)})\n`,
             });
-
         }
 
         embed.fields.push({
