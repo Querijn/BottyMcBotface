@@ -146,7 +146,13 @@ export default class ESportsAPI {
                 name: league,
                 value: output + `[More about ${league} here](${this.getUrlByLeague(league)})\n`,
             });
+
         }
+
+        embed.fields.push({
+            name: "Stelar",
+            value: "If you notice anything weird, reach out to @stelar7#1424"
+        })
 
         channel.send({ embed });
     }
