@@ -55,6 +55,7 @@ controller.registerCommand(commandList.botty.restart, bot.onRestart.bind(bot));
 
 // Esport commands
 controller.registerCommand(commandList.esports.date, esports.onCheckNext.bind(esports));
+controller.registerCommand(commandList.esports.pickem, esports.onPickem.bind(esports));
 
 // API schema commands
 controller.registerCommand(commandList.apiSchema.updateSchema, apiSchema.onUpdateSchemaRequest.bind(apiSchema));

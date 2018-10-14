@@ -32,6 +32,7 @@ export interface CommandList {
     };
     esports: {
         date: Command;
+        pickem: Command;
     };
     botty: {
         restart: Command;

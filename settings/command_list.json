@@ -15,6 +15,12 @@
                 "esports"
             ],
             "description": "Print out esport games on that date"
+        },
+        "pickem": {
+            "aliases": [
+                "pickem"
+            ],
+            "description": "Print out your pickems"
         }
     },
     "controller": {

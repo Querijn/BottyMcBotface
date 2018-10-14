@@ -18,11 +18,45 @@ interface ESportsLeagueSchedule {
     teamB: string;
 }
 
+interface PickemLeaderboardEntry {
+    vsUserId: number;
+}
+
+interface PickemLeaderboard {
+    entries: PickemLeaderboardEntry[];
+}
+
+interface PickemTeam {
+    shortName: string;
+    name: string;
+    logoUrl: string;
+    wins: number;
+    losses: number;
+}
+
+interface PickemGroup {
+    name: string;
+    userPoints: number;
+    teams: PickemTeam[];
+}
+
+interface PickemUser {
+    summonerName: string;
+    id: number;
+}
+
+interface PickemGroupPick {
+    user: PickemUser;
+    groups: PickemGroup[];
+}
+
 export default class ESportsAPI {
     private bot: Discord.Client;
     private settings: SharedSettings;
 
     private schedule: Map<string, Map<string, ESportsLeagueSchedule[]>> = new Map();
+
+    private currentList: PickemGroupPick[];
 
     constructor(bot: Discord.Client, settings: SharedSettings) {
         this.bot = bot;
@@ -31,7 +65,123 @@ export default class ESportsAPI {
         bot.on("ready", async () => {
             await this.loadData();
             this.postInfo();
+            this.updateMemberList();
         });
+    }
+
+    public async updateMemberList() {
+        this.currentList = await this.getMembersWithName();
+
+        setTimeout(this.updateMemberList.bind(this), 1000 * 60 * 60);
+    }
+
+    public async getCorrectPickem(): Promise<PickemGroupPick> {
+        const anyPick = await this.getPickem(4643536);
+        const best: PickemGroupPick = { user: { summonerName: "The Correct Choice", id: -1 }, groups: [] };
+
+        for (const group of anyPick.groups) {
+            best.groups.push({ name: group.name, teams: group.teams.sort((a, b) => b.wins - a.wins), userPoints: -1 });
+        }
+
+        return best;
+    }
+
+    public async getMembersWithName(): Promise<PickemGroupPick[]> {
+        const leaderboard = (await this.getLeaderboard()).entries;
+        const returnList: PickemGroupPick[] = [];
+
+        for (const entry of leaderboard) {
+            const pickem = await this.getPickem(entry.vsUserId);
+            returnList.push(pickem);
+        }
+
+        return returnList;
+    }
+
+    public async getLeaderboard(): Promise<PickemLeaderboard> {
+        const data = await fetch("https://pickem.euw.lolesports.com/en-GB/api/get_vs_lists/series/5/user/4643536");
+        return (await data.json())[0];
+    }
+
+    public async getPickem(id: number): Promise<PickemGroupPick> {
+        const url = "https://pickem.euw.lolesports.com/en-GB/api/get_group_picks/series/5/user/";
+        return await (await fetch(url + id)).json();
+    }
+
+    public printPickem(match: PickemGroupPick) {
+        for (const group of match.groups) {
+            console.log(`${group.name} (${group.userPoints} points)`);
+            let index = 1;
+
+            for (const team of group.teams) {
+                console.log(`${index++}. ${team.name} (${team.wins}-${team.losses})`);
+            }
+        }
+    }
+
+    public embedPickem(match: PickemGroupPick) {
+        const embed = new Discord.RichEmbed();
+        embed.setTitle(`${match.user.summonerName}'s pickem`);
+        for (const group of match.groups) {
+
+            let value = "";
+            let index = 1;
+            for (const team of group.teams) {
+                value += `${index++}. ${team.name} (${team.wins}-${team.losses})`;
+            }
+
+            embed.addField(`${group.name} (${group.userPoints} points)`, value, true);
+        }
+        return embed;
+    }
+
+    public getScore(groups: PickemGroup[]): number {
+        let score = 0;
+
+        for (const group of groups) {
+            score += group.userPoints;
+        }
+
+        return score;
+    }
+
+    public async onPickem(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        if (args.length > 1) return;
+
+        if (args.length === 0) {
+            const bestPick = await this.getCorrectPickem();
+            message.channel.send({ embed: this.embedPickem(bestPick) });
+            return;
+        }
+
+        if (args[0] === "leaderboard") {
+            const scores = [];
+
+            for (const user of this.currentList) {
+                const score = this.getScore(user.groups);
+                scores.push({ name: user.user.summonerName, score });
+            }
+
+            const sorted = scores.sort((a, b) => b.score - a.score);
+
+            const embed = new Discord.RichEmbed();
+            embed.setAuthor("Top scores:");
+
+            let list = "";
+            for (let i = 0; i < 5; i++) {
+                list += `${i + 1}. ${sorted[i].name} : ${sorted[i].score}\n`;
+            }
+
+            embed.addField("Leaderboard", list);
+            return;
+        }
+
+        const match = this.currentList.filter(a => a.user.summonerName === args[0])[0];
+        if (match) {
+            message.channel.send({ embed: this.embedPickem(match) });
+        } else {
+            message.channel.send("No pickem with that summonername found..");
+        }
     }
 
     public onCheckNext(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
