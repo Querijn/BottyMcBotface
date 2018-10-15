@@ -134,4 +134,16 @@ export interface SharedSettings {
         maxDistance: number,
         aliases: { [key: string]: string[] },
     };
+
+    pickem: {
+        // this is an id that only has the riotdev pickem leaderboards, in this case "stelar7"
+        blankId: number,
+        worldsId: number,
+        updateTimeout: number,
+        leaderboardUrl: string,
+        pointsUrl: string,
+        // not used yet, as the data format for the brackets is unknown..
+        bracketsUrl: string,
+        groupPickUrl: string;
+    };
 }

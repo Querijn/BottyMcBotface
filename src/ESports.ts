@@ -45,9 +45,24 @@ interface PickemUser {
     id: number;
 }
 
+interface PickemUserPoints {
+    summonerName: string;
+    id: number;
+    groupPoints: number;
+    bracketPoints: number;
+    totalPoints: number;
+}
+
 interface PickemGroupPick {
     user: PickemUser;
     groups: PickemGroup[];
+}
+
+interface PickemBracketPicks {
+    teams: PickemTeam[];
+    rounds: any[];
+    user: PickemUser;
+    points: number;
 }
 
 export default class ESportsAPI {
@@ -65,25 +80,42 @@ export default class ESportsAPI {
         bot.on("ready", async () => {
             await this.loadData();
             this.postInfo();
-            this.updateMemberList();
         });
     }
 
     public async updateMemberList() {
         this.currentList = await this.getMembersWithName();
-
-        setTimeout(this.updateMemberList.bind(this), 1000 * 60 * 60);
+        setTimeout(this.updateMemberList.bind(this), this.settings.pickem.updateTimeout);
     }
 
     public async getCorrectPickem(): Promise<PickemGroupPick> {
-        const anyPick = await this.getPickem(4643536);
+        const anyPick = await this.getGroupPicks(this.settings.pickem.worldsId, this.settings.pickem.blankId);
         const best: PickemGroupPick = { user: { summonerName: "The Correct Choice", id: -1 }, groups: [] };
 
         for (const group of anyPick.groups) {
-            best.groups.push({ name: group.name, teams: group.teams.sort((a, b) => b.wins - a.wins), userPoints: -1 });
+            best.groups.push({ name: group.name, teams: group.teams.sort(this.pickemTeamCompareFunction), userPoints: Number.POSITIVE_INFINITY });
         }
 
         return best;
+    }
+
+    public pickemTeamCompareFunction(a: PickemTeam, b: PickemTeam): number {
+        if (a.wins !== b.wins) return b.wins - a.wins;
+        if (a.losses === b.losses) return a.name.localeCompare(b.name);
+        return a.losses - b.losses;
+    }
+
+    public async getPickemPoints(series: number, users: number[]): Promise<PickemUserPoints[]> {
+        let url = this.settings.pickem.pointsUrl;
+        url = url.replace("{series}", String(this.settings.pickem.worldsId));
+
+        for (const user of users) {
+            url += user;
+            url += "&user=";
+        }
+
+        const data = await fetch(url);
+        return (await data.json()) as PickemUserPoints[];
     }
 
     public async getMembersWithName(): Promise<PickemGroupPick[]> {
@@ -91,7 +123,7 @@ export default class ESportsAPI {
         const returnList: PickemGroupPick[] = [];
 
         for (const entry of leaderboard) {
-            const pickem = await this.getPickem(entry.vsUserId);
+            const pickem = await this.getGroupPicks(this.settings.pickem.worldsId, entry.vsUserId);
             returnList.push(pickem);
         }
 
@@ -99,13 +131,20 @@ export default class ESportsAPI {
     }
 
     public async getLeaderboard(): Promise<PickemLeaderboard> {
-        const data = await fetch("https://pickem.euw.lolesports.com/en-GB/api/get_vs_lists/series/5/user/4643536");
+        let url = this.settings.pickem.leaderboardUrl;
+        url = url.replace("{series}", String(this.settings.pickem.worldsId));
+        url = url.replace("{user}", String(this.settings.pickem.blankId));
+
+        const data = await fetch(url);
         return (await data.json())[0];
     }
 
-    public async getPickem(id: number): Promise<PickemGroupPick> {
-        const url = "https://pickem.euw.lolesports.com/en-GB/api/get_group_picks/series/5/user/";
-        return await (await fetch(url + id)).json();
+    public async getGroupPicks(series: number, user: number): Promise<PickemGroupPick> {
+        let url = this.settings.pickem.groupPickUrl;
+        url = url.replace("{series}", String(series));
+        url = url.replace("{user}", String(user));
+
+        return (await (await fetch(url)).json());
     }
 
     public printPickem(match: PickemGroupPick) {
@@ -122,31 +161,29 @@ export default class ESportsAPI {
     public embedPickem(match: PickemGroupPick) {
         const embed = new Discord.RichEmbed();
         embed.setTitle(`${match.user.summonerName}'s pickem`);
+        let formattingIndex = 0;
         for (const group of match.groups) {
-
             let value = "";
             let index = 1;
             for (const team of group.teams) {
-                value += `${index++}. ${team.name} (${team.wins}-${team.losses})`;
+                value += `${index++}. ${team.name} (${team.wins}-${team.losses})\n`;
             }
-
             embed.addField(`${group.name} (${group.userPoints} points)`, value, true);
+
+            if (++formattingIndex % 2 === 0) {
+                embed.addBlankField();
+            }
         }
+
         return embed;
     }
 
-    public getScore(groups: PickemGroup[]): number {
-        let score = 0;
-
-        for (const group of groups) {
-            score += group.userPoints;
-        }
-
-        return score;
-    }
-
     public async onPickem(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-        if (args.length > 1) return;
+        if (args.length > 1) args[0] = args.join(" ");
+
+        if (this.currentList === undefined) {
+            await this.updateMemberList();
+        }
 
         if (args.length === 0) {
             const bestPick = await this.getCorrectPickem();
@@ -155,24 +192,22 @@ export default class ESportsAPI {
         }
 
         if (args[0] === "leaderboard") {
-            const scores = [];
+            const ids: number[] = [];
+            this.currentList.forEach(i => ids.push(i.user.id));
 
-            for (const user of this.currentList) {
-                const score = this.getScore(user.groups);
-                scores.push({ name: user.user.summonerName, score });
-            }
-
-            const sorted = scores.sort((a, b) => b.score - a.score);
+            const points = await this.getPickemPoints(this.settings.pickem.worldsId, ids);
+            const sorted = points.sort((a, b) => b.totalPoints - a.totalPoints);
 
             const embed = new Discord.RichEmbed();
-            embed.setAuthor("Top scores:");
+            embed.setTitle("Top scores:");
 
             let list = "";
             for (let i = 0; i < 5; i++) {
-                list += `${i + 1}. ${sorted[i].name} : ${sorted[i].score}\n`;
+                list += `${i + 1}. ${sorted[i].summonerName} : ${sorted[i].totalPoints}\n`;
             }
 
             embed.addField("Leaderboard", list);
+            message.channel.send({ embed });
             return;
         }
 
