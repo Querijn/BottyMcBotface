@@ -34,7 +34,8 @@ export default class ESportsAPI {
         });
     }
 
-    public onCheckNext(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+    public async onCheckNext(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        if (args.length === 0) args = ["today"];
         if (args.length !== 1) return;
 
         const data = args[0].trim().split(/[\/ -]/g);
