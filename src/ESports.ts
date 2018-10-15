@@ -225,6 +225,10 @@ export default class ESportsAPI {
     }
 
     private getUrlByLeague(leagueName: string) {
+
+        // Hotfix for worlds
+        if (leagueName === "World Championship") leagueName = "worlds";
+
         return "https://eu.lolesports.com/en/league/" + leagueName.replace(/ /g, "-").toLowerCase();
     }
 }
