@@ -35,18 +35,7 @@ export default class ESportsAPI {
     }
 
     public async onCheckNext(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-
-        if (args.length === 0) {
-            await this.loadData();
-
-            const today = new Date();
-            const dateToday = `${today.getFullYear()} ${today.getMonth() + 1} ${today.getDate()}`;
-
-            const scheduleToday = this.schedule.get(dateToday);
-            this.sendPrintout(message.channel as Discord.TextChannel, schedule, dateToday);
-            return;
-        }
-
+        if (args.length === 0) args = ["today"];
         if (args.length !== 1) return;
 
         const data = args[0].trim().split(/[\/ -]/g);
