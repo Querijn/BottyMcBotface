@@ -108,14 +108,14 @@ export default class ESportsAPI {
             for (const [league, entryList] of entries) {
                 for (const item of entryList) {
 
-                    const time = momentjs(item.time, "YYYY MM DD HH:mm Z").fromNow();
-                    if (!time.includes("ago")) {
-                        if (!prints.get(league)) {
-                            prints.set(league, []);
-                        }
+                    const time = momentjs(item.time, "YYYY MM DD HH:mm");
+                    if (time.isBefore(new Date())) continue;
 
-                        prints.get(league)!.push(item);
+                    if (!prints.get(league)) {
+                        prints.set(league, []);
                     }
+
+                    prints.get(league)!.push(item);
                 }
             }
         }
