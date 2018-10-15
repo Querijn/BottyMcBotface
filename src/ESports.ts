@@ -202,8 +202,15 @@ export default class ESportsAPI {
             embed.setTitle("Top scores:");
 
             let list = "";
+            let place = 1;
             for (let i = 0; i < 5; i++) {
-                list += `${i + 1}. ${sorted[i].summonerName} : ${sorted[i].totalPoints}\n`;
+                if (i > 0) {
+                    if (sorted[i - 1].totalPoints !== sorted[i].totalPoints) {
+                        place = i + 1;
+                    }
+                }
+
+                list += `${place}. ${sorted[i].summonerName} : ${sorted[i].totalPoints}\n`;
             }
 
             embed.addField("Leaderboard", list);
