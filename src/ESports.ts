@@ -300,14 +300,14 @@ export default class ESportsAPI {
             for (const [league, entryList] of entries) {
                 for (const item of entryList) {
 
-                    const time = momentjs(item.time, "YYYY MM DD HH:mm Z").fromNow();
-                    if (!time.includes("ago")) {
-                        if (!prints.get(league)) {
-                            prints.set(league, []);
-                        }
+                    const time = momentjs(item.time, "YYYY MM DD HH:mm");
+                    if (time.isBefore(new Date())) continue;
 
-                        prints.get(league)!.push(item);
+                    if (!prints.get(league)) {
+                        prints.set(league, []);
                     }
+
+                    prints.get(league)!.push(item);
                 }
             }
         }
@@ -334,7 +334,11 @@ export default class ESportsAPI {
 
             let output = "";
             for (const game of games) {
-                output += `${game.teamA} vs ${game.teamB}, ${momentjs(game.time, "YYYY MM DD HH:mm Z").fromNow()}\n`;
+
+                const moment = momentjs(game.time, "YYYY MM DD HH:mm");
+                if (moment.isBefore(new Date())) continue;
+
+                output += `${game.teamA} vs ${game.teamB}, ${moment.fromNow()}\n`;
             }
 
             embed.fields.push({
@@ -417,6 +421,10 @@ export default class ESportsAPI {
     }
 
     private getUrlByLeague(leagueName: string) {
+
+        // Hotfix for worlds
+        if (leagueName === "World Championship") leagueName = "worlds";
+
         return "https://eu.lolesports.com/en/league/" + leagueName.replace(/ /g, "-").toLowerCase();
     }
 }
