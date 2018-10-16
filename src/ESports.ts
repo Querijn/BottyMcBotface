@@ -371,7 +371,7 @@ export default class ESportsAPI {
     // this can also check for older games by using resultsHtml instead of fixures
     private async loadData() {
         // pull data
-        const data = await fetch("https://eu.lolesports.com/en/api/widget/schedule?timezone=Europe%2FOslo&leagues=26&leagues=3&leagues=2&leagues=6&leagues=7&leagues=5&leagues=4&leagues=9&leagues=10&leagues=1&leagues=43&slug=all");
+        const data = await fetch("https://eu.lolesports.com/en/api/widget/schedule?timezone=UTC&leagues=26&leagues=3&leagues=2&leagues=6&leagues=7&leagues=5&leagues=4&leagues=9&leagues=10&leagues=1&leagues=43&slug=all");
         const html = (await data.json() as ESportsAPIReturnData).fixturesHtml;
         const schedule: Map<string, Map<string, ESportsLeagueSchedule[]>> = new Map();
 
