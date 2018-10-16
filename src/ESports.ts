@@ -228,7 +228,7 @@ export default class ESportsAPI {
         if (match) {
             message.channel.send({ embed: this.embedPickem(match) });
         } else {
-            message.channel.send("No pickem with that summonername found..");
+            message.channel.send("No pickem with that summoner name found..");
         }
     }
 
