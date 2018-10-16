@@ -68,6 +68,7 @@ interface PickemBracketPicks {
 export default class ESportsAPI {
     private bot: Discord.Client;
     private settings: SharedSettings;
+    private esportsChannel: Discord.GuildChannel | null = null;
 
     private schedule: Map<string, Map<string, ESportsLeagueSchedule[]>> = new Map();
 
@@ -80,6 +81,9 @@ export default class ESportsAPI {
         bot.on("ready", async () => {
 
             this.updateMemberList();
+
+            const channel = this.settings.esports.printChannel;
+            this.esportsChannel = this.bot.guilds.get(this.settings.server)!.channels.find("name", channel);
 
             await this.loadData();
             this.postInfo();
@@ -183,9 +187,13 @@ export default class ESportsAPI {
 
     public async onPickem(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
 
+        if (this.esportsChannel && message.channel.id !== this.esportsChannel.id) {
+            message.channel.send(`To avoid spoilers, this command is restricted to #${this.esportsChannel.name}.`);
+            return;
         }
 
         if (args.length > 1) args[0] = args.join(" ");
+
         if (args.length === 0) {
             const bestPick = await this.getCorrectPickem();
             message.channel.send({ embed: this.embedPickem(bestPick) });
@@ -283,10 +291,8 @@ export default class ESportsAPI {
     }
 
     private postInfo() {
-        const channel = this.settings.esports.printChannel;
-        const esports = this.bot.guilds.get(this.settings.server)!.channels.find("name", channel);
-        if (!esports) {
-            console.error(`Esports: Unable to find channel #${channel}`);
+        if (!this.esportsChannel) {
+            console.error(`Esports: Unable to find channel #${this.esportsChannel}`);
             return;
         }
 
@@ -318,7 +324,7 @@ export default class ESportsAPI {
             }
         }
 
-        this.sendPrintout(esports as Discord.TextChannel, prints, tellDate);
+        this.sendPrintout(this.esportsChannel as Discord.TextChannel, prints, tellDate);
         setTimeout(this.postInfo.bind(this), this.settings.esports.printToChannelTimeout);
     }
 
