@@ -149,7 +149,6 @@ export default class ESportsAPI {
 
     public printPickem(match: PickemGroupPick) {
         for (const group of match.groups) {
-            console.log(`${group.name} (${group.userPoints} points)`);
             let index = 1;
 
             for (const team of group.teams) {
