@@ -104,6 +104,9 @@ export default class Botty {
         const guild = this.client.guilds.get(this.sharedSettings.server);
         if (!guild) {
             console.error(`Botty: Incorrect setting for the server: ${this.sharedSettings.server}`);
+
+            const guilds = this.client.guilds.array().map(g => ` - ${g.name} (${g.id})\n`);
+            console.error(`The available guilds are:\n${guilds}`);
             return;
         }
 
