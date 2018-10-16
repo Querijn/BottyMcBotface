@@ -159,7 +159,7 @@ export default class ESportsAPI {
 
     public embedPickem(match: PickemGroupPick) {
         const embed = new Discord.RichEmbed();
-        embed.setTitle(`${match.user.summonerName}'s pickem`);
+        embed.setTitle(match.user.id >= 0 ? `${match.user.summonerName}'s pickem` : "Current standings");
         let formattingIndex = 0;
         for (const group of match.groups) {
             let value = "";
