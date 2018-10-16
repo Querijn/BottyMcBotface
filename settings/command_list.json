@@ -18,7 +18,10 @@
         },
         "pickem": {
             "aliases": [
-                "pickem"
+                "pickem",
+                "pick_em",
+                "pick_ems",
+                "pickems"
             ],
             "description": "Print out your pickems"
         }
