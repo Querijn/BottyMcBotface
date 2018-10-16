@@ -167,7 +167,8 @@ export default class ESportsAPI {
             for (const team of group.teams) {
                 value += `${index++}. ${team.name} (${team.wins}-${team.losses})\n`;
             }
-            embed.addField(`${group.name} (${group.userPoints} points)`, value, true);
+            const pointsField = group.userPoints !== Number.POSITIVE_INFINITY ? `(${group.userPoints} points)` : "";
+            embed.addField(`${group.name} ${pointsField}`, value, true);
 
             if (++formattingIndex % 2 === 0) {
                 embed.addBlankField();
