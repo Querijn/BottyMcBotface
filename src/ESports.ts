@@ -78,6 +78,9 @@ export default class ESportsAPI {
         this.settings = settings;
 
         bot.on("ready", async () => {
+
+            this.updateMemberList();
+
             await this.loadData();
             this.postInfo();
         });
@@ -179,15 +182,18 @@ export default class ESportsAPI {
     }
 
     public async onPickem(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-        if (args.length > 1) args[0] = args.join(" ");
 
-        if (this.currentList === undefined) {
-            await this.updateMemberList();
         }
 
+        if (args.length > 1) args[0] = args.join(" ");
         if (args.length === 0) {
             const bestPick = await this.getCorrectPickem();
             message.channel.send({ embed: this.embedPickem(bestPick) });
+            return;
+        }
+
+        if (this.currentList === undefined) {
+            message.channel.send(`We're updating the user-list, please retry this command in a bit..`);
             return;
         }
 
