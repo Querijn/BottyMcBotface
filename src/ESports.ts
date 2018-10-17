@@ -240,7 +240,7 @@ export default class ESportsAPI {
             return;
         }
 
-        const match = this.currentList.filter(a => a.user.summonerName === args[0])[0];
+        const match = this.currentList.filter(a => a.user.summonerName.replace(/\s/g, "").toLowerCase() === args[0].replace(/\s/g, "").toLowerCase())[0];
         if (match) {
             message.channel.send({ embed: this.embedPickem(match) });
         } else {
