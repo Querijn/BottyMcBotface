@@ -105,7 +105,7 @@ export default class Info {
         if (args.length === 0) return;
         const name = args[0];
 
-        const regexp = /^[a-z0-9-]+$/;
+        const regexp = /^[a-z0-9-]+$/i;
         if (!regexp.test(name)) return;
 
         const infoData = this.fetchInfo(name);
@@ -223,6 +223,8 @@ export default class Info {
         const alreadyExists = this.infos.some(info => info.command === command);
         if (alreadyExists) return;
 
+        command = command.toLowerCase();
+        
         const newInfo: InfoData = {
             command,
             counter: 0,
@@ -294,6 +296,8 @@ export default class Info {
 
         if (command.length === 0) return null;
         if (command.length > 300) return { message: `Stop it. Get some help.`, counter: 0, command, categoryId: "" };
+
+        command = command.toLowerCase();
 
         let info = this.infos.find(inf => {
             return inf.command === command;
