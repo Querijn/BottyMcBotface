@@ -13,6 +13,7 @@
         "forin": false,
         "arrow-parens": false,
         "max-classes-per-file": false,
+        "no-string-literal": false,
         "array-type": {
             "options": [
                 "array"
