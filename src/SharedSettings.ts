@@ -139,6 +139,7 @@ export interface SharedSettings {
         // this is an id that only has the riotdev pickem leaderboards, in this case "stelar7"
         blankId: number,
         worldsId: number,
+        listId: number,
         updateTimeout: number,
         leaderboardUrl: string,
         pointsUrl: string,

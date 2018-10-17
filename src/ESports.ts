@@ -19,11 +19,24 @@ interface ESportsLeagueSchedule {
 }
 
 interface PickemLeaderboardEntry {
-    vsUserId: number;
+    id: number;
+    rank: number;
+    points: number;
+    summonerName: string;
 }
 
 interface PickemLeaderboard {
-    entries: PickemLeaderboardEntry[];
+    listSeriesId: number;
+    listCreatorId: number;
+    listName: string;
+    secretToken: string | null;
+    hasPoints: boolean;
+    hasSocialMediaLinks: boolean;
+    modifiable: boolean;
+    shareable: boolean;
+    leavable: boolean;
+    promoted: boolean;
+    stageToRankings: { [key: string]: PickemLeaderboardEntry[]; };
 }
 
 interface PickemTeam {
@@ -126,24 +139,19 @@ export default class ESportsAPI {
     }
 
     public async getMembersWithName(): Promise<PickemGroupPick[]> {
-        const leaderboard = (await this.getLeaderboard()).entries;
+
+        const url = this.settings.pickem.leaderboardUrl.replace("{listId}", String(this.settings.pickem.listId));
+
+        const data = await fetch(url);
+        const leaderboard: PickemLeaderboard = await data.json();
         const returnList: PickemGroupPick[] = [];
 
-        for (const entry of leaderboard) {
-            const pickem = await this.getGroupPicks(this.settings.pickem.worldsId, entry.vsUserId);
+        for (const entry of leaderboard.stageToRankings["both"]) {
+            const pickem = await this.getGroupPicks(this.settings.pickem.worldsId, entry.id);
             returnList.push(pickem);
         }
 
         return returnList;
-    }
-
-    public async getLeaderboard(): Promise<PickemLeaderboard> {
-        let url = this.settings.pickem.leaderboardUrl;
-        url = url.replace("{series}", String(this.settings.pickem.worldsId));
-        url = url.replace("{user}", String(this.settings.pickem.blankId));
-
-        const data = await fetch(url);
-        return (await data.json())[0];
     }
 
     public async getGroupPicks(series: number, user: number): Promise<PickemGroupPick> {

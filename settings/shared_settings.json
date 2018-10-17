@@ -152,12 +152,13 @@
         }
     },
     "pickem": {
-        "leaderboardUrl": "https://pickem.euw.lolesports.com/en-GB/api/get_vs_lists/series/{series}/user/{user}",
+        "leaderboardUrl": "https://pickem.euw.lolesports.com/en-GB/api/get_vs_list_rankings/{listId}",
         "groupPickUrl": "https://pickem.euw.lolesports.com/en-GB/api/get_group_picks/series/{series}/user/{user}",
         "bracketsUrl": "https://pickem.euw.lolesports.com/en-GB/api/get_bracket_picks/series/{series}/user/{user}",
         "pointsUrl": "https://pickem.euw.lolesports.com/en-GB/api/get_points/series/{series}?user=",
         "worldsId": 5,
         "blankId": 4643536,
+        "listId": 619532,
         "updateTimeout": 3600000
     }
 }
