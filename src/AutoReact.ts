@@ -129,11 +129,35 @@ export default class AutoReact {
         const greeting = message.content.toLowerCase();
 
         const words = [
+            // Russian
+            "privet", "preevyet", "privyet",
+            "zdrastvooyte", "dobraye ootro",
+            "привет",
+            // English
             "hello", "hi", "hey",
             "good morning", "goodmorning",
             "good evening", "goodevening",
             "good night", "goodnight",
             "good day", "goodday",
+            // French
+            "bonjour", "salut", "coucou",
+            // Spanish
+            "buenos días", "buenos dias",
+            "buenas tardes", "buenas noches",
+            "muy buenos", "hola", "saludos",
+            // Portuguese
+            "ola", "olá", "boa tarde",
+            // Hindi
+            "namaste", "suprabhātam",
+            "śubha sandhyā", "śubha rātri",
+            // Bengali
+            "nomoskar", "shubho shokal",
+            "shubho oporanno", "shubho shondha",
+            // Japanese
+            "おはよう　ございます", "こんにちは",
+            "ohayō gozaimasu", "konnichiwa",
+            "こんばんは", "おやすみ　なさい",
+            "konbanwa", "oyasumi nasai"
         ];
 
         const endChars = [
