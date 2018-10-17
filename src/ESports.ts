@@ -336,15 +336,13 @@ export default class ESportsAPI {
 
     private sendPrintout(channel: Discord.TextChannel, data: Map<string, ESportsLeagueSchedule[]> | undefined, date: string) {
 
-        date = (date || momentjs().format("YYYY M D"))
-            .split(" ")
-            .join("/");
+        date = (date.replace(/ /g, "/") || momentjs().format("YYYY/M/D"));
         if (!data || data.size === 0) {
             channel.send(`No games played on ${date}`);
             return;
         }
         const embed = new Discord.RichEmbed();
-        embed.title = `Games being played ${date.split(" ").join("/")}:`;
+        embed.title = `Games being played ${date}:`;
         if (!embed.fields) embed.fields = [];
         embed.color = 0x9b311a;
 
