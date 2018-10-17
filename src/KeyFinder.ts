@@ -79,8 +79,8 @@ export default class KeyFinder {
             },
         });
 
-        const headers = resp.headers.get("x-app-rate-limit");
-        if (resp.status !== 403 && headers === null) {
+        const rateLimit = resp.headers.get("x-app-rate-limit");
+        if (resp.status !== 403 && rateLimit === null) {
 
             const availableHeaders: string[] = [];
             resp.headers.forEach((value: string, header: string) => availableHeaders.push(`${header}: ${value}`));
@@ -89,7 +89,12 @@ export default class KeyFinder {
             return "Fake Headers";
         }
 
-        return resp.status === 403 ? null : headers;
+        const existingKey = this.keys.find(k => k.apiKey === key);
+        if (existingKey && rateLimit) {
+            existingKey.rateLimit = rateLimit;
+        }
+
+        return resp.status === 403 ? null : rateLimit;
     }
 
     /**
