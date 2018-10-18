@@ -15,6 +15,7 @@ import Techblog from "./Techblog";
 import Uptime from "./Uptime";
 import VersionChecker from "./VersionChecker";
 import ESportsAPI from "./ESports";
+import Pickem from "./Pickem";
 import Endpoint from "./Endpoint";
 
 import { APISchema } from "./ApiSchema";
@@ -44,6 +45,7 @@ const uptime = new Uptime(sharedSettings, "data/uptime_data.json");
 const status = new ApiStatus(sharedSettings);
 const libraries = new RiotAPILibraries(sharedSettings);
 const esports = new ESportsAPI(bot.client, sharedSettings);
+const pickem = new Pickem(bot.client, sharedSettings);
 const endpoint = new Endpoint(sharedSettings, "data/endpoints.json");
 
 // Commands controller commands
@@ -55,7 +57,7 @@ controller.registerCommand(commandList.botty.restart, bot.onRestart.bind(bot));
 
 // Esport commands
 controller.registerCommand(commandList.esports.date, esports.onCheckNext.bind(esports));
-controller.registerCommand(commandList.esports.pickem, esports.onPickem.bind(esports));
+controller.registerCommand(commandList.esports.pickem, pickem.onPickem.bind(pickem));
 
 // API schema commands
 controller.registerCommand(commandList.apiSchema.updateSchema, apiSchema.onUpdateSchemaRequest.bind(apiSchema));
