@@ -18,66 +18,6 @@ interface ESportsLeagueSchedule {
     teamB: string;
 }
 
-interface PickemLeaderboardEntry {
-    id: number;
-    rank: number;
-    points: number;
-    summonerName: string;
-}
-
-interface PickemLeaderboard {
-    listSeriesId: number;
-    listCreatorId: number;
-    listName: string;
-    secretToken: string | null;
-    hasPoints: boolean;
-    hasSocialMediaLinks: boolean;
-    modifiable: boolean;
-    shareable: boolean;
-    leavable: boolean;
-    promoted: boolean;
-    stageToRankings: { [key: string]: PickemLeaderboardEntry[]; };
-}
-
-interface PickemTeam {
-    shortName: string;
-    name: string;
-    logoUrl: string;
-    wins: number;
-    losses: number;
-}
-
-interface PickemGroup {
-    name: string;
-    userPoints: number;
-    teams: PickemTeam[];
-}
-
-interface PickemUser {
-    summonerName: string;
-    id: number;
-}
-
-interface PickemUserPoints {
-    summonerName: string;
-    id: number;
-    groupPoints: number;
-    bracketPoints: number;
-    totalPoints: number;
-}
-
-interface PickemGroupPick {
-    user: PickemUser;
-    groups: PickemGroup[];
-}
-
-interface PickemBracketPicks {
-    teams: PickemTeam[];
-    rounds: any[];
-    user: PickemUser;
-    points: number;
-}
-
 export default class ESportsAPI {
     private bot: Discord.Client;
     private settings: SharedSettings;
@@ -85,15 +25,11 @@ export default class ESportsAPI {
 
     private schedule: Map<string, Map<string, ESportsLeagueSchedule[]>> = new Map();
 
-    private currentList: PickemGroupPick[];
-
     constructor(bot: Discord.Client, settings: SharedSettings) {
         this.bot = bot;
         this.settings = settings;
 
         bot.on("ready", async () => {
-
-            this.updateMemberList();
 
             const channel = this.settings.esports.printChannel;
             this.esportsChannel = this.bot.guilds.get(this.settings.server)!.channels.find("name", channel);
@@ -101,151 +37,6 @@ export default class ESportsAPI {
             await this.loadData();
             this.postInfo();
         });
-    }
-
-    public async updateMemberList() {
-        this.currentList = await this.getMembersWithName();
-        setTimeout(this.updateMemberList.bind(this), this.settings.pickem.updateTimeout);
-    }
-
-    public async getCorrectPickem(): Promise<PickemGroupPick> {
-        const anyPick = await this.getGroupPicks(this.settings.pickem.worldsId, this.settings.pickem.blankId);
-        const best: PickemGroupPick = { user: { summonerName: "The Correct Choice", id: -1 }, groups: [] };
-
-        for (const group of anyPick.groups) {
-            best.groups.push({ name: group.name, teams: group.teams.sort(this.pickemTeamCompareFunction), userPoints: Number.POSITIVE_INFINITY });
-        }
-
-        return best;
-    }
-
-    public pickemTeamCompareFunction(a: PickemTeam, b: PickemTeam): number {
-        if (a.wins !== b.wins) return b.wins - a.wins;
-        if (a.losses === b.losses) return a.name.localeCompare(b.name);
-        return a.losses - b.losses;
-    }
-
-    public async getPickemPoints(series: number, users: number[]): Promise<PickemUserPoints[]> {
-        let url = this.settings.pickem.pointsUrl;
-        url = url.replace("{series}", String(this.settings.pickem.worldsId));
-
-        for (const user of users) {
-            url += user;
-            url += "&user=";
-        }
-
-        const data = await fetch(url);
-        return (await data.json()) as PickemUserPoints[];
-    }
-
-    public async getMembersWithName(): Promise<PickemGroupPick[]> {
-
-        const url = this.settings.pickem.leaderboardUrl.replace("{listId}", String(this.settings.pickem.listId));
-
-        const data = await fetch(url);
-        const leaderboard: PickemLeaderboard = await data.json();
-        const returnList: PickemGroupPick[] = [];
-
-        for (const entry of leaderboard.stageToRankings["both"]) {
-            const pickem = await this.getGroupPicks(this.settings.pickem.worldsId, entry.id);
-            returnList.push(pickem);
-        }
-
-        return returnList;
-    }
-
-    public async getGroupPicks(series: number, user: number): Promise<PickemGroupPick> {
-        let url = this.settings.pickem.groupPickUrl;
-        url = url.replace("{series}", String(series));
-        url = url.replace("{user}", String(user));
-
-        return (await (await fetch(url)).json());
-    }
-
-    public printPickem(match: PickemGroupPick) {
-        for (const group of match.groups) {
-            let index = 1;
-
-            for (const team of group.teams) {
-                console.log(`${index++}. ${team.name} (${team.wins}-${team.losses})`);
-            }
-        }
-    }
-
-    public embedPickem(match: PickemGroupPick) {
-        const embed = new Discord.RichEmbed();
-        embed.setTitle(match.user.id >= 0 ? `${match.user.summonerName}'s pickem` : "Current standings");
-        let formattingIndex = 0;
-        for (const group of match.groups) {
-            let value = "";
-            let index = 1;
-            for (const team of group.teams) {
-                value += `${index++}. ${team.name} (${team.wins}-${team.losses})\n`;
-            }
-            const pointsField = group.userPoints !== Number.POSITIVE_INFINITY ? `(${group.userPoints} points)` : "";
-            embed.addField(`${group.name} ${pointsField}`, value, true);
-
-            if (++formattingIndex % 2 === 0) {
-                embed.addBlankField();
-            }
-        }
-
-        return embed;
-    }
-
-    public async onPickem(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-
-        if (this.esportsChannel && message.channel.id !== this.esportsChannel.id) {
-            message.channel.send(`To avoid spoilers, this command is restricted to #${this.esportsChannel.name}.`);
-            return;
-        }
-
-        if (args.length > 1) args[0] = args.join(" ");
-
-        if (args.length === 0) {
-            const bestPick = await this.getCorrectPickem();
-            message.channel.send({ embed: this.embedPickem(bestPick) });
-            return;
-        }
-
-        if (this.currentList === undefined) {
-            message.channel.send(`We're updating the user-list, please retry this command in a bit..`);
-            return;
-        }
-
-        if (args[0] === "leaderboard") {
-            const ids: number[] = [];
-            this.currentList.forEach(i => ids.push(i.user.id));
-
-            const points = await this.getPickemPoints(this.settings.pickem.worldsId, ids);
-            const sorted = points.sort((a, b) => b.totalPoints - a.totalPoints);
-
-            const embed = new Discord.RichEmbed();
-            embed.setTitle("Top scores:");
-
-            let list = "";
-            let place = 1;
-            for (let i = 0; i < 5; i++) {
-                if (i > 0) {
-                    if (sorted[i - 1].totalPoints !== sorted[i].totalPoints) {
-                        place = i + 1;
-                    }
-                }
-
-                list += `${place}. ${sorted[i].summonerName} : ${sorted[i].totalPoints}\n`;
-            }
-
-            embed.addField("Leaderboard", list);
-            message.channel.send({ embed });
-            return;
-        }
-
-        const match = this.currentList.filter(a => a.user.summonerName.replace(/\s/g, "").toLowerCase() === args[0].replace(/\s/g, "").toLowerCase())[0];
-        if (match) {
-            message.channel.send({ embed: this.embedPickem(match) });
-        } else {
-            message.channel.send("No pickem with that summoner name found..");
-        }
     }
 
     public async onCheckNext(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {

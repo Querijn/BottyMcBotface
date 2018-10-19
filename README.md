@@ -5,9 +5,11 @@ The Riot Games API Discord Bot. This is the bot that helps out with your questio
 ## Available commands
 
 - **!ask**: Ask a question at the next #office-hours
+- **!esports**: Prints out a list of esports games.
 - **!help**: Prints all the commands
 - **!lib, !libs, !libraries**: Print a list of the public libraries
 - **!note, !notes**: Prints all the notes, or the content of a note if used with a parameter
+- **!pickem**: Prints out information about your pickems.
 - **!status, !apistatus**: Prints the status of the Riot Games API
 - **!toggle_default_thinking**: Changes bottys reaction from the normal thinking emote, to one of the custom ones (or opposite)
 - **!toggle_react**: Decides if botty reacts to your messages
@@ -44,6 +46,8 @@ The Riot Games API Discord Bot. This is the bot that helps out with your questio
 - **Uptime**: A module that keeps track of uptime.
 - **ApiStatus**: Keeps track of the API status.
 - **RiotAPILibraries**: Can output the Riot API Libraries from the article on the forum via GitHub.
+- **Esports**: Handles the data collection and output for !esports 
+- **Pickem**: Handles the data collection and output for !pickem
 
 ## Setting up
 
