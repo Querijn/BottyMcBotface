@@ -13,6 +13,14 @@
             "username": "Querijn",
             "password": ""
         },
-        "isProduction": false
+        "riotApi": {
+            "key": ""
+        },
+        "webServer": {
+            "relativeFolderLocation": "www/",
+            "relativeLiveLocation": "my.cool.url"
+        },
+        "isProduction": false,
+        "appName":"app"
     }
 }
