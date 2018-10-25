@@ -2,6 +2,10 @@ import fetch from "node-fetch";
 import Discord = require("discord.js");
 import { SharedSettings } from "./SharedSettings";
 
+export enum PickemPrintMode {
+    GROUP = "GROUP", BRACKET = "BRACKET", BOTH = "BOTH",
+}
+
 interface PickemLeaderboardEntry {
     id: number;
     rank: number;
@@ -320,8 +324,7 @@ export default class Pickem {
 
         if (args.length === 0) {
             const bestPick = await this.getCorrectPickem();
-            message.channel.send({ embed: this.generateEmbedGroupPickem(bestPick.group) });
-            message.channel.send(this.generateBracket(bestPick.bracket));
+            this.doPrint(message.channel as Discord.TextChannel, bestPick.group, bestPick.bracket);
             return;
         }
 
@@ -339,10 +342,26 @@ export default class Pickem {
         if (match) {
             const group = await this.getGroupPicks(this.settings.pickem.worldsId, match.id);
             const bracket = await this.getBracketPicks(this.settings.pickem.worldsId, match.id);
-            message.channel.send({ embed: this.generateEmbedGroupPickem(group) });
-            message.channel.send(this.generateBracket(bracket));
-        } else {
+            this.doPrint(message.channel as Discord.TextChannel, group, bracket);
             message.channel.send("No pickem with that summoner name found..");
+        }
+    }
+
+    public doPrint(channel: Discord.TextChannel, group: PickemGroupPick, bracket: PickemBracketPick) {
+        switch (this.settings.pickem.printMode) {
+            case PickemPrintMode.BOTH: {
+                channel.send({ embed: this.generateEmbedGroupPickem(group) });
+                channel.send(this.generateBracket(bracket));
+                break;
+            }
+            case PickemPrintMode.GROUP: {
+                channel.send({ embed: this.generateEmbedGroupPickem(group) });
+                break;
+            }
+            case PickemPrintMode.BRACKET: {
+                channel.send(this.generateBracket(bracket));
+                break;
+            }
         }
     }
 }
