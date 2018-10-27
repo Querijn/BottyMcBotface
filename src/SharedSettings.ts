@@ -1,3 +1,5 @@
+import { PickemPrintMode } from "./Pickem";
+
 export interface PersonalSettings {
     forum: {
         username: string;
@@ -165,5 +167,6 @@ export interface SharedSettings {
         // not used yet, as the data format for the brackets is unknown..
         bracketsUrl: string,
         groupPickUrl: string;
+        printMode: PickemPrintMode;
     };
 }
