@@ -224,7 +224,7 @@ export default class Info {
         if (alreadyExists) return;
 
         command = command.toLowerCase();
-        
+
         const newInfo: InfoData = {
             command,
             counter: 0,
