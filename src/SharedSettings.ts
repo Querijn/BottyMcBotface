@@ -24,6 +24,17 @@ export interface PersonalSettings {
     appName: string;
 }
 
+export enum PageType {
+    Page = "page",
+    Article = "article",
+}
+
+export interface PageDifferPage {
+    name: string;
+    ident: string;
+    type: PageType;
+}
+
 export interface SharedSettings {
     server: string;
 
@@ -58,6 +69,14 @@ export interface SharedSettings {
         checkInterval: number,
         channel: string,
         url: string,
+    };
+
+    pageDiffer: {
+        checkInterval: number,
+        channel: string,
+        pages: PageDifferPage[],
+        articleHost: string,
+        embedImageUrl: string,
     };
 
     autoReact: {
