@@ -24,8 +24,8 @@ export default class ESportsAPI {
     private esportsChannel: Discord.GuildChannel | null = null;
 
     private schedule: Map<string, Map<string, ESportsLeagueSchedule[]>> = new Map();
-    postInfoTimeOut: number | null;
-    loadDataTimeOut: number | null;
+    private postInfoTimeOut: number | null;
+    private loadDataTimeOut: number | null;
 
     constructor(bot: Discord.Client, settings: SharedSettings) {
         this.bot = bot;
@@ -37,7 +37,7 @@ export default class ESportsAPI {
             this.esportsChannel = this.bot.guilds.get(this.settings.server)!.channels.find("name", channel);
 
             await this.loadData();
-            this.postInfo();
+            this.postInfo(true);
         });
     }
 
@@ -94,10 +94,10 @@ export default class ESportsAPI {
         }
 
         const schedule = this.schedule.get(date);
-        this.sendPrintout(message.channel as Discord.TextChannel, schedule, date);
+        this.sendPrintout(message.channel as Discord.TextChannel, schedule, date, false);
     }
 
-    private postInfo() {
+    private postInfo(isUpdateMessage: boolean = false) {
         if (!this.esportsChannel) {
             console.error(`Esports: Unable to find channel #${this.esportsChannel}`);
             return;
@@ -122,29 +122,29 @@ export default class ESportsAPI {
                     const time = momentjs(item.time, "YYYY MM DD HH:mm");
                     if (time.isBefore(new Date())) continue;
 
-                    if (!prints.get(league)) {
-                        prints.set(league, []);
-                    }
+                    // if (!prints.get(league)) {
+                    //     prints.set(league, []);
+                    // }
 
-                    prints.get(league)!.push(item);
+                    // prints.get(league)!.push(item);
                 }
             }
         }
 
-        this.sendPrintout(this.esportsChannel as Discord.TextChannel, prints, tellDate);
-        
+        this.sendPrintout(this.esportsChannel as Discord.TextChannel, prints, tellDate, isUpdateMessage);
+
         if (this.postInfoTimeOut) {
             clearTimeout(this.postInfoTimeOut);
             this.postInfoTimeOut = null;
         }
-        this.postInfoTimeOut = setTimeout(this.postInfo.bind(this), this.settings.esports.printToChannelTimeout);
+        this.postInfoTimeOut = setTimeout(this.postInfo.bind(this, true), this.settings.esports.printToChannelTimeout);
     }
 
-    private sendPrintout(channel: Discord.TextChannel, data: Map<string, ESportsLeagueSchedule[]> | undefined, date: string) {
+    private sendPrintout(channel: Discord.TextChannel, data: Map<string, ESportsLeagueSchedule[]> | undefined, date: string, isUpdateMessage: boolean) {
 
         date = (date.replace(/ /g, "/") || momentjs().format("YYYY/M/D"));
         if (!data || data.size === 0) {
-            channel.send(`No games played on ${date}`);
+            if (!isUpdateMessage) channel.send(`No games played on ${date}`);
             return;
         }
         const embed = new Discord.RichEmbed();
@@ -239,7 +239,7 @@ export default class ESportsAPI {
             }
         });
         this.schedule = schedule;
-        
+
         if (this.loadDataTimeOut) {
             clearTimeout(this.loadDataTimeOut);
             this.loadDataTimeOut = null;
