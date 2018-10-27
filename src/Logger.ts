@@ -7,9 +7,9 @@ import Discord = require("discord.js");
  * Log handler.
  *
  * @export
- * @class AutoReact
+ * @class Logger
  */
-export default class AutoReact {
+export default class Logger {
     private bot: Discord.Client;
     private errorChannel: Discord.TextChannel;
     private logChannel: Discord.TextChannel;
