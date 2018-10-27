@@ -133,6 +133,8 @@ export default class AutoReact {
             "privet", "preevyet", "privyet",
             "zdrastvooyte", "dobraye ootro",
             "привет",
+            // ASBO
+            "oi", "ey",
             // English
             "hello", "hi", "hey",
             "good morning", "goodmorning",
@@ -157,7 +159,13 @@ export default class AutoReact {
             "おはよう　ございます", "こんにちは",
             "ohayō gozaimasu", "konnichiwa",
             "こんばんは", "おやすみ　なさい",
-            "konbanwa", "oyasumi nasai"
+            "konbanwa", "oyasumi nasai",
+            // Dutch
+            "hallo", "hoi", "hey",
+            "goede morgen", "goedemorgen",
+            "goedenavond",
+            "goedenacht", "goede nacht",
+            "goedendag", "houdoe",
         ];
 
         const endChars = [
