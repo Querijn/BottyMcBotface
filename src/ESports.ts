@@ -24,6 +24,8 @@ export default class ESportsAPI {
     private esportsChannel: Discord.GuildChannel | null = null;
 
     private schedule: Map<string, Map<string, ESportsLeagueSchedule[]>> = new Map();
+    postInfoTimeOut: number | null;
+    loadDataTimeOut: number | null;
 
     constructor(bot: Discord.Client, settings: SharedSettings) {
         this.bot = bot;
@@ -130,7 +132,12 @@ export default class ESportsAPI {
         }
 
         this.sendPrintout(this.esportsChannel as Discord.TextChannel, prints, tellDate);
-        setTimeout(this.postInfo.bind(this), this.settings.esports.printToChannelTimeout);
+        
+        if (this.postInfoTimeOut) {
+            clearTimeout(this.postInfoTimeOut);
+            this.postInfoTimeOut = null;
+        }
+        this.postInfoTimeOut = setTimeout(this.postInfo.bind(this), this.settings.esports.printToChannelTimeout);
     }
 
     private sendPrintout(channel: Discord.TextChannel, data: Map<string, ESportsLeagueSchedule[]> | undefined, date: string) {
@@ -232,7 +239,12 @@ export default class ESportsAPI {
             }
         });
         this.schedule = schedule;
-        setTimeout(this.loadData.bind(this), this.settings.esports.updateTimeout);
+        
+        if (this.loadDataTimeOut) {
+            clearTimeout(this.loadDataTimeOut);
+            this.loadDataTimeOut = null;
+        }
+        this.loadDataTimeOut = setTimeout(this.loadData.bind(this), this.settings.esports.updateTimeout);
     }
 
     private getUrlByLeague(leagueName: string) {
