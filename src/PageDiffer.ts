@@ -96,7 +96,7 @@ export default class PageDiffer {
             }
 
             const hash = crc32.str(body);
-            // if (this.data.hashes[page.type + page.ident] === hash) continue;
+            if (this.data.hashes[page.type + page.ident] === hash) continue;
 
             // Make sure the folders are there
             if (!fs.existsSync("www")) fs.mkdirSync("www");
