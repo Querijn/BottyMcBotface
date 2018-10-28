@@ -1,5 +1,6 @@
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
+import * as evenin from "evenin";
 
 import Discord = require("discord.js");
 
@@ -128,59 +129,8 @@ export default class AutoReact {
         if (message.author.bot) return;
         const greeting = message.content.toLowerCase();
 
-        const words = [
-            // Russian
-            "privet", "preevyet", "privyet",
-            "zdrastvooyte", "dobraye ootro",
-            "привет",
-            // ASBO
-            "oi", "ey",
-            // English
-            "hello", "hi", "hey",
-            "good morning", "goodmorning",
-            "good evening", "goodevening",
-            "good night", "goodnight",
-            "good day", "goodday",
-            // French
-            "bonjour", "salut", "coucou",
-            // Spanish
-            "buenos días", "buenos dias",
-            "buenas tardes", "buenas noches",
-            "muy buenos", "hola", "saludos",
-            // Portuguese
-            "ola", "olá", "boa tarde",
-            // Hindi
-            "namaste", "suprabhātam",
-            "śubha sandhyā", "śubha rātri",
-            // Bengali
-            "nomoskar", "shubho shokal",
-            "shubho oporanno", "shubho shondha",
-            // Japanese
-            "おはよう　ございます", "こんにちは",
-            "ohayō gozaimasu", "konnichiwa",
-            "こんばんは", "おやすみ　なさい",
-            "konbanwa", "oyasumi nasai",
-            // Dutch
-            "hallo", "hoi", "hey",
-            "goede morgen", "goedemorgen",
-            "goedenavond",
-            "goedenacht", "goede nacht",
-            "goedendag", "houdoe",
-        ];
-
-        const endChars = [
-            " ", "!", ",", ".",
-        ];
-
-        // Determine if the greeting is just the greeting, or ends in punctuation and not "his"
-        const shouldReact = words.some(x => {
-            if (greeting === x) { return true; }
-
-            const endChar = greeting.charAt(x.length);
-            return greeting.startsWith(x) && endChars.findIndex(y => y === endChar) !== -1;
-        });
-
-        if (!shouldReact) {
+        // If this message has no greeting, abort.
+        if (!evenin.hasGreeting(greeting)) {
             return;
         }
 
