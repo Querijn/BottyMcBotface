@@ -17,6 +17,7 @@ import VersionChecker from "./VersionChecker";
 import ESportsAPI from "./ESports";
 import Pickem from "./Pickem";
 import Endpoint from "./Endpoint";
+import PageDiffer from "./PageDiffer";
 
 import { APISchema } from "./ApiSchema";
 import { CommandList } from "./CommandController";
@@ -47,6 +48,7 @@ const libraries = new RiotAPILibraries(sharedSettings);
 const esports = new ESportsAPI(bot.client, sharedSettings);
 const pickem = new Pickem(bot.client, sharedSettings);
 const endpoint = new Endpoint(sharedSettings, "data/endpoints.json");
+const pageDiffer = new PageDiffer(bot.client, sharedSettings, "data/page_differ.json");
 
 // Commands controller commands
 controller.registerCommand(commandList.controller.toggle, controller.onToggle.bind(controller));

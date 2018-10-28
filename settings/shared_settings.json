@@ -57,6 +57,24 @@
         "channel": "external-activity",
         "url": "http://discussion.developer.riotgames.com/"
     },
+    "pageDiffer": {
+        "checkInterval": 600000,
+        "channel": "external-activity",
+        "pages": [
+            {
+                "name": "Champion Update Schedule",
+                "ident": "202294884",
+                "type": "article"
+            },
+            {
+                "name": "Legal Jibber Jabber",
+                "ident": "https://www.riotgames.com/en/legal",
+                "type": "page"
+            }
+        ],
+        "articleHost": "https://support.riotgames.com/api/v2/help_center/en-us/articles/{id}.json",
+        "embedImageUrl": "https://irule.at/riot/api/morello.png"
+    },
     "info": {
         "allowedRoles": [
             "187653195038720000",
