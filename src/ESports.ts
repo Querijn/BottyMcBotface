@@ -122,11 +122,11 @@ export default class ESportsAPI {
                     const time = momentjs(item.time, "YYYY MM DD HH:mm");
                     if (time.isBefore(new Date())) continue;
 
-                    // if (!prints.get(league)) {
-                    //     prints.set(league, []);
-                    // }
+                    if (!prints.get(league)) {
+                        prints.set(league, []);
+                    }
 
-                    // prints.get(league)!.push(item);
+                    prints.get(league)!.push(item);
                 }
             }
         }
