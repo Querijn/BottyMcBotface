@@ -5,7 +5,7 @@ import Discord = require("discord.js");
 import crc32 = require("crc-32");
 import fs = require("fs");
 import fetch from "node-fetch";
-import Info from "./Info";
+import h2p = require("html2plaintext");
 
 interface PageDifferData {
     hashes: { [page: string]: number };
@@ -95,7 +95,8 @@ export default class PageDiffer {
                 }
             }
 
-            const hash = crc32.str(body);
+            const diffBody = h2p(body);
+            const hash = crc32.str(diffBody);
             if (this.data.hashes[page.type + page.ident] === hash) continue;
 
             // Make sure the folders are there

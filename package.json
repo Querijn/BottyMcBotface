@@ -18,6 +18,7 @@
     "discord.js": "11.3.2",
     "evenin": "^1.0.0",
     "feed-read": "^0.0.1",
+    "html2plaintext": "^2.1.0",
     "moment": "^2.22.2",
     "node-fetch": "^1.7.2",
     "pretty-ms": "^3.0.0",
