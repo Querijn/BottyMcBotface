@@ -1,5 +1,6 @@
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings, PageType, PageDifferPage } from "./SharedSettings";
+import { clearTimeout, setTimeout } from "timers";
 
 import Discord = require("discord.js");
 import crc32 = require("crc-32");
