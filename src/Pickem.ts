@@ -343,8 +343,9 @@ export default class Pickem {
             const group = await this.getGroupPicks(this.settings.pickem.worldsId, match.id);
             const bracket = await this.getBracketPicks(this.settings.pickem.worldsId, match.id);
             this.doPrint(message.channel as Discord.TextChannel, group, bracket);
-            message.channel.send("No pickem with that summoner name found..");
+            return;
         }
+        message.channel.send("No pickem with that summoner name found..");
     }
 
     public doPrint(channel: Discord.TextChannel, group: PickemGroupPick, bracket: PickemBracketPick) {
