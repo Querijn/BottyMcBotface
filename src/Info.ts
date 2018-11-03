@@ -231,7 +231,7 @@ export default class Info {
             command,
             counter: 0,
             message,
-            categoryId: category.id,
+            categoryId: category.identifier,
         };
 
         this.infos.push(newInfo);
