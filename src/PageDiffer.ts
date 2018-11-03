@@ -1,5 +1,6 @@
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings, PageType, PageDifferPage } from "./SharedSettings";
+import { clearTimeout, setTimeout } from "timers";
 
 import Discord = require("discord.js");
 import crc32 = require("crc-32");
@@ -22,7 +23,7 @@ export default class PageDiffer {
     private channel: Discord.TextChannel;
     private sharedSettings: SharedSettings;
     private data: PageDifferData;
-    private timeOut: number | null;
+    private timeOut: NodeJS.Timer | null;
 
     constructor(bot: Discord.Client, sharedSettings: SharedSettings, pageDiffFile: string) {
         console.log("Requested PageDiffer extension..");
