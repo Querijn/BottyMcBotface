@@ -22,7 +22,7 @@ export default class PageDiffer {
     private channel: Discord.TextChannel;
     private sharedSettings: SharedSettings;
     private data: PageDifferData;
-    private timeOut: number | null;
+    private timeOut: NodeJS.Timer | null;
 
     constructor(bot: Discord.Client, sharedSettings: SharedSettings, pageDiffFile: string) {
         console.log("Requested PageDiffer extension..");
