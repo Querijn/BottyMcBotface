@@ -221,7 +221,9 @@ export default class Info {
 
     private addInfo(command: string, message: string, category: Discord.Emoji) {
         const alreadyExists = this.infos.some(info => info.command === command);
-        if (alreadyExists) return;
+        if (alreadyExists) {
+            return "A note with that name already exists";
+        }
 
         command = command.toLowerCase();
 
