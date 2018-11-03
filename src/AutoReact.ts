@@ -148,7 +148,7 @@ export default class AutoReact {
             "buenas tardes", "buenas noches",
             "muy buenos", "hola", "saludos",
             // Portuguese
-            "ola", "olá", "boa tarde",
+            "ola", "olá", "boa tarde", "bom dia", "boa noite", 
             // Hindi
             "namaste", "suprabhātam",
             "śubha sandhyā", "śubha rātri",
