@@ -96,7 +96,7 @@ export default class PageDiffer {
                 }
             }
 
-            const diffBody = h2p(body);
+            const diffBody = h2p(body).replace(/[\W_]+/g, "");
             const hash = crc32.str(diffBody);
             if (this.data.hashes[page.type + page.ident] === hash) continue;
 
