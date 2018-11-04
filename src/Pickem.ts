@@ -162,9 +162,8 @@ export default class Pickem {
             returnList.push({ summonerName: entry.summonerName, id: entry.id });
         }
 
-        const self = this;
-        self.currentMemberList = returnList;
-        setTimeout(self.updateUserList.bind(this), self.settings.pickem.updateTimeout);
+        this.currentMemberList = returnList;
+        setTimeout(this.updateUserList.bind(this), this.settings.pickem.updateTimeout);
     }
 
     public async getMembersWithName(): Promise<PickemPick[]> {
