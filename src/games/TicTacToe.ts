@@ -1,8 +1,7 @@
 import { fileBackedObject } from "../FileBackedObject";
-import Botty from "../Botty";
+import { setTimeout } from "timers";
 
 import Discord = require("discord.js");
-import { stat } from "fs";
 
 interface TicTacToeScore {
     lowWins: number;
@@ -56,9 +55,11 @@ export default class TicTacToe {
 
         const senderName = message.author.username;
         const opponentName = opponent.username;
-        const key = message.author.id.localeCompare(opponent.id) ? message.author.id + "_" + opponent.id : opponent.id + "_" + message.author.id;
-        const highP = message.author.id.localeCompare(opponent.id) ? senderName : opponentName;
-        const lowP = opponent.id.localeCompare(message.author.id) ? opponentName : senderName;
+
+        const isAuthorHigherId = message.author.id.localeCompare(opponent.id) >= 0;
+        const key = isAuthorHigherId ? message.author.id + "_" + opponent.id : opponent.id + "_" + message.author.id;
+        const highP = isAuthorHigherId ? senderName : opponentName;
+        const lowP = !isAuthorHigherId ? opponentName : senderName;
 
         // setup a separate channel for the game, so we dont spam a real channel..
         const channelName = ("TTT-" + highP + "-vs-" + lowP).toLowerCase();
@@ -99,7 +100,7 @@ export default class TicTacToe {
         const startingPlayer = random ? senderName : opponentName;
         gameChannel.send(`Game ${gamesPlayed + 1} of ${message.author} vs ${opponent}\nThe gods have decided that ${startingPlayer} goes first`);
 
-        this.incrementGameState(game, -1);
+        this.incrementGameState(game, undefined);
     }
 
     private printGameBoard(game: TicTacToeGame) {
@@ -134,7 +135,7 @@ export default class TicTacToe {
             }
         }
 
-        const regex = /\d/;
+        const regex = /^\d$/;
         if (regex.test(message.cleanContent)) {
             const move = +message.cleanContent;
             if (this.isValidMove(game.board, move)) {
@@ -144,10 +145,10 @@ export default class TicTacToe {
     }
 
     private isValidMove(board: { [key: number]: TicTacToeType }, move: number) {
-        return board[move] === undefined;
+        return board[move] === undefined && move > 0 && move < 10;
     }
 
-    private incrementGameState(game: TicTacToeGame, move: number) {
+    private incrementGameState(game: TicTacToeGame, move: number | undefined) {
         if (move) {
             game.board[move] = game.turnPlayer;
         }
@@ -157,40 +158,45 @@ export default class TicTacToe {
 
         const winner = this.getGameWinner(game);
         if (winner) {
-            const high = game.Oplayer.localeCompare(game.Xplayer);
-            if (winner === game.Oplayer) {
-                if (high) {
-                    this.scores[game.scoreKey].highWins = this.scores[game.scoreKey].highWins + 1;
-                } else {
-                    this.scores[game.scoreKey].lowWins = this.scores[game.scoreKey].lowWins + 1;
-                }
-            } else if (winner === game.Xplayer) {
-                if (high) {
-                    this.scores[game.scoreKey].lowWins = this.scores[game.scoreKey].lowWins + 1;
-                } else {
-                    this.scores[game.scoreKey].highWins = this.scores[game.scoreKey].highWins + 1;
-                }
-            } else if (winner === "-1") {
-                this.scores[game.scoreKey].draws = this.scores[game.scoreKey].draws + 1;
-            }
-
-            const oplayer = game.channel.members.find(m => m.id === game.Oplayer);
-            const xplayer = game.channel.members.find(m => m.id === game.Xplayer);
-
-            const highP = high ? oplayer.user.username : xplayer.user.username;
-            const lowP = high ? xplayer.user.username : oplayer.user.username;
-            const highScore = this.scores[game.scoreKey].highWins;
-            const lowScore = this.scores[game.scoreKey].lowWins;
-            const drawScore = this.scores[game.scoreKey].draws;
-
-            game.channel.send("The game has ended!\nScores are now: " + highP + "(" + highScore + ") - " + drawScore + " - " + lowP + "(" + lowScore + ")");
-            game.channel.overwritePermissions(oplayer, { SEND_MESSAGES: false });
-            game.channel.overwritePermissions(xplayer, { SEND_MESSAGES: false });
-            this.games = this.games.filter(g => g !== game);
+            this.handleEndOfGame(game, winner);
             return;
         }
 
         this.doBottyMove(game);
+    }
+
+    private handleEndOfGame(game: TicTacToeGame, winner: string) {
+        const high = game.Oplayer.localeCompare(game.Xplayer) >= 0;
+        if (winner === game.Oplayer) {
+            if (high) {
+                this.scores[game.scoreKey].highWins++;
+            } else {
+                this.scores[game.scoreKey].lowWins++;
+            }
+        } else if (winner === game.Xplayer) {
+            if (high) {
+                this.scores[game.scoreKey].lowWins++;
+            } else {
+                this.scores[game.scoreKey].highWins++;
+            }
+        } else if (winner === "-1") {
+            this.scores[game.scoreKey].draws++;
+        }
+
+        const oplayer = game.channel.members.find(m => m.id === game.Oplayer);
+        const xplayer = game.channel.members.find(m => m.id === game.Xplayer);
+
+        const highP = high ? oplayer.user.username : xplayer.user.username;
+        const lowP = high ? xplayer.user.username : oplayer.user.username;
+        const highScore = this.scores[game.scoreKey].highWins;
+        const lowScore = this.scores[game.scoreKey].lowWins;
+        const drawScore = this.scores[game.scoreKey].draws;
+
+        game.channel.send("The game has ended!\nThis channel will be deleted in 60 seconds.\nScores are now: " + highP + "(" + highScore + ") - " + drawScore + " - " + lowP + "(" + lowScore + ")");
+        game.channel.overwritePermissions(oplayer, { SEND_MESSAGES: false });
+        game.channel.overwritePermissions(xplayer, { SEND_MESSAGES: false });
+        this.games = this.games.filter(g => g !== game);
+        setTimeout(() => game.channel.delete(), 60 * 1000);
     }
 
     /**
@@ -200,26 +206,11 @@ export default class TicTacToe {
      */
     private getGameWinner(game: TicTacToeGame) {
 
-        let player = TicTacToeType.X;
-        if ((game.board[1] === player && game.board[2] === player && game.board[3] === player) ||
-            (game.board[4] === player && game.board[5] === player && game.board[6] === player) ||
-            (game.board[7] === player && game.board[8] === player && game.board[9] === player) ||
-            (game.board[1] === player && game.board[4] === player && game.board[7] === player) ||
-            (game.board[2] === player && game.board[5] === player && game.board[8] === player) ||
-            (game.board[3] === player && game.board[6] === player && game.board[9] === player) ||
-            (game.board[1] === player && game.board[5] === player && game.board[9] === player) ||
-            (game.board[3] === player && game.board[5] === player && game.board[7] === player)) {
+        if (this.testPlayerWin(game, TicTacToeType.X)) {
             return game.Xplayer;
         }
-        player = TicTacToeType.O;
-        if ((game.board[1] === player && game.board[2] === player && game.board[3] === player) ||
-            (game.board[4] === player && game.board[5] === player && game.board[6] === player) ||
-            (game.board[7] === player && game.board[8] === player && game.board[9] === player) ||
-            (game.board[1] === player && game.board[4] === player && game.board[7] === player) ||
-            (game.board[2] === player && game.board[5] === player && game.board[8] === player) ||
-            (game.board[3] === player && game.board[6] === player && game.board[9] === player) ||
-            (game.board[1] === player && game.board[5] === player && game.board[9] === player) ||
-            (game.board[3] === player && game.board[5] === player && game.board[7] === player)) {
+
+        if (this.testPlayerWin(game, TicTacToeType.O)) {
             return game.Oplayer;
         }
 
@@ -230,6 +221,17 @@ export default class TicTacToe {
         }
 
         return "-1";
+    }
+
+    private testPlayerWin(game: TicTacToeGame, player: TicTacToeType) {
+        return (game.board[1] === player && game.board[2] === player && game.board[3] === player) ||
+            (game.board[4] === player && game.board[5] === player && game.board[6] === player) ||
+            (game.board[7] === player && game.board[8] === player && game.board[9] === player) ||
+            (game.board[1] === player && game.board[4] === player && game.board[7] === player) ||
+            (game.board[2] === player && game.board[5] === player && game.board[8] === player) ||
+            (game.board[3] === player && game.board[6] === player && game.board[9] === player) ||
+            (game.board[1] === player && game.board[5] === player && game.board[9] === player) ||
+            (game.board[3] === player && game.board[5] === player && game.board[7] === player);
     }
 
     private doBottyMove(game: TicTacToeGame) {
