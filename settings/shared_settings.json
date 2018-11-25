@@ -106,7 +106,9 @@
         "baseURL": "https://api.github.com/repos/WxWatch/riot-api-libraries/contents/libraries/",
         "aliases": {
             "javascript": [
-                "js"
+                "js",
+                "node",
+                "nodejs"
             ],
             "typescript": [
                 "ts"
