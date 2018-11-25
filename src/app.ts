@@ -23,6 +23,7 @@ import { APISchema } from "./ApiSchema";
 import { CommandList } from "./CommandController";
 import { defaultBackedObject, fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
+import TicTacToe from "./games/TicTacToe";
 
 // Load and initialise settings
 const sharedSettings = defaultBackedObject<SharedSettings>("settings/shared_settings.json", "private/shared_settings.json");
@@ -49,6 +50,7 @@ const esports = new ESportsAPI(bot.client, sharedSettings);
 const pickem = new Pickem(bot.client, sharedSettings);
 const endpoint = new Endpoint(sharedSettings, "data/endpoints.json");
 const pageDiffer = new PageDiffer(bot.client, sharedSettings, "data/page_differ.json");
+const ttt = new TicTacToe(bot.client, "data/ttt_scores.json");
 
 // Commands controller commands
 controller.registerCommand(commandList.controller.toggle, controller.onToggle.bind(controller));
@@ -56,6 +58,9 @@ controller.registerCommand(commandList.controller.help, controller.onHelp.bind(c
 
 // Botty commands
 controller.registerCommand(commandList.botty.restart, bot.onRestart.bind(bot));
+
+// TTT commands
+controller.registerCommand(commandList.games.ttt, ttt.onInvite.bind(ttt));
 
 // Esport commands
 controller.registerCommand(commandList.esports.date, esports.onCheckNext.bind(esports));

@@ -9,6 +9,14 @@
             "description": "Restarts Botty."
         }
     },
+    "games": {
+        "ttt": {
+            "aliases": [
+                "ttt"
+            ],
+            "description": "Starts a game of TTT versus that player"
+        }
+    },
     "esports": {
         "date": {
             "aliases": [

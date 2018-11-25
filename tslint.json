@@ -10,6 +10,7 @@
         "interface-name": false,
         "no-empty-interface": false,
         "no-console": false,
+        "no-namespace": false,
         "forin": false,
         "arrow-parens": false,
         "max-classes-per-file": false,
