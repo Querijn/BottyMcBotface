@@ -179,13 +179,14 @@ export default class CommandController {
 
             // handlers that register the "*" command will get all commands with that prefix (unless they already have gotten it once)
 
+            const args = parts.slice(1).filter(a => a !== "");
             if (holder.command.aliases.some(x => x === command)) {
                 if (this.checkCooldown(holder, message)) {
-                    holder.handler.call(null, message, isAdmin, command, parts.slice(1));
+                    holder.handler.call(null, message, isAdmin, command, args);
                 }
             } else if (holder.command.aliases.some(x => x === "*")) {
                 if (this.checkCooldown(holder, message)) {
-                    holder.handler.call(null, message, isAdmin, "*", Array<string>().concat(command, parts.slice(1)));
+                    holder.handler.call(null, message, isAdmin, "*", Array<string>().concat(command, args));
                 }
             }
         });
