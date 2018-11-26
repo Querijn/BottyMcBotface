@@ -37,6 +37,7 @@ interface TicTacToeGame {
     deleteTimeout: NodeJS.Timer;
     wantDraw: string[];
     wantRematch: string[];
+    isActive: boolean;
 }
 
 export default class TicTacToe {
@@ -153,6 +154,7 @@ export default class TicTacToe {
         game.scoreKey = key;
         game.wantDraw = [];
         game.wantRematch = [];
+        game.isActive = true;
         game.board = {
             1: undefined, 2: undefined, 3: undefined,
             4: undefined, 5: undefined, 6: undefined,
@@ -169,17 +171,17 @@ export default class TicTacToe {
     }
 
     private printGameBoard(game: TicTacToeGame) {
-        const tl = game.board[1] || "1";
-        const tm = game.board[2] || "2";
-        const tr = game.board[3] || "3";
+        const bl = game.board[1] || "1";
+        const bm = game.board[2] || "2";
+        const br = game.board[3] || "3";
 
         const ml = game.board[4] || "4";
         const mm = game.board[5] || "5";
         const mr = game.board[6] || "6";
 
-        const bl = game.board[7] || "7";
-        const bm = game.board[8] || "8";
-        const br = game.board[9] || "9";
+        const tl = game.board[7] || "7";
+        const tm = game.board[8] || "8";
+        const tr = game.board[9] || "9";
 
         game.channel.send(`\`\`\`${tl} | ${tm} | ${tr}\n---------\n${ml} | ${mm} | ${mr}\n---------\n${bl} | ${bm} | ${br}\`\`\``);
     }
@@ -188,12 +190,14 @@ export default class TicTacToe {
         const game = this.games.find(g => g.channel.id === message.channel.id);
         if (!game) return;
 
-        if (message.cleanContent === "!draw") {
-            this.handleDraw(game, message.author.id);
-        }
+        if (game.isActive) {
+            if (message.cleanContent === "!draw") {
+                this.handleDraw(game, message.author.id);
+            }
 
-        if (message.cleanContent === "!ff") {
-            this.handleFF(game, message.author.id);
+            if (message.cleanContent === "!ff") {
+                this.handleFF(game, message.author.id);
+            }
         }
 
         if (message.cleanContent === "!rematch") {
@@ -329,6 +333,7 @@ export default class TicTacToe {
         const lowScore = this.scores[game.scoreKey].lowWins;
         const drawScore = this.scores[game.scoreKey].draws;
 
+        game.isActive = false;
         game.channel.send("The game has ended!\nThis channel will be deleted in 30 seconds.\nScores are now: " + highP + " (" + highScore + ") - " + drawScore + " - " + "(" + lowScore + ") " + lowP);
         game.deleteTimeout = setTimeout(() => {
             this.games = this.games.filter(g => g !== game);
