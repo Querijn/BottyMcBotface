@@ -86,7 +86,6 @@ export default class TicTacToe {
         const highP = isAuthorHigherId ? { name: senderName, id: message.author.id } : { name: opponentName, id: opponent.id };
         const lowP = isAuthorHigherId ? { name: opponentName, id: opponent.id } : { name: senderName, id: message.author.id };
 
-        args = args.filter(a => a !== "");
         if (args.length >= 2) {
             if (args[1] === "score") {
                 const key = highP.id + "_" + lowP.id;
