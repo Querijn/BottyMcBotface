@@ -9,6 +9,11 @@ interface TicTacToeScore {
     draws: number;
 }
 
+enum TicTacToeBrain {
+    RANDOM,
+    MINIMAX, // should finish this sometime :shrug:
+}
+
 enum TicTacToeType {
     X = "X", O = "O",
 }
@@ -22,11 +27,12 @@ namespace TicTacToeType {
 }
 
 interface TicTacToeGame {
-    board: { [key: number]: TicTacToeType };
+    board: { [key: number]: TicTacToeType | undefined };
     turnPlayer: TicTacToeType;
     Xplayer: string;
     Oplayer: string;
     scoreKey: string;
+    botBrain: TicTacToeBrain;
     channel: Discord.TextChannel;
 }
 
@@ -38,6 +44,18 @@ export default class TicTacToe {
     constructor(client: Discord.Client, scorefile: string) {
         this.scores = fileBackedObject(scorefile);
         client.on("message", this.handleChat.bind(this));
+        client.on("ready", () => {
+
+            // delete all ttt channels on boot, because we lost all gamestate on restart
+            const gameCategory = (client.channels.findAll("type", "category") as Discord.CategoryChannel[]).find(c => c.name === "games");
+            (client.channels.findAll("type", "text") as Discord.TextChannel[])
+                .filter(c => c.parent === gameCategory)
+                .forEach(c => {
+                    if (c.name.startsWith("ttt-")) {
+                        c.delete();
+                    }
+                });
+        });
     }
 
     public async onInvite(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
@@ -47,9 +65,8 @@ export default class TicTacToe {
             return;
         }
 
-        const isBottyOpponent = opponent.bot;
-        if (isBottyOpponent) {
-            message.reply("Playing against Botty does not work at the moment.. :(");
+        if (opponent === message.author) {
+            message.reply("You can't play against yourself!");
             return;
         }
 
@@ -59,12 +76,19 @@ export default class TicTacToe {
         const isAuthorHigherId = message.author.id.localeCompare(opponent.id) >= 0;
         const key = isAuthorHigherId ? message.author.id + "_" + opponent.id : opponent.id + "_" + message.author.id;
         const highP = isAuthorHigherId ? senderName : opponentName;
-        const lowP = !isAuthorHigherId ? opponentName : senderName;
+        const lowP = isAuthorHigherId ? opponentName : senderName;
 
-        // setup a separate channel for the game, so we dont spam a real channel..
-        const channelName = ("TTT-" + highP + "-vs-" + lowP).toLowerCase();
-        if (message.guild.channels.find(c => c.name === channelName)) {
-            message.reply("A game with this name already exists, so you need to finish it first...");
+        // limit users to starting one game themselfs
+        const existingGame = message.guild.channels.filter(c => c.name.startsWith("ttt-"))
+            .some(c => c.name
+                .split("-")
+                .splice(1, 3)
+                .join("-")
+                .split("-vs-")
+                .filter(n => n === senderName).length > 0);
+
+        if (existingGame) {
+            message.reply("You can only start a game of TTT if youre not already playing in one!");
             return;
         }
 
@@ -75,6 +99,8 @@ export default class TicTacToe {
             { id: message.guild.roles.find(r => r.name === "@everyone").id, type: "role", deny: ["SEND_MESSAGES"] },
         ];
 
+        // setup a separate channel for the game, so we dont spam a real channel..
+        const channelName = ("TTT-" + highP + "-vs-" + lowP).toLowerCase();
         const gameChannel = await message.guild.createChannel(channelName, "text", permissions) as Discord.TextChannel;
         let gameCategory = message.guild.channels.filter(c => c.type === "category").find(c => c.name === "games");
         if (!gameCategory) {
@@ -91,8 +117,13 @@ export default class TicTacToe {
         game.Oplayer = random ? opponent.id : message.author.id;
         game.channel = gameChannel;
         game.turnPlayer = TicTacToeType.O;
-        game.board = {};
+        game.botBrain = TicTacToeBrain.RANDOM;
         game.scoreKey = key;
+        game.board = {
+            1: undefined, 2: undefined, 3: undefined,
+            4: undefined, 5: undefined, 6: undefined,
+            7: undefined, 8: undefined, 9: undefined,
+        };
 
         // print the "welcome" message
         const status = this.scores[key] || (this.scores[key] = { highWins: 0, lowWins: 0, draws: 0 });
@@ -123,6 +154,16 @@ export default class TicTacToe {
         const game = this.games.find(g => g.channel.id === message.channel.id);
         if (!game) return;
 
+        if (message.cleanContent === "!ff") {
+            if (message.author.id === game.Xplayer) {
+                this.handleEndOfGame(game, game.Oplayer);
+            }
+
+            if (message.author.id === game.Oplayer) {
+                this.handleEndOfGame(game, game.Xplayer);
+            }
+        }
+
         // ignore messages from the other player
         if (game.turnPlayer === TicTacToeType.X) {
             if (message.author.id === game.Oplayer) {
@@ -144,7 +185,7 @@ export default class TicTacToe {
         }
     }
 
-    private isValidMove(board: { [key: number]: TicTacToeType }, move: number) {
+    private isValidMove(board: { [key: number]: TicTacToeType | undefined }, move: number) {
         return board[move] === undefined && move > 0 && move < 10;
     }
 
@@ -192,11 +233,9 @@ export default class TicTacToe {
         const lowScore = this.scores[game.scoreKey].lowWins;
         const drawScore = this.scores[game.scoreKey].draws;
 
-        game.channel.send("The game has ended!\nThis channel will be deleted in 60 seconds.\nScores are now: " + highP + "(" + highScore + ") - " + drawScore + " - " + lowP + "(" + lowScore + ")");
-        game.channel.overwritePermissions(oplayer, { SEND_MESSAGES: false });
-        game.channel.overwritePermissions(xplayer, { SEND_MESSAGES: false });
+        game.channel.send("The game has ended!\nThis channel will be deleted in 15 seconds.\nScores are now: " + highP + " (" + highScore + ") - " + drawScore + " - " + "(" + lowScore + ") " + lowP);
         this.games = this.games.filter(g => g !== game);
-        setTimeout(() => game.channel.delete(), 60 * 1000);
+        setTimeout(() => game.channel.delete(), 15 * 1000);
     }
 
     /**
@@ -239,12 +278,20 @@ export default class TicTacToe {
         const isBottyTurn = game.channel.members.find(m => m.id === turnId).user.bot;
 
         if (isBottyTurn) {
-            const bestMove = this.minimax({ ...game });
+            const bestMove = this.chooseMoveFromBrain(game.botBrain, game.board, game.turnPlayer);
             this.incrementGameState(game, bestMove);
         }
     }
 
-    private minimax(game: TicTacToeGame) {
-        return 1;
+    private chooseMoveFromBrain(brain: TicTacToeBrain, board: { [key: number]: TicTacToeType | undefined }, turn: TicTacToeType): number {
+        switch (brain) {
+            case TicTacToeBrain.RANDOM: {
+                const validKeys = Object.entries(board).filter(e => e[1] === undefined).map(e => e[0]);
+                return +validKeys[Math.floor(Math.random() * validKeys.length)];
+            }
+            default: {
+                return this.chooseMoveFromBrain(TicTacToeBrain.RANDOM, board, turn);
+            }
+        }
     }
 }
