@@ -32,7 +32,7 @@ interface TicTacToeGame {
     Xplayer: { name: string, id: string };
     Oplayer: { name: string, id: string };
     scoreKey: string;
-    botBrain: TicTacToeBrain;
+    botBrain: TicTacToeBrain | undefined;
     channel: Discord.TextChannel;
     deleteTimeout: NodeJS.Timer;
     wantDraw: string[];
@@ -50,7 +50,7 @@ export default class TicTacToe {
         client.on("message", this.handleChat.bind(this));
         client.on("ready", () => {
 
-            // delete all ttt channels on boot, because we lost all gamestate on restart
+            // delete all ttt channels on startup, because we lost all gamestate on restart
             const gameCategory = (client.channels.findAll("type", "category") as Discord.CategoryChannel[]).find(c => c.name === "games");
             (client.channels.findAll("type", "text") as Discord.TextChannel[])
                 .filter(c => c.parent === gameCategory)
@@ -74,13 +74,8 @@ export default class TicTacToe {
             return;
         }
 
-        let opponentName: string;
+        const opponentName = opponent.username.toLowerCase();
         const senderName = message.author.username.toLowerCase();
-        if (opponent.bot) {
-            opponentName = "botty_player";
-        } else {
-            opponentName = opponent.username.toLowerCase();
-        }
 
         const isAuthorHigherId = message.author.id.localeCompare(opponent.id) >= 0;
         const highP = isAuthorHigherId ? { name: senderName, id: message.author.id } : { name: opponentName, id: opponent.id };
@@ -88,11 +83,7 @@ export default class TicTacToe {
 
         if (args.length >= 2) {
             if (args[1] === "score") {
-                const key = highP.id + "_" + lowP.id;
-                const highScore = this.scores[key].highWins;
-                const lowScore = this.scores[key].lowWins;
-                const drawScore = this.scores[key].draws;
-                message.channel.send("Scores are: " + highP.name + " (" + highScore + ") - " + drawScore + " - " + "(" + lowScore + ") " + lowP.name);
+                this.printScores(message.channel as Discord.TextChannel, highP, lowP);
                 return;
             }
 
@@ -101,20 +92,7 @@ export default class TicTacToe {
         }
 
         // limit users to starting one game themselfs
-        const existingGames = message.guild.channels.filter(c => c.name.startsWith("ttt-"))
-            .map(c => c.name
-                .split("-")
-                .splice(1, 3)
-                .join("-")
-                .split("-vs-"));
-
-        let alreadyPlaying = false;
-        existingGames.forEach(g => {
-            if (g.includes(senderName) && g.includes(opponentName)) {
-                alreadyPlaying = true;
-            }
-        });
-
+        const alreadyPlaying = this.games.some(g => [g.Oplayer.id, g.Xplayer.id].every(p => p === highP.id || p === lowP.id));
         if (alreadyPlaying) {
             message.reply("You need to finish the game you are playing first!");
             return;
@@ -136,23 +114,24 @@ export default class TicTacToe {
         }
         gameChannel.setParent(gameCategory);
 
-        this.initFreshGame(gameChannel, highP, lowP);
+        this.initFreshGame(gameChannel, highP, lowP, opponent.bot);
     }
 
-    private initFreshGame(gameChannel: Discord.TextChannel, player1: { name: string, id: string }, player2: { name: string, id: string }) {
+    private initFreshGame(gameChannel: Discord.TextChannel, highP: { name: string, id: string }, lowP: { name: string, id: string }, bot: boolean) {
         const game = {} as TicTacToeGame;
         this.games.push(game);
 
-        const key = player1 + "_" + player2;
+        const key = highP.id + "_" + lowP.id;
         const random = Math.floor(Math.random() * 2);
-        game.Xplayer = random ? player1 : player2;
-        game.Oplayer = random ? player2 : player1;
-        game.channel = gameChannel;
+        const status = this.scores[key] || (this.scores[key] = { highWins: 0, lowWins: 0, draws: 0 });
+        game.Xplayer = random ? highP : lowP;
+        game.Oplayer = random ? lowP : highP;
+        game.botBrain = bot ? TicTacToeBrain.RANDOM : undefined;
         game.turnPlayer = TicTacToeType.O;
-        game.botBrain = TicTacToeBrain.RANDOM;
-        game.scoreKey = key;
-        game.wantDraw = [];
+        game.channel = gameChannel;
         game.wantRematch = [];
+        game.wantDraw = [];
+        game.scoreKey = key;
         game.isActive = true;
         game.board = {
             1: undefined, 2: undefined, 3: undefined,
@@ -161,10 +140,8 @@ export default class TicTacToe {
         };
 
         // print the "welcome" message
-        const status = this.scores[key] || (this.scores[key] = { highWins: 0, lowWins: 0, draws: 0 });
         const gamesPlayed = status.highWins + status.lowWins + status.draws;
-        const startingPlayer = random ? player1.name : player2.name;
-        gameChannel.send(`Game ${gamesPlayed + 1} of ${player1.name} vs ${player2.name}\nThe gods have decided that ${startingPlayer} goes first`);
+        gameChannel.send(`Game ${gamesPlayed + 1} of ${highP.name} vs ${lowP.name}\nThe gods have decided that ${game.Xplayer.name} goes first`);
 
         this.incrementGameState(game, undefined);
     }
@@ -225,28 +202,23 @@ export default class TicTacToe {
     }
 
     private handleRematch(game: TicTacToeGame, sender: string) {
-        if (sender === game.Xplayer.id) {
-            if (game.wantRematch.includes(game.Xplayer.id)) {
+        [game.Xplayer.id, game.Oplayer.id].forEach(playerId => {
+            if (game.wantRematch.includes(playerId)) {
+                return;
+            }
+
+            if (sender !== playerId) {
                 return;
             }
 
             game.channel.send("Game will rematch when both players have entered the command");
-            game.wantRematch.push(game.Xplayer.id);
-        }
+            game.wantRematch.push(playerId);
+        });
 
-        if (sender === game.Oplayer.id) {
-            if (game.wantRematch.includes(game.Oplayer.id)) {
-                return;
-            }
-
-            game.channel.send("Game will rematch when both players have entered the command");
-            game.wantRematch.push(game.Oplayer.id);
-        }
-
-        if (game.wantRematch.length === 2) {
+        if (game.botBrain !== undefined || game.wantRematch.length === 2) {
             clearTimeout(game.deleteTimeout);
             this.games = this.games.filter(g => g !== game);
-            this.initFreshGame(game.channel, game.Xplayer, game.Oplayer);
+            this.initFreshGame(game.channel, game.Xplayer, game.Oplayer, game.botBrain !== undefined);
         }
     }
 
@@ -261,25 +233,20 @@ export default class TicTacToe {
     }
 
     private handleDraw(game: TicTacToeGame, sender: string) {
-        if (sender === game.Xplayer.id) {
-            if (game.wantDraw.includes(game.Xplayer.id)) {
+        [game.Xplayer.id, game.Oplayer.id].forEach(playerId => {
+            if (game.wantDraw.includes(playerId)) {
+                return;
+            }
+
+            if (sender !== playerId) {
                 return;
             }
 
             game.channel.send("Game will draw when both players have entered the command");
-            game.wantDraw.push(game.Xplayer.id);
-        }
+            game.wantDraw.push(playerId);
+        });
 
-        if (sender === game.Oplayer.id) {
-            if (game.wantDraw.includes(game.Oplayer.id)) {
-                return;
-            }
-
-            game.channel.send("Game will draw when both players have entered the command");
-            game.wantDraw.push(game.Oplayer.id);
-        }
-
-        if (game.wantDraw.length === 2) {
+        if (game.botBrain !== undefined || game.wantDraw.length === 2) {
             this.handleEndOfGame(game, "-1");
         }
     }
@@ -306,7 +273,14 @@ export default class TicTacToe {
     }
 
     private handleEndOfGame(game: TicTacToeGame, winner: string) {
-        const high = game.Oplayer.id.localeCompare(game.Xplayer.id) >= 0;
+
+        const oplayer = game.channel.members.find(m => m.id === game.Oplayer.id);
+        const xplayer = game.channel.members.find(m => m.id === game.Xplayer.id);
+
+        const high = game.Xplayer.id.localeCompare(game.Oplayer.id) >= 0;
+        const highP = high ? { name: xplayer.user.username, id: xplayer.id } : { name: oplayer.user.username, id: oplayer.id };
+        const lowP = high ? { name: oplayer.user.username, id: oplayer.id } : { name: xplayer.user.username, id: xplayer.id };
+
         if (winner === game.Oplayer.id) {
             if (high) {
                 this.scores[game.scoreKey].highWins++;
@@ -323,21 +297,21 @@ export default class TicTacToe {
             this.scores[game.scoreKey].draws++;
         }
 
-        const oplayer = game.channel.members.find(m => m.id === game.Oplayer.id);
-        const xplayer = game.channel.members.find(m => m.id === game.Xplayer.id);
-
-        const highP = high ? oplayer.user.username : xplayer.user.username;
-        const lowP = high ? xplayer.user.username : oplayer.user.username;
-        const highScore = this.scores[game.scoreKey].highWins;
-        const lowScore = this.scores[game.scoreKey].lowWins;
-        const drawScore = this.scores[game.scoreKey].draws;
-
         game.isActive = false;
-        game.channel.send("The game has ended!\nThis channel will be deleted in 30 seconds.\nScores are now: " + highP + " (" + highScore + ") - " + drawScore + " - " + "(" + lowScore + ") " + lowP);
+        game.channel.send("The game has ended!\nThis channel will be deleted in 30 seconds.");
+        this.printScores(game.channel, highP, lowP);
         game.deleteTimeout = setTimeout(() => {
             this.games = this.games.filter(g => g !== game);
             game.channel.delete();
         }, 30 * 1000);
+    }
+
+    private printScores(channel: Discord.TextChannel, highP: { name: string, id: string }, lowP: { name: string, id: string }) {
+        const key = highP.id + "_" + lowP.id;
+        const highScore = this.scores[key].highWins;
+        const lowScore = this.scores[key].lowWins;
+        const drawScore = this.scores[key].draws;
+        channel.send(`Scores are: ${highP.name} (${highScore}) - ${drawScore} - (${lowScore}) ${lowP.name}`);
     }
 
     /**
@@ -365,14 +339,11 @@ export default class TicTacToe {
     }
 
     private testPlayerWin(game: TicTacToeGame, player: TicTacToeType) {
-        return (game.board[1] === player && game.board[2] === player && game.board[3] === player) ||
-            (game.board[4] === player && game.board[5] === player && game.board[6] === player) ||
-            (game.board[7] === player && game.board[8] === player && game.board[9] === player) ||
-            (game.board[1] === player && game.board[4] === player && game.board[7] === player) ||
-            (game.board[2] === player && game.board[5] === player && game.board[8] === player) ||
-            (game.board[3] === player && game.board[6] === player && game.board[9] === player) ||
-            (game.board[1] === player && game.board[5] === player && game.board[9] === player) ||
-            (game.board[3] === player && game.board[5] === player && game.board[7] === player);
+        const isAllPlayer = (...args: number[]) => args.filter(x => game.board[x] === player).length === args.length;
+        return isAllPlayer(1, 2, 3) || isAllPlayer(4, 5, 6)
+            || isAllPlayer(7, 8, 9) || isAllPlayer(1, 4, 7)
+            || isAllPlayer(2, 5, 8) || isAllPlayer(3, 6, 9)
+            || isAllPlayer(1, 5, 9) || isAllPlayer(3, 5, 7);
     }
 
     private doBottyMove(game: TicTacToeGame) {
@@ -380,7 +351,7 @@ export default class TicTacToe {
         const isBottyTurn = game.channel.members.find(m => m.id === turnId.id).user.bot;
 
         if (isBottyTurn) {
-            const bestMove = this.chooseMoveFromBrain(game.botBrain, game.board, game.turnPlayer);
+            const bestMove = this.chooseMoveFromBrain(game.botBrain!, game.board, game.turnPlayer);
             this.incrementGameState(game, bestMove);
         }
     }
