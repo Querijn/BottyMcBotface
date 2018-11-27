@@ -34,6 +34,9 @@ export interface CommandList {
         date: Command;
         pickem: Command;
     };
+    games: {
+        ttt: Command;
+    };
     botty: {
         restart: Command;
     };
