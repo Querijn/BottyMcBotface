@@ -44,9 +44,12 @@ export default class TicTacToe {
 
     private scores: { [key: string]: TicTacToeScore };
     private games: TicTacToeGame[] = [];
+    private bot: Discord.Client;
 
     constructor(client: Discord.Client, scorefile: string) {
         this.scores = fileBackedObject(scorefile);
+
+        this.bot = client;
         client.on("message", this.handleChat.bind(this));
         client.on("ready", () => {
 
@@ -102,6 +105,7 @@ export default class TicTacToe {
         const permissions = [
             { id: message.author, type: "member", allow: ["SEND_MESSAGES"] },
             { id: opponent, type: "member", allow: ["SEND_MESSAGES"] },
+            { id: this.bot.user, type: "member", allow: ["SEND_MESSAGES"] },
             { id: message.guild.roles.find(r => r.name === "@everyone").id, type: "role", deny: ["SEND_MESSAGES"] },
         ];
 
