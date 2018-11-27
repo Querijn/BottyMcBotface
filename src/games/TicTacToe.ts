@@ -285,13 +285,13 @@ export default class TicTacToe {
         const highP = high ? { name: xplayer.user.username, id: xplayer.id } : { name: oplayer.user.username, id: oplayer.id };
         const lowP = high ? { name: oplayer.user.username, id: oplayer.id } : { name: xplayer.user.username, id: xplayer.id };
 
-        if (winner === game.Oplayer.id) {
+        if (winner === game.Xplayer.id) {
             if (high) {
                 this.scores[game.scoreKey].highWins++;
             } else {
                 this.scores[game.scoreKey].lowWins++;
             }
-        } else if (winner === game.Xplayer.id) {
+        } else if (winner === game.Oplayer.id) {
             if (high) {
                 this.scores[game.scoreKey].lowWins++;
             } else {
