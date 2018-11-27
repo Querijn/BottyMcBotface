@@ -339,10 +339,9 @@ export default class TicTacToe {
     }
 
     private testPlayerWin(game: TicTacToeGame, player: TicTacToeType) {
-        const isAllPlayer = (...args: number[]) => args.filter(x => game.board[x] === player).length === args.length;
-        return isAllPlayer(1, 2, 3) || isAllPlayer(4, 5, 6)
-            || isAllPlayer(7, 8, 9) || isAllPlayer(1, 4, 7)
-            || isAllPlayer(2, 5, 8) || isAllPlayer(3, 6, 9)
+        const isAllPlayer = (...args: number[]) => args.every(x => game.board[x] === player);
+        return isAllPlayer(1, 2, 3) || isAllPlayer(4, 5, 6) || isAllPlayer(7, 8, 9)
+            || isAllPlayer(1, 4, 7) || isAllPlayer(2, 5, 8) || isAllPlayer(3, 6, 9)
             || isAllPlayer(1, 5, 9) || isAllPlayer(3, 5, 7);
     }
 
