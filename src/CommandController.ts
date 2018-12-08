@@ -60,8 +60,6 @@ export interface CommandList {
         close: Command;
         ask: Command;
         ask_for: Command;
-        question_list: Command;
-        question_remove: Command;
     };
     riotApiLibraries: Command;
     apiStatus: Command;

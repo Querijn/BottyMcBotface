@@ -61,6 +61,19 @@ export default class OfficeHours {
 
     public onAsk(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         const question = args.join(" ");
+
+        if (isAdmin) {
+            if (args[0] === "remove") {
+                this.onQuestionRemove(message, isAdmin, args[0], args.slice(1));
+                return;
+            }
+
+            if (args[0] === "list") {
+                this.onQuestionList(message, isAdmin, args[0], args.slice(1));
+                return;
+            }
+        }
+
         this.storeQuestion(question, message, message.author.toString(), message.author.username);
     }
 
