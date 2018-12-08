@@ -51,17 +51,23 @@ export default class TicTacToe {
 
         this.bot = client;
         client.on("message", this.handleChat.bind(this));
-        client.on("ready", () => {
+        client.on("ready", async () => {
 
             // delete all ttt channels on startup, because we lost all gamestate on restart
             const gameCategory = (client.channels.findAll("type", "category") as Discord.CategoryChannel[]).find(c => c.name === "games");
-            (client.channels.findAll("type", "text") as Discord.TextChannel[])
-                .filter(c => c.parent === gameCategory)
-                .forEach(c => {
-                    if (c.name.startsWith("ttt-")) {
-                        c.delete();
+
+            if (gameCategory) {
+                const channels = (client.channels.findAll("type", "text") as Discord.TextChannel[]).filter(c => c.parent === gameCategory);
+
+                // needs to be a for loop so that we can await the channels. does NOT work with forEach
+                for (const channel of channels) {
+                    if (channel.name.startsWith("ttt-")) {
+                        await channel.delete();
                     }
-                });
+                }
+
+                await this.deleteParentIfEmpty(gameCategory.guild);
+            }
         });
     }
 
@@ -304,10 +310,23 @@ export default class TicTacToe {
         game.isActive = false;
         game.channel.send("The game has ended!\nThis channel will be deleted in 30 seconds.");
         this.printScores(game.channel, highP, lowP);
-        game.deleteTimeout = setTimeout(() => {
+        game.deleteTimeout = setTimeout(async () => {
             this.games = this.games.filter(g => g !== game);
-            game.channel.delete();
+            await game.channel.delete();
+            await this.deleteParentIfEmpty(game.channel.guild);
         }, 30 * 1000);
+    }
+
+    private async deleteParentIfEmpty(guild: Discord.Guild) {
+        const categories = guild.channels.findAll("type", "category") as Discord.CategoryChannel[];
+        const texts = guild.channels.findAll("type", "text") as Discord.TextChannel[];
+        const gameCategory = categories.find(c => c.name === "games");
+
+        if (gameCategory) {
+            if (texts.filter(c => c.parent === gameCategory).length === 0) {
+                await gameCategory.delete();
+            }
+        }
     }
 
     private printScores(channel: Discord.TextChannel, highP: { name: string, id: string }, lowP: { name: string, id: string }) {
