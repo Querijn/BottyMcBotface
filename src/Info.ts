@@ -153,7 +153,7 @@ export default class Info {
         }
 
         // a non-admin account tried to use one of the sub-commands, so we stop
-        const badWords = ["add", "remove", "list"];
+        const badWords = ["add", "remove", "list", "replace"];
         if (!isAdmin && badWords.some(x => x === action)) {
             return;
         }
@@ -208,6 +208,29 @@ export default class Info {
             }
 
             message.channel.send(this.removeInfo(args[1]));
+            return;
+        }
+
+        if (action === "replace") {
+            // we need more than 2 arguments to replace a note.
+            //   cmd    1     2
+            // (!note replace name)
+            if (args.length <= 2) {
+                return;
+            }
+
+            const info = this.infos.find(inf => {
+                return inf.command === args[2];
+            });
+
+            if (info) {
+                const body = args.splice(2).join();
+                info.command = body;
+                message.channel.send("new body is now " + body);
+            } else {
+                message.channel.send("no valid command");
+            }
+
             return;
         }
 
