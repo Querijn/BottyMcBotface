@@ -14,6 +14,7 @@ interface ESportsAPIReturnData {
 
 interface ESportsLeagueSchedule {
     league: string;
+    url: string;
     time: string;
     teamA: string;
     teamB: string;
@@ -166,7 +167,7 @@ export default class ESportsAPI {
 
             embed.fields.push({
                 name: league,
-                value: output + `[More about ${league} here](${this.getUrlByLeague(league)})\n`,
+                value: output + `[More about ${league} here](${this.getUrlByLeague(games[0])})\n`,
             });
         }
 
@@ -176,7 +177,7 @@ export default class ESportsAPI {
     // this can also check for older games by using resultsHtml instead of fixures
     private async loadData() {
         // pull data
-        const data = await fetch("https://eu.lolesports.com/en/api/widget/schedule?timezone=UTC&leagues=26&leagues=3&leagues=2&leagues=6&leagues=7&leagues=5&leagues=4&leagues=9&leagues=10&leagues=1&leagues=43&slug=all");
+        const data = await fetch("https://eu.lolesports.com/en/api/widget/schedule?timezone=UTC&slug=all");
         const html = (await data.json() as ESportsAPIReturnData).fixturesHtml;
         const schedule: Map<string, Map<string, ESportsLeagueSchedule[]>> = new Map();
 
@@ -209,6 +210,7 @@ export default class ESportsAPI {
                 // league title
                 const titleRoot = CheerioAPI.load(titleRow).root();
                 const title = titleRoot.find("h3 a").text();
+                const url = titleRoot.find("h3 a").attr("href");
                 schedule.get(realDate)!.set(title, []);
 
                 // league games
@@ -225,12 +227,13 @@ export default class ESportsAPI {
                     const timestamp = realDate + ` ${start}`;
 
                     // teams
-                    const content = gameRoot.find(".schedule__table-cell--content .team a");
+                    const content = gameRoot.find(".schedule__table-cell--content .team");
                     const teamA = content.first().text();
                     const teamB = content.last().text();
 
                     const gameData: ESportsLeagueSchedule = {
                         league: title,
+                        url,
                         time: timestamp,
                         teamA,
                         teamB,
@@ -248,11 +251,8 @@ export default class ESportsAPI {
         this.loadDataTimeOut = setTimeout(this.loadData.bind(this), this.settings.esports.updateTimeout);
     }
 
-    private getUrlByLeague(leagueName: string) {
+    private getUrlByLeague(leagueName: ESportsLeagueSchedule) {
 
-        // Hotfix for worlds
-        if (leagueName === "World Championship") leagueName = "worlds";
-
-        return "https://eu.lolesports.com/en/league/" + leagueName.replace(/ /g, "-").toLowerCase();
+        return "https://eu.lolesports.com" + leagueName.url;
     }
 }
