@@ -153,7 +153,7 @@ export default class Info {
         }
 
         // a non-admin account tried to use one of the sub-commands, so we stop
-        const badWords = ["add", "remove", "list", "replace"];
+        const badWords = ["add", "remove", "list", "replace", "rename"];
         if (!isAdmin && badWords.some(x => x === action)) {
             return;
         }
@@ -211,21 +211,43 @@ export default class Info {
             return;
         }
 
+        if (action === "rename") {
+            // we need 3 arguments to rename a note.
+            //   cmd    1     2      3
+            // (!note replace name newname)
+            if (args.length !== 3) {
+                return;
+            }
+
+            const info = this.infos.find(inf => {
+                return inf.command === args[1];
+            });
+
+            if (info) {
+                info.command = args[2];
+                message.channel.send("new name is now " + info.command);
+            } else {
+                message.channel.send("no valid command");
+            }
+
+            return;
+        }
+
         if (action === "replace") {
             // we need more than 2 arguments to replace a note.
-            //   cmd    1     2
-            // (!note replace name)
+            //   cmd    1     2     3++
+            // (!note replace name data...)
             if (args.length <= 2) {
                 return;
             }
 
             const info = this.infos.find(inf => {
-                return inf.command === args[2];
+                return inf.command === args[1];
             });
 
             if (info) {
-                const body = args.splice(2).join();
-                info.command = body;
+                const body = args.splice(2).join(" ");
+                info.message = body;
                 message.channel.send("new body is now " + body);
             } else {
                 message.channel.send("no valid command");
