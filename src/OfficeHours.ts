@@ -57,7 +57,7 @@ export default class OfficeHours {
         this.data = fileBackedObject(officeHoursData);
         console.log("Successfully question file.");
 
-        bot.on("ready", this.setupOpenState.bind(this, bot));
+        this.bot.on("ready", this.setupOpenState.bind(this));
     }
 
     public onAsk(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
@@ -113,9 +113,9 @@ export default class OfficeHours {
         this.close(this.channel);
     }
 
-    private setupOpenState(bot: Discord.Client) {
+    private setupOpenState() {
 
-        this.guild = bot.guilds.get(this.sharedSettings.server)!;
+        this.guild = this.bot.guilds.get(this.sharedSettings.server)!;
         if (!this.guild) {
             console.error(`Office-Hours: Unable to find server with ID: ${this.sharedSettings.server}`);
             return;
