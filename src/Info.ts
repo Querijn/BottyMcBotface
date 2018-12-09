@@ -225,9 +225,9 @@ export default class Info {
 
             if (info) {
                 info.command = args[2];
-                message.channel.send("new name is now " + info.command);
+                message.channel.send(`Note '${args[1]}' has been renamed to '${args[2]}'`);
             } else {
-                message.channel.send("no valid command");
+                message.channel.send("Unable to find note with that name!");
             }
 
             return;
@@ -248,9 +248,9 @@ export default class Info {
             if (info) {
                 const body = args.splice(2).join(" ");
                 info.message = body;
-                message.channel.send("new body is now " + body);
+                message.channel.send(`Note '${args[1]}' has been changed to ${body}`);
             } else {
-                message.channel.send("no valid command");
+                message.channel.send("Unable to find note with that name!");
             }
 
             return;
