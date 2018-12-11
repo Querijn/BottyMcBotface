@@ -100,14 +100,16 @@
     "officeHours": {
         "ask": {
             "aliases": [
-                "ask"
+                "ask",
+                "question"
             ],
             "description": "Ask a question at the next #office-hours"
         },
         "ask_for": {
             "admin": true,
             "aliases": [
-                "ask_for"
+                "ask_for",
+                "question_for"
             ],
             "description": "Ask a question for someone else at the next #office-hours"
         },
@@ -124,20 +126,6 @@
                 "close"
             ],
             "description": "Close #office-hours"
-        },
-        "question_list": {
-            "admin": true,
-            "aliases": [
-                "question_list"
-            ],
-            "description": "Print the list of questions waiting for #office-hours"
-        },
-        "question_remove": {
-            "admin": true,
-            "aliases": [
-                "question_remove"
-            ],
-            "description": "Remove a question from the list waiting for #office-hours"
         }
     },
     "riotApiLibraries": {

@@ -84,8 +84,6 @@ controller.registerCommand(commandList.officeHours.ask, officeHours.onAsk.bind(o
 controller.registerCommand(commandList.officeHours.ask_for, officeHours.onAskFor.bind(officeHours));
 controller.registerCommand(commandList.officeHours.open, officeHours.onOpen.bind(officeHours));
 controller.registerCommand(commandList.officeHours.close, officeHours.onClose.bind(officeHours));
-controller.registerCommand(commandList.officeHours.question_remove, officeHours.onQuestionRemove.bind(officeHours));
-controller.registerCommand(commandList.officeHours.question_list, officeHours.onQuestionList.bind(officeHours));
 
 // Auto react commands
 controller.registerCommand(commandList.autoReact.toggle_default_thinking, react.onToggleDefault.bind(react));
