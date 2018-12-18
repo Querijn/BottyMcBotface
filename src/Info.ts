@@ -103,7 +103,7 @@ export default class Info {
     public async onAll(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         let response: string | undefined;
         if (args.length === 0) return;
-        const name = args[0];
+        const name = args[0].toLowerCase();
 
         const regexp = /^[a-z0-9-]+$/i;
         if (!regexp.test(name)) return;
@@ -189,15 +189,17 @@ export default class Info {
             return;
         }
 
+        const noteName = args[1].toLowerCase();
+
         const info = this.infos.find(inf => {
-            return inf.command === args[1];
+            return inf.command === noteName;
         });
 
         if (info) {
             const body = args.splice(2).join(" ");
             info.message = body;
 
-            message.channel.send(`Note '${args[1]}' has been changed to ${body}`);
+            message.channel.send(`Note '${noteName}' has been changed to ${body}`);
             return;
         }
 
@@ -212,23 +214,26 @@ export default class Info {
             return;
         }
 
+        const noteName = args[1].toLowerCase();
+        const newNoteName = args[2].toLowerCase();
+
         const info = this.infos.find(inf => {
-            return inf.command === args[1];
+            return inf.command === noteName;
         });
 
         if (info) {
 
             const other = this.infos.find(inf => {
-                return inf.command === args[2];
+                return inf.command === newNoteName;
             });
 
             if (!other) {
-                info.command = args[2];
-                message.channel.send(`Note '${args[1]}' has been renamed to '${args[2]}'`);
+                info.command = newNoteName;
+                message.channel.send(`Note '${noteName}' has been renamed to '${newNoteName}'`);
                 return;
             }
 
-            message.channel.send(`Note '${args[2]}' already exists`);
+            message.channel.send(`Note '${newNoteName}' already exists`);
             return;
         }
 
@@ -243,14 +248,16 @@ export default class Info {
             return;
         }
 
+        const noteName = args[1].toLowerCase();
+
         const index = this.infos.findIndex(info => {
-            return info.command === command;
+            return info.command === noteName;
         });
 
         if (index === -1) return;
 
         this.infos.splice(index, 1);
-        message.channel.send(`Successfully removed ${command}`);
+        message.channel.send(`Successfully removed ${noteName}`);
     }
 
     private async handleNoteAdd(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
@@ -261,7 +268,7 @@ export default class Info {
             return;
         }
 
-        const name = args[1];
+        const name = args[1].toLowerCase();
         const text = args.splice(2).join(" ");
 
         let reply = await message.channel.send("What category would you like to put it in?");
@@ -299,8 +306,6 @@ export default class Info {
         if (alreadyExists) {
             return "A note with that name already exists";
         }
-
-        command = command.toLowerCase();
 
         const newInfo: InfoData = {
             command,
@@ -362,8 +367,6 @@ export default class Info {
 
         if (command.length === 0) return null;
         if (command.length > 300) return { message: `Stop it. Get some help.`, counter: 0, command, categoryId: "" };
-
-        command = command.toLowerCase();
 
         let info = this.infos.find(inf => {
             return inf.command === command;
