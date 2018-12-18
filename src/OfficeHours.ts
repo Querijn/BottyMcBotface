@@ -46,6 +46,7 @@ export default class OfficeHours {
     private sharedSettings: SharedSettings;
     private bot: Discord.Client;
     private guild: Discord.Guild;
+    private channel: Discord.TextChannel;
 
     constructor(bot: Discord.Client, sharedSettings: SharedSettings, officeHoursData: string) {
         console.log("Requested OfficeHours extension..");
@@ -56,7 +57,7 @@ export default class OfficeHours {
         this.data = fileBackedObject(officeHoursData);
         console.log("Successfully question file.");
 
-        bot.on("ready", this.setupOpenState.bind(this));
+        this.bot.on("ready", this.setupOpenState.bind(this));
     }
 
     public onAsk(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
@@ -113,7 +114,7 @@ export default class OfficeHours {
             return;
         }
         message.delete();
-        this.open(message.channel);
+        this.open(this.channel);
     }
 
     public onClose(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
@@ -122,25 +123,26 @@ export default class OfficeHours {
         }
 
         message.delete();
-        this.close(message.channel);
+        this.close(this.channel);
     }
 
     private setupOpenState() {
-        this.guild = this.bot.guilds.get(this.sharedSettings.server) as Discord.Guild;
+
+        this.guild = this.bot.guilds.get(this.sharedSettings.server)!;
         if (!this.guild) {
-            console.error(`OfficeHours: Unable to find server with ID: ${this.sharedSettings.server}`);
+            console.error(`Office-Hours: Unable to find server with ID: ${this.sharedSettings.server}`);
             return;
         }
 
-        const officeHoursChannel = this.guild.channels.find("name", "office-hours");
-        if (!officeHoursChannel) {
-            console.error(`OfficeHours: Unable to find channel #office-hours`);
+        this.channel = this.guild.channels.find("name", "office-hours") as Discord.TextChannel;
+        if (!this.channel || !(this.channel instanceof Discord.TextChannel)) {
+            console.error(`Office-Hours: Unable to find channel: #office-hours`);
             return;
         }
 
         const everyone = this.guild.roles.find("name", "@everyone");
         const randomUser = this.guild.members.find(x => x.roles.has(everyone.id)); // && x.roles.size === 1);
-        this.data.isOpen = officeHoursChannel.permissionsFor(randomUser).has("SEND_MESSAGES");
+        this.data.isOpen = this.channel.permissionsFor(randomUser).has("SEND_MESSAGES");
         console.log(`OfficeHours extension loaded (${this.data.isOpen ? "open" : "closed"}).`);
     }
 
@@ -158,6 +160,12 @@ export default class OfficeHours {
             requester,
             uuid: ++this.data.nextId,
         };
+
+        if (this.data.isOpen) {
+            this.channel.send(`${questionData.authorId} asked ${questionData.requester ? `(via ${questionData.requester})` : ""}: \`\`\`${questionData.question}\`\`\``);
+            message.reply("Your message has been posted in #office-hours, because its open at the moment!");
+            return;
+        }
 
         this.data.questions.push(questionData);
         message.reply(this.sharedSettings.officehours.addedMessage);
