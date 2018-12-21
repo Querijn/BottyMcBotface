@@ -106,7 +106,7 @@ export default class OfficeHours {
             return;
         }
 
-        message.reply("Invalid use of command, use !question_remove {id}");
+        message.reply("Invalid use of command, use !question remove {id}");
     }
 
     public onOpen(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
@@ -172,7 +172,7 @@ export default class OfficeHours {
 
         const moderatorChannel = this.guild.channels.find("name", "moderators");
         if (moderatorChannel instanceof Discord.TextChannel) {
-            moderatorChannel.send(`${authorName} just asked a question: \`${question}\`, you can remove it with \`!question_remove ${questionData.uuid}\``);
+            moderatorChannel.send(`${authorName} just asked a question: \`${question}\`, you can remove it with \`!question remove ${questionData.uuid}\``);
         }
     }
 
