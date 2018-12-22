@@ -90,7 +90,8 @@ export default class RiotAPILibraries {
         const libraryResponse = await fetch(json.download_url);
         const libraryInfo: APILibraryStruct = await libraryResponse.json();
 
-        if (!libraryInfo.tags || libraryInfo.tags.indexOf("v3") === -1) {
+        const hasValidVerrsion = libraryInfo.tags && (libraryInfo.tags.indexOf("v3") !== -1 || libraryInfo.tags.indexOf("v4") !== -1);
+        if (!hasValidVerrsion) {
             return { stars: 0, valid: false, library: null, links: [] };
         }
 
