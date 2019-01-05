@@ -103,7 +103,7 @@ export default class Info {
     public async onAll(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         let response: string | undefined;
         if (args.length === 0) return;
-        const name = args[0];
+        const name = args[0].toLowerCase();
 
         const regexp = /^[a-z0-9-]+$/i;
         if (!regexp.test(name)) return;
@@ -148,75 +148,157 @@ export default class Info {
 
         // if no params, we print the list
         if (args.length === 0) {
-            this.listInfo(message);
+            this.handleNoteList(message);
             return;
         }
 
         // a non-admin account tried to use one of the sub-commands, so we stop
-        const badWords = ["add", "remove", "list"];
+        const badWords = ["add", "remove", "replace", "rename"];
         if (!isAdmin && badWords.some(x => x === action)) {
             return;
         }
 
         if (action === "add") {
-            // we need atleast 3 arguments to add a note.
-            //  cmd   1   2    3
-            // (!note add name message)
-            if (args.length < 3) {
-                return;
-            }
-
-            const name = args[1];
-            const text = args.splice(2).join(" ");
-
-            let reply = await message.channel.send("What category would you like to put it in?");
-            if (Array.isArray(reply)) reply = reply[0];
-
-            this.addReactionListener({
-                user: message.author,
-                message: reply,
-                callback: async (emoji: Discord.Emoji, listener: ReactionListener) => {
-
-                    if (!this.categories.find(c => emoji.identifier === c.icon))
-                        return; // Not a valid category.
-
-                    try {
-                        await message.channel.send(this.addInfo(name, text, emoji));
-                    }
-                    catch (e) {
-                        if (e instanceof Discord.DiscordAPIError) {
-                            console.error(`Received DiscordAPIError while outputting an add info message: ${e.code} "${e.message}"`);
-                        }
-                        else {
-                            console.error(`Received unknown error while outputting an add info message: ${e}"`);
-                        }
-                    }
-                },
-            });
-
-            for (const category of this.categories)
-                await reply.react(category.icon).catch((reason) => console.log(`Cannot react with category '${category}', reason being: ${reason}`));
+            this.handleNoteAdd(message, isAdmin, command, args);
             return;
         }
 
         if (action === "remove") {
-            // we need 2 arguments to remove a note.
-            //   cmd    1     2
-            // (!note remove name)
-            if (args.length !== 2) {
-                return;
-            }
-
-            message.channel.send(this.removeInfo(args[1]));
+            this.handleNoteRemove(message, isAdmin, command, args);
             return;
         }
 
-        if (action === "list") {
-            this.listInfo(message);
+        if (action === "rename") {
+            this.handleNoteRename(message, isAdmin, command, args);
+            return;
+        }
+
+        if (action === "replace") {
+            this.handleNoteReplace(message, isAdmin, command, args);
             return;
         }
 
         return this.onAll(message, isAdmin, command, args);
+    }
+
+    private handleNoteReplace(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        // we need more than 2 arguments to replace a note.
+        //   cmd    1     2     3++
+        // (!note replace name data...)
+        if (args.length <= 2) {
+            return;
+        }
+
+        const noteName = args[1].toLowerCase();
+
+        const info = this.infos.find(inf => {
+            return inf.command === noteName;
+        });
+
+        if (info) {
+            const body = args.splice(2).join(" ");
+            info.message = body;
+
+            message.channel.send(`Note '${noteName}' has been changed to ${body}`);
+            return;
+        }
+
+        message.channel.send("Unable to find note with that name!");
+    }
+
+    private handleNoteRename(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        // we need 3 arguments to rename a note.
+        //   cmd    1     2      3
+        // (!note rename name newname)
+        if (args.length !== 3) {
+            return;
+        }
+
+        const noteName = args[1].toLowerCase();
+        const newNoteName = args[2].toLowerCase();
+
+        const info = this.infos.find(inf => {
+            return inf.command === noteName;
+        });
+
+        if (info) {
+
+            const other = this.infos.find(inf => {
+                return inf.command === newNoteName;
+            });
+
+            if (!other) {
+                info.command = newNoteName;
+                message.channel.send(`Note '${noteName}' has been renamed to '${newNoteName}'`);
+                return;
+            }
+
+            message.channel.send(`Note '${newNoteName}' already exists`);
+            return;
+        }
+
+        message.channel.send("Unable to find note with that name!");
+    }
+
+    private handleNoteRemove(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        // we need 2 arguments to remove a note.
+        //   cmd    1     2
+        // (!note remove name)
+        if (args.length !== 2) {
+            return;
+        }
+
+        const noteName = args[1].toLowerCase();
+
+        const index = this.infos.findIndex(info => {
+            return info.command === noteName;
+        });
+
+        if (index === -1) return;
+
+        this.infos.splice(index, 1);
+        message.channel.send(`Successfully removed ${noteName}`);
+    }
+
+    private async handleNoteAdd(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        // we need atleast 3 arguments to add a note.
+        //  cmd   1   2    3
+        // (!note add name message)
+        if (args.length < 3) {
+            return;
+        }
+
+        const name = args[1].toLowerCase();
+        const text = args.splice(2).join(" ");
+
+        let reply = await message.channel.send("What category would you like to put it in?");
+        if (Array.isArray(reply)) reply = reply[0];
+
+        this.addReactionListener({
+            user: message.author,
+            message: reply,
+            callback: async (emoji: Discord.Emoji, listener: ReactionListener) => {
+
+                if (!this.categories.find(c => emoji.identifier === c.icon))
+                    return; // Not a valid category.
+
+                try {
+                    await message.channel.send(this.addInfo(name, text, emoji));
+                }
+                catch (e) {
+                    if (e instanceof Discord.DiscordAPIError) {
+                        console.error(`Received DiscordAPIError while outputting an add info message: ${e.code} "${e.message}"`);
+                    }
+                    else {
+                        console.error(`Received unknown error while outputting an add info message: ${e}"`);
+                    }
+                }
+            },
+        });
+
+        for (const category of this.categories)
+            await reply.react(category.icon).catch((reason) => console.log(`Cannot react with category '${category}', reason being: ${reason}`));
+        return;
     }
 
     private addInfo(command: string, message: string, category: Discord.Emoji) {
@@ -224,8 +306,6 @@ export default class Info {
         if (alreadyExists) {
             return "A note with that name already exists";
         }
-
-        command = command.toLowerCase();
 
         const newInfo: InfoData = {
             command,
@@ -239,18 +319,7 @@ export default class Info {
         return `Successfully added ${command} with category ${category}`;
     }
 
-    private removeInfo(command: string) {
-        const index = this.infos.findIndex(info => {
-            return info.command === command;
-        });
-
-        if (index === -1) return;
-
-        this.infos.splice(index, 1);
-        return `Successfully removed ${command}`;
-    }
-
-    private async listInfo(message: Discord.Message) {
+    private async handleNoteList(message: Discord.Message) {
 
         const maxLength = 80;
 
@@ -298,8 +367,6 @@ export default class Info {
 
         if (command.length === 0) return null;
         if (command.length > 300) return { message: `Stop it. Get some help.`, counter: 0, command, categoryId: "" };
-
-        command = command.toLowerCase();
 
         let info = this.infos.find(inf => {
             return inf.command === command;
