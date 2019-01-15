@@ -24,6 +24,7 @@ import { CommandList } from "./CommandController";
 import { defaultBackedObject, fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 import TicTacToe from "./games/TicTacToe";
+import SpamKiller from "./SpamKiller";
 
 // Load and initialise settings
 const sharedSettings = defaultBackedObject<SharedSettings>("settings/shared_settings.json", "private/shared_settings.json");
@@ -51,6 +52,7 @@ const pickem = new Pickem(bot.client, sharedSettings);
 const endpoint = new Endpoint(sharedSettings, "data/endpoints.json");
 const pageDiffer = new PageDiffer(bot.client, sharedSettings, "data/page_differ.json");
 const ttt = new TicTacToe(bot.client, "data/ttt_scores.json");
+const spamKiller = new SpamKiller(bot.client);
 
 // Commands controller commands
 controller.registerCommand(commandList.controller.toggle, controller.onToggle.bind(controller));
