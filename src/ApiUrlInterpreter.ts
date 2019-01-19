@@ -290,7 +290,7 @@ export default class ApiUrlInterpreter {
                     return;
                 }
 
-                message.edit(`Response for ${url}:\n${this.personalSettings.webServer.relativeLiveLocation}${fileName}`);
+                message.edit(`Response for ${url}:\n${this.personalSettings.webServer.relativeLiveLocation}requests/${fileName}`);
             });
 
             this.iterator = (this.iterator % 50) + 1;

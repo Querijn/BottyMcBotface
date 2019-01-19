@@ -21,7 +21,7 @@ export default class VersionChecker {
         this.sharedSettings = sharedSettings;
         console.log("Successfully loaded VersionChecker settings.");
 
-        this.data = fileBackedObject(dataFile);
+        this.data = fileBackedObject(dataFile, "www/" + dataFile);
         console.log("Successfully loaded VersionChecker data file.");
 
         this.bot = bot;

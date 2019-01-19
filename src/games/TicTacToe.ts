@@ -47,7 +47,7 @@ export default class TicTacToe {
     private bot: Discord.Client;
 
     constructor(client: Discord.Client, scorefile: string) {
-        this.scores = fileBackedObject(scorefile);
+        this.scores = fileBackedObject(scorefile, "www/" + scorefile);
 
         this.bot = client;
         client.on("message", this.handleChat.bind(this));

@@ -22,7 +22,7 @@ export default class Uptime {
         this.personalSettings = sharedSettings.botty;
         console.log("Successfully loaded uptime settings.");
 
-        this.data = fileBackedObject(dataFile);
+        this.data = fileBackedObject(dataFile, "www/" + dataFile);
         console.log("Successfully loaded uptime data file.");
 
         setInterval(this.onUpdate.bind(this), this.sharedSettings.uptimeSettings.checkInterval);

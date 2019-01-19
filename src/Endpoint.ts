@@ -31,7 +31,7 @@ export default class Endpoint {
         this.maxDistance = sharedSettings.endpoint.maxDistance;
         this.aliases = sharedSettings.endpoint.aliases || {};
         this.timeOutDuration = sharedSettings.endpoint.timeOutDuration;
-        this.endpoints = fileBackedObject(endpointFile);
+        this.endpoints = fileBackedObject(endpointFile, "www/" + endpointFile);
         this.updateEndpoints();
     }
 

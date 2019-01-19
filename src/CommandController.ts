@@ -80,7 +80,7 @@ export default class CommandController {
         this.sharedSettings = sharedSettings;
         this.client = bot;
 
-        this.commandStatuses = fileBackedObject(commandData);
+        this.commandStatuses = fileBackedObject(commandData, "www/" + commandData);
 
         bot.on("message", this.handleCommands.bind(this));
     }

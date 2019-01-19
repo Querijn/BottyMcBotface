@@ -50,7 +50,7 @@ export default class Info {
         this.versionChecker = versionChecker;
         this.sharedSettings = sharedSettings;
 
-        const file = fileBackedObject<InfoFile>(userFile);
+        const file = fileBackedObject<InfoFile>(userFile, "www/" + userFile);
         this.infos = file.messages;
 
         console.log("Successfully loaded info file.");

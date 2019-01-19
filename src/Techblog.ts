@@ -17,7 +17,7 @@ export default class Techblog {
     constructor(bot: Discord.Client, sharedSettings: SharedSettings, dataFile: string) {
         this.sharedSettings = sharedSettings;
 
-        this.data = fileBackedObject(dataFile);
+        this.data = fileBackedObject(dataFile, "www/" + dataFile);
         console.log("Successfully loaded TechblogReader data file.");
 
         this.bot = bot;
