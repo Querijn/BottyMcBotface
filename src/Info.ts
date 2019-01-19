@@ -158,6 +158,11 @@ export default class Info {
             return;
         }
 
+        if (action === "list") {
+            this.handleNoteList(message);
+            return;
+        }
+
         if (action === "add") {
             this.handleNoteAdd(message, isAdmin, command, args);
             return;
