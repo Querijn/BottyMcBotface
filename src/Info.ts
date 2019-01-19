@@ -30,10 +30,6 @@ class ReactionListener {
     public callback: (emoji: Discord.ReactionEmoji | Discord.Emoji, listener: ReactionListener) => void;
 }
 
-const findOne = (arr1: Discord.Collection<string, Discord.Role>, arr2: any[]) => {
-    return arr2.some(x => arr1.has(x));
-};
-
 export default class Info {
     private userId: string;
     private infos: InfoData[];
