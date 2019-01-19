@@ -4,7 +4,6 @@ import ApiStatus from "./ApiStatus";
 import ApiUrlInterpreter from "./ApiUrlInterpreter";
 import AutoReact from "./AutoReact";
 import CommandController from "./CommandController";
-import ForumReader from "./ForumReader";
 import Info from "./Info";
 import JoinMessaging from "./JoinMessaging";
 import KeyFinder from "./KeyFinder";
