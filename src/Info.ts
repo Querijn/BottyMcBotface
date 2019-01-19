@@ -199,7 +199,7 @@ export default class Info {
             const body = args.splice(2).join(" ");
             info.message = body;
 
-            message.channel.send(`Note '${noteName}' has been changed to ${body}`);
+            message.channel.send(`Note '${noteName}' has been changed to:\n ${body}`);
             return;
         }
 
