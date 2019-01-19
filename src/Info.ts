@@ -42,6 +42,9 @@ export default class Info {
     private command: string;
     private versionChecker: VersionChecker;
 
+    private adminCommands = ["add", "remove", "replace", "rename"];
+    private badNoteNames = ["list"];
+
     private reactionListeners: ReactionListener[] = [];
     private categorisedMessages: { [msgId: string]: CategorisedMessage } = {};
 
@@ -153,8 +156,7 @@ export default class Info {
         }
 
         // a non-admin account tried to use one of the sub-commands, so we stop
-        const badWords = ["add", "remove", "replace", "rename"];
-        if (!isAdmin && badWords.some(x => x === action)) {
+        if (!isAdmin && this.adminCommands.some(x => x === action)) {
             return;
         }
 
@@ -221,6 +223,11 @@ export default class Info {
 
         const noteName = args[1].toLowerCase();
         const newNoteName = args[2].toLowerCase();
+        
+        if (this.adminCommands.indexOf(newNoteName) >= 0 || this.badNoteNames.indexOf(newNoteName) >= 0) {
+            message.channel.send("This note is a note command or a disallowed note name, and cannot be used.");
+            return;
+        }
 
         const info = this.infos.find(inf => {
             return inf.command === noteName;
@@ -275,6 +282,11 @@ export default class Info {
 
         const name = args[1].toLowerCase();
         const text = args.splice(2).join(" ");
+        
+        if (this.adminCommands.indexOf(name) >= 0 || this.badNoteNames.indexOf(name) >= 0) {
+            message.channel.send("This note is a note command or a disallowed note name, and cannot be used.");
+            return;
+        }
 
         let reply = await message.channel.send("What category would you like to put it in?");
         if (Array.isArray(reply)) reply = reply[0];
@@ -310,6 +322,10 @@ export default class Info {
         const alreadyExists = this.infos.some(info => info.command === command);
         if (alreadyExists) {
             return "A note with that name already exists";
+        }
+
+        if (this.adminCommands.indexOf(command) >= 0 || this.badNoteNames.indexOf(command) >= 0) {
+            return "This note is a note command or a disallowed note name, and cannot be used.";
         }
 
         const newInfo: InfoData = {
