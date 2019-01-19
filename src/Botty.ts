@@ -69,7 +69,7 @@ export default class Botty {
             if (message.author.bot) return; // Ignore bot in general
             if (message.channel.type === "dm" || message.channel.type === "group") return; // Don't output DMs
 
-            console.log(`${message.author.username}'s message in ${message.channel} was deleted. Contents: \`\`\`${message.content}\`\`\``);
+            console.log(`${message.author.username}'s message in ${message.channel} was deleted. Contents: \n${message.cleanContent}\n`);
         });
 
         this.client.on("messageUpdate", (oldMessage: Discord.Message, newMessage: Discord.Message) => {
@@ -78,7 +78,7 @@ export default class Botty {
             if (oldMessage.author.bot) return; // Ignore bot in general
             if (oldMessage.channel.type === "dm" || oldMessage.channel.type === "group") return; // Don't output DMs
 
-            console.log(`${oldMessage.author.username}'s message in ${oldMessage.channel} was changed from: \`\`\`${oldMessage.content}\`\`\` To: \`\`\`${newMessage.content}\`\`\``);
+            console.log(`${oldMessage.author.username}'s message in ${oldMessage.channel} was changed from: \n${oldMessage.cleanContent}\n\nTo:\n${newMessage.cleanContent}`);
         });
 
         this.client.on("guildMemberUpdate", (oldMember: GuildMember, newMember: GuildMember) => {

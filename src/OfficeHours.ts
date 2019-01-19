@@ -162,7 +162,7 @@ export default class OfficeHours {
         };
 
         if (this.data.isOpen) {
-            this.channel.send(`${questionData.authorId} asked ${questionData.requester ? `(via ${questionData.requester})` : ""}: \`\`\`${questionData.question}\`\`\``);
+            this.channel.send(`${questionData.authorId} asked ${questionData.requester ? `(via ${questionData.requester})` : ""}:\n ${questionData.question}`);
             message.reply("Your message has been posted in #office-hours, because its open at the moment!");
             return;
         }
@@ -211,7 +211,7 @@ export default class OfficeHours {
 
         // Add all questions with mention
         for (const data of this.data.questions) {
-            channel.send(`${data.authorId} asked ${data.requester ? `(via ${data.requester})` : ""}: \`\`\`${data.question}\`\`\``);
+            channel.send(`${data.authorId} asked ${data.requester ? `(via ${data.requester})` : ""}:\n ${data.question}`);
         }
 
         this.data.questions = [];
