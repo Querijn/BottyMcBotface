@@ -7,10 +7,33 @@ export function fileBackedObject<T>(path: string): T {
     return generateProxy(obj, path);
 }
 
+export function isObject(item: any) {
+    return (item && typeof item === 'object' && !Array.isArray(item));
+}
+  
+export default function mergeDeep(target: any, source: any) {
+    let output = Object.assign({}, target);
+    if (isObject(target) && isObject(source)) {
+        Object.keys(source).forEach(key => {
+            if (isObject(source[key])) {
+                if (!(key in target))
+                    Object.assign(output, { [key]: source[key] });
+                else
+                    output[key] = mergeDeep(target[key], source[key]);
+            } else {
+                Object.assign(output, { [key]: source[key] });
+            }
+        });
+    }
+    return output;
+}
+
 export function defaultBackedObject<T>(path: string, overwritePath: string): T {
     const defaults = fs.readFileSync(path, "utf-8");
     const overwrite = fs.readFileSync(overwritePath, "utf-8");
-    const obj = Object.assign({}, JSON.parse(defaults), JSON.parse(overwrite));
+    const defaultsData = JSON.parse(defaults);
+    const overwriteData = JSON.parse(overwrite);
+    const obj = mergeDeep(defaultsData, overwriteData);
 
     return generateProxy(obj, path);
 }
