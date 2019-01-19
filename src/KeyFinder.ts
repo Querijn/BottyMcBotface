@@ -85,7 +85,7 @@ export default class KeyFinder {
             const availableHeaders: string[] = [];
             resp.headers.forEach((value: string, header: string) => availableHeaders.push(`${header}: ${value}`));
 
-            console.warn(`Key Rate-limit headers for \`${key}\` are missing from a call with status code ${resp.status}. Available headers: \`\`\`${availableHeaders.join("\n")}\`\`\``);
+            console.log(`Key Rate-limit headers for \`${key}\` are missing from a call with status code ${resp.status}. Available headers: \`\`\`${availableHeaders.join("\n")}\`\`\``);
             return "Fake Headers";
         }
 
