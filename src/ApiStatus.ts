@@ -68,7 +68,7 @@ export default class ApiStatus {
         const embedContent: any = {
             author: {
                 icon_url: "http://ddragon.leagueoflegends.com/cdn/7.20.2/img/champion/Heimerdinger.png",
-                name: "API Status (" + this.getLastUpdate() + ")",
+                name: "API Status",
                 url: "https://developer.riotgames.com/api-status/",
             },
             color: 0xe74c3c,
@@ -90,11 +90,6 @@ export default class ApiStatus {
                 console.error(`Received unknown error while returning the current API status: ${e}"`);
             }
         }
-    }
-
-    private getLastUpdate(): string {
-        const timeDiff = Date.now() - this.lastCheckTime;
-        return "Last refresh: " + prettyMs(Math.max(timeDiff, 1000), { verbose: true, secDecimalDigits: 0 }) + " ago";
     }
 
     private async getApiStatus(): Promise<StatusEmbedState> {
