@@ -23,8 +23,8 @@ The Riot Games API Discord Bot. This is the bot that helps out with your questio
 - **!ask_for**: Ask a question for someone else at the next #office-hours
 - **!close**: Close #office-hours
 - **!open**: Open #office-hours
-- **!question_list**: Print the list of questions waiting for #office-hours
-- **!question_remove**: Remove a question from the list waiting for #office-hours
+- **!question list**: Print the list of questions waiting for #office-hours
+- **!question remove**: Remove a question from the list waiting for #office-hours
 - **!refresh_thinking**: Reloads the thinking emojis
 - **!restart, !reboot**: Restarts Botty.
 - **!toggle_command**: Enables or disables commands (!toggle_command {command})
