@@ -36,6 +36,8 @@ export default class JoinMessaging {
             this.messageContents = fs.readFileSync(this.sharedSettings.onJoin.messageFile, "utf8").toString();
             this.commandContents = this.commandController.getHelp();
 
+            fs.copyFileSync(this.sharedSettings.onJoin.messageFile, "www/" + this.sharedSettings.onJoin.messageFile);
+
             this.bot.on("guildMemberAdd", (user: GuildMember) => {
                 user.send(this.messageContents);
                 this.commandContents.forEach(embed => user.send({ embed }));
