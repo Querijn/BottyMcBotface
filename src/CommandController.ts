@@ -152,7 +152,7 @@ export default class CommandController {
     public onHelp(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
 
         if (args[0] !== "here") {
-            message.channel.send(`An introduction to Botty can be found here: ${this.sharedSettings.botty.webServer.relativeLiveLocation}\nYou can find all commands to use here: ${url.resolve(this.sharedSettings.botty.webServer.relativeLiveLocation, "commands")}`);
+            message.channel.send(`An introduction to Botty can be found here: <${this.sharedSettings.botty.webServer.relativeLiveLocation}>\nYou can find all commands to use here: <${url.resolve(this.sharedSettings.botty.webServer.relativeLiveLocation, "commands")}>`);
             return;
         }
 
