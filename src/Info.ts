@@ -1,6 +1,8 @@
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 
+import url = require("url");
+
 import Botty from "./Botty";
 import CategorisedMessage from "./CategorisedMessage";
 import Discord = require("discord.js");
@@ -147,7 +149,7 @@ export default class Info {
 
         // if no params, we print the list
         if (args.length === 0) {
-            this.handleNoteList(message);
+            this.handleNoteList(message, false);
             return;
         }
 
@@ -157,7 +159,7 @@ export default class Info {
         }
 
         if (action === "list") {
-            this.handleNoteList(message);
+            this.handleNoteList(message, args[1] === "here");
             return;
         }
 
@@ -336,9 +338,14 @@ export default class Info {
         return `Successfully added ${command} with category ${category}`;
     }
 
-    private async handleNoteList(message: Discord.Message) {
+    private async handleNoteList(message: Discord.Message, isLocal: boolean) {
 
         const maxLength = 80;
+
+        if (!isLocal) {
+            message.channel.send(url.resolve(this.sharedSettings.botty.webServer.relativeLiveLocation, "notes"));
+            return;
+        }
 
         let firstPage: Discord.RichEmbed | null = null;
         const pages: { [emoji: string]: Discord.RichEmbed } = {};
