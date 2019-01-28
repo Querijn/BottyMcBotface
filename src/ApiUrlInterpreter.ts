@@ -30,7 +30,7 @@ export default class ApiUrlInterpreter {
      * Matches Riot API call for each match found:
      * The 1st group is named "https" and indicates if the URL is using HTTP or HTTPS (it will be "s" or "S" if HTTPS, and empty if HTTP).
      * The 2nd group is named "platform" and is the platform ID (e.g "na1").
-     * The 3rd group is named "path" and is the URL path (e.g. "/lol/summoner/v3/summoners/41271279").
+     * The 3rd group is named "path" and is the URL path (e.g. "/lol/summoner/v4/summoners/902572087429847093845790243").
      * The 4th group is named "query" and is the URL query (e.g. "api_key=aaaaaa&ayy=lmao"). If there is no URL query, this group will not exist.
      * https://regex101.com/r/WGLmBG/10/
      */

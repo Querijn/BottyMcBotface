@@ -33,7 +33,7 @@ export class Path {
     public constructor(name: string, methodSchema: any, methodType: "GET" | "POST") {
         this.name = name;
         this.methodType = methodType;
-        this.canUse = !methodSchema.operationId.startsWith("tournament-v3");
+        this.canUse = !methodSchema.operationId.startsWith("tournament-v4");
 
         this.regex = Path.constructRegex(name, methodSchema);
 

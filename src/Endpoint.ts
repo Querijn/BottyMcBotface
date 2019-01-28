@@ -145,7 +145,7 @@ export default class Endpoint {
             const endpointSet = new Set<EndpointName>();
 
             for (const path in paths) {
-                const endpointName = paths[path]["x-endpoint"]; // match-v3
+                const endpointName = paths[path]["x-endpoint"]; // match-v4
                 endpointSet.add(endpointName);
             }
 

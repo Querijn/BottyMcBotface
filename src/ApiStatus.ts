@@ -5,7 +5,7 @@ import { SharedSettings } from "./SharedSettings";
 import Discord = require("discord.js");
 
 /**
- * Map from API name (e.g. champion-mastery-v3) to the string used in the embed field.
+ * Map from API name (e.g. champion-mastery-v4) to the string used in the embed field.
  * Only APIs with issues (troubled/down) are stored.
  *
  * @interface ApiStates
