@@ -73,7 +73,7 @@ export default class KeyFinder {
      * @throws {Error} Thrown if the AnswerHubAPI call cannot be completed or results in a status code other than 200 or 403
      */
     public async testKey(key: string): Promise<string | null> {
-        const resp = await fetch("https://euw1.api.riotgames.com/lol/summoner/v3/summoners/22929336", {
+        const resp = await fetch("https://kr.api.riotgames.com/lol/league/v4/masterleagues/by-queue/RANKED_SOLO_5x5", {
             headers: {
                 "X-Riot-Token": key,
             },
