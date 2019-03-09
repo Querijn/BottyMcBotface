@@ -164,6 +164,9 @@ export default class ESportsAPI {
 
                 output += `${game.teamA} vs ${game.teamB}, ${moment.fromNow()}\n`;
             }
+            
+            if (output.trim().length === 0)
+                continue;
 
             embed.fields.push({
                 name: league,
