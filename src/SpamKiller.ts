@@ -40,7 +40,7 @@ export default class SpamKiller {
             if (this.violators.find(v => message.author.id == v.author.id))
                 return;
 
-            let response = await message.channel.send(`Hey, ${message.author}, I deleted your link, just in case you're a bot. can you react to this message with a thumbs up? 👍`);
+            let response = await message.channel.send(`Hey, ${message.author}, I deleted your link, just in case you're a bot. Can you react to this message with a thumbs up? I'll re-post that link for you if you do. 👍`);
 
             if (Array.isArray(response)) 
                 response = response[0];
