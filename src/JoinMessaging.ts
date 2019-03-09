@@ -39,8 +39,9 @@ export default class JoinMessaging {
             fs.copyFileSync(this.sharedSettings.onJoin.messageFile, "www/" + this.sharedSettings.onJoin.messageFile);
 
             this.bot.on("guildMemberAdd", (user: GuildMember) => {
-                user.send(this.messageContents);
-                this.commandContents.forEach(embed => user.send({ embed }));
+                user.send(this.messageContents)
+                .then(() => this.commandContents.forEach(embed => user.send({ embed })))
+                .catch((e) => console.log(`Error: Cannot send the welcome message to ${user.nickname} (${e})`));
             });
 
             console.log("Join message extension loaded.");
