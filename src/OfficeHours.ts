@@ -7,6 +7,7 @@ import fetch from "node-fetch";
 interface QuestionData {
     uuid: number;
     requester: string | null;
+    authorMention: string;
     authorId: string;
     authorName: string;
     question: string;
@@ -63,19 +64,19 @@ export default class OfficeHours {
     public onAsk(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         const question = args.join(" ");
 
-        if (isAdmin) {
-            if (args[0] === "remove") {
-                this.onQuestionRemove(message, isAdmin, args[0], args.slice(1));
-                return;
-            }
+        if (args[0] === "remove") {
+            this.onQuestionRemove(message, isAdmin, args[0], args.slice(1));
+            return;
+        }
 
+        if (isAdmin) {
             if (args[0] === "list") {
                 this.onQuestionList(message, isAdmin, args[0], args.slice(1));
                 return;
             }
         }
 
-        this.storeQuestion(question, message, message.author.toString(), message.author.username);
+        this.storeQuestion(question, message, message.author, message.author.username);
     }
 
     public onAskFor(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
@@ -83,7 +84,7 @@ export default class OfficeHours {
         if (!asker) return;
 
         const question = args.slice(1).join(" ");
-        this.storeQuestion(question, message, asker.toString(), asker.username, message.author.username);
+        this.storeQuestion(question, message, asker, message.author.username);
     }
 
     public onQuestionList(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
@@ -99,14 +100,37 @@ export default class OfficeHours {
     }
 
     public onQuestionRemove(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+
+        const id = +args[0];
+
+        if (!isAdmin) {
+
+            // Get user questions
+            const questions = this.data.questions.filter(q => q.authorId == message.author.id);
+            if (questions.length == 0)
+                return;
+
+            // Get the question user requested to delete
+            const question = questions.find(q => q.uuid == id);
+            if (!question) {
+                let reply = "I'm sorry, but you must have entered the wrong ID. You own the following questions: \n";
+
+                for (const ownedQuestion of questions) {
+                    reply += `ID ${ownedQuestion.uuid}: ${ownedQuestion.question}\n`;
+                }
+
+                message.channel.send(reply);
+                return;
+            }
+        }
+
         if (args.length === 1) {
-            const id = +args[0];
             this.data.questions = this.data.questions.filter(q => q.uuid !== id);
-            message.reply(this.sharedSettings.officehours.removedMessage);
+            message.channel.send(this.sharedSettings.officehours.removedMessage);
             return;
         }
 
-        message.reply("Invalid use of command, use !question remove {id}");
+        message.channel.send("Invalid use of command, use !question remove {id}");
     }
 
     public onOpen(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
@@ -146,7 +170,7 @@ export default class OfficeHours {
         console.log(`OfficeHours extension loaded (${this.data.isOpen ? "open" : "closed"}).`);
     }
 
-    private storeQuestion(question: string, message: Discord.Message, authorId: string, authorName: string, requester: string | null = null) {
+    private storeQuestion(question: string, message: Discord.Message, author: Discord.User, requester: string | null = null) {
 
         if (question.length === 0) {
             message.reply("You forgot to ask a question...");
@@ -154,25 +178,26 @@ export default class OfficeHours {
         }
 
         const questionData = {
-            authorId,
-            authorName,
+            authorMention: author.toString(),
+            authorName: author.username,
+            authorId: author.id,
             question,
             requester,
             uuid: ++this.data.nextId,
         };
 
         if (this.data.isOpen) {
-            this.channel.send(`${questionData.authorId} asked ${questionData.requester ? `(via ${questionData.requester})` : ""}:\n ${questionData.question}`);
+            this.channel.send(`${questionData.authorMention} asked ${questionData.requester ? `(via ${questionData.requester})` : ""}:\n ${questionData.question}`);
             message.reply("Your message has been posted in #office-hours, because its open at the moment!");
             return;
         }
 
         this.data.questions.push(questionData);
-        message.reply(this.sharedSettings.officehours.addedMessage);
+        message.channel.send(this.sharedSettings.officehours.addedMessage.replace(/{removeCommand}/, `\`!question remove ${questionData.uuid}\``));
 
         const moderatorChannel = this.guild.channels.find("name", "moderators");
         if (moderatorChannel instanceof Discord.TextChannel) {
-            moderatorChannel.send(`${authorName} just asked a question: \`${question}\`, you can remove it with \`!question remove ${questionData.uuid}\``);
+            moderatorChannel.send(`${author.username} just asked a question: \`${question}\`, you can remove it with \`!question remove ${questionData.uuid}\``);
         }
     }
 
@@ -211,7 +236,7 @@ export default class OfficeHours {
 
         // Add all questions with mention
         for (const data of this.data.questions) {
-            channel.send(`${data.authorId} asked ${data.requester ? `(via ${data.requester})` : ""}:\n ${data.question}`);
+            channel.send(`${data.authorMention} asked ${data.requester ? `(via ${data.requester})` : ""}:\n ${data.question}`);
         }
 
         this.data.questions = [];
