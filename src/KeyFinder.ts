@@ -44,7 +44,7 @@ export default class KeyFinder {
     }
 
     public onMessage(incomingMessage: Discord.Message) {
-        if (incomingMessage.author.id === this.bot.user.id) return;
+        if (incomingMessage.author.id === this.bot.user.id || !incomingMessage.guild) return;
 
         this.findKey(`<@${incomingMessage.author.id}>`, incomingMessage.content, `<#${incomingMessage.channel.id}>`, incomingMessage.createdTimestamp);
     }
