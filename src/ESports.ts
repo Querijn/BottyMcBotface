@@ -45,8 +45,8 @@ export default class ESportsAPI {
 
     public async onCheckNext(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
 
-        if (this.esportsChannel && message.channel.id !== this.esportsChannel.id) {
-            message.channel.send(`To avoid spoilers, this command is restricted to #${this.esportsChannel.name}.`);
+        if (message.guild && this.esportsChannel && message.channel.id !== this.esportsChannel.id) {
+            message.channel.send(`To avoid spoilers, this command is restricted to ${this.esportsChannel.name}.`);
             return;
         }
 
