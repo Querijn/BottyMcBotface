@@ -51,7 +51,7 @@ const pickem = new Pickem(bot.client, sharedSettings);
 const endpoint = new Endpoint(sharedSettings, "data/endpoints.json");
 const pageDiffer = new PageDiffer(bot.client, sharedSettings, "data/page_differ.json");
 const ttt = new TicTacToe(bot.client, "data/ttt_scores.json");
-const spamKiller = new SpamKiller(bot.client);
+const spamKiller = new SpamKiller(bot.client, sharedSettings);
 
 // Commands controller commands
 controller.registerCommand(commandList.controller.toggle, controller.onToggle.bind(controller));
