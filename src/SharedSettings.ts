@@ -107,6 +107,7 @@ export interface SharedSettings {
         githubErrorLanguage: string,
         baseURL: string,
         aliases: { [key: string]: string[] },
+        checkInterval: number,
     };
 
     versionChecker: {
