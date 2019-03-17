@@ -26,7 +26,7 @@ import TicTacToe from "./games/TicTacToe";
 import SpamKiller from "./SpamKiller";
 
 // Load and initialise settings
-const sharedSettings = defaultBackedObject<SharedSettings>("settings/shared_settings.json", "private/shared_settings.json");
+const sharedSettings = overrideFileBackedObject<SharedSettings>("settings/shared_settings.json", "private/shared_settings.json");
 const commandList = fileBackedObject<CommandList>("settings/command_list.json", "www/data/command_list.json");
 const bot = new Botty(sharedSettings);
 

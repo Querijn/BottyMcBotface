@@ -32,7 +32,7 @@ export default function mergeDeep(target: any, source: any) {
     return output;
 }
 
-export function defaultBackedObject<T>(location: string, overwriteLocation: string): T {
+export function overrideFileBackedObject<T>(location: string, overwriteLocation: string): T {
     const defaults = fs.readFileSync(location, "utf-8");
     const overwrite = fs.readFileSync(overwriteLocation, "utf-8");
     const defaultsData = JSON.parse(defaults);
