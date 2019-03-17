@@ -20,10 +20,11 @@ import PageDiffer from "./PageDiffer";
 
 import { APISchema } from "./ApiSchema";
 import { CommandList } from "./CommandController";
-import { defaultBackedObject, fileBackedObject } from "./FileBackedObject";
+import { overrideFileBackedObject, fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 import TicTacToe from "./games/TicTacToe";
 import SpamKiller from "./SpamKiller";
+import Admin from "./Admin";
 
 // Load and initialise settings
 const sharedSettings = overrideFileBackedObject<SharedSettings>("settings/shared_settings.json", "private/shared_settings.json");
@@ -51,6 +52,7 @@ const pickem = new Pickem(bot.client, sharedSettings);
 const endpoint = new Endpoint(sharedSettings, "data/endpoints.json");
 const pageDiffer = new PageDiffer(bot.client, sharedSettings, "data/page_differ.json");
 const ttt = new TicTacToe(bot.client, "data/ttt_scores.json");
+const admin = new Admin(bot.client, sharedSettings, "data/admin_data.json");
 const spamKiller = new SpamKiller(bot.client, sharedSettings);
 
 // Commands controller commands
@@ -62,6 +64,11 @@ controller.registerCommand(commandList.botty.restart, bot.onRestart.bind(bot));
 
 // TTT commands
 controller.registerCommand(commandList.games.ttt, ttt.onInvite.bind(ttt));
+
+// Admin commands
+controller.registerCommand(commandList.admin.unmute, admin.onUnmute.bind(admin));
+controller.registerCommand(commandList.admin.mute, admin.onMute.bind(admin));
+controller.registerCommand(commandList.admin.ticket, admin.onTicket.bind(admin));
 
 // Esport commands
 controller.registerCommand(commandList.esports.date, esports.onCheckNext.bind(esports));

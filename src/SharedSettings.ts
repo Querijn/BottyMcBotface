@@ -46,6 +46,12 @@ export interface SharedSettings {
         checkInterval: number,
     };
 
+    admin: {
+        muteRoleId: string;
+        muteRoleName: string;
+        muteTimeout: number;
+    };
+
     esports: {
         printChannel: string;
         updateTimeout: number;

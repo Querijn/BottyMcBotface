@@ -17,6 +17,30 @@
             "description": "Starts a game of TTT versus that player"
         }
     },
+    "admin": {
+        "mute": {
+            "admin": true,
+            "aliases": [
+                "mute"
+            ],
+            "description": "Mutes a user"
+        },
+        "unmute": {
+            "admin": true,
+            "aliases": [
+                "unmute"
+            ],
+            "description": "Unmutes a user"
+        },
+        "ticket": {
+            "admin": true,
+            "aliases": [
+                "ticket",
+                "tickets"
+            ],
+            "description": "List previous offenses of a user or add a new one."
+        }
+    },
     "esports": {
         "date": {
             "aliases": [

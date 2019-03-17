@@ -31,6 +31,11 @@ export interface CommandList {
         toggle: Command;
         help: Command;
     };
+    admin: {
+        unmute: Command;
+        mute: Command;
+        ticket: Command;
+    };
     esports: {
         date: Command;
         pickem: Command;

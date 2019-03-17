@@ -36,6 +36,11 @@
             "347539422943903755"
         ]
     },
+    "admin": {
+        "muteRoleId": "428943553167884307",
+        "muteRoleName": "muted",
+        "muteTimeout": 86400000
+    },
     "esports": {
         "printChannel": "esports-spoilers",
         "updateTimeout": 18000000,
