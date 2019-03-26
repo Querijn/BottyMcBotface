@@ -31,6 +31,9 @@ export interface CommandList {
         toggle: Command;
         help: Command;
     };
+    gamedata: {
+        lookup: Command;
+    };
     admin: {
         unmute: Command;
         mute: Command;
