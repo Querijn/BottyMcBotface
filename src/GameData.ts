@@ -89,36 +89,21 @@ export default class GameData {
             .filter(id => id > 0)
             .map(i => i.toString())
             .forEach(id => {
-                const skinKeys = Object.keys(skins).filter(k => k.startsWith(id)).filter(k => (k.length - id.length) === 3).map(k => +k);
+                const skinKeys = Object.keys(skins)
+                    .filter(k => k.startsWith(id))
+                    .filter(k => (k.length - id.length) === 3)
+                    .map(k => +k);
 
                 skinKeys.forEach(key => {
                     const data = skins[key];
-
-                    const chromaData: ChromaData[] = [];
-                    if (data.hasOwnProperty("chromas")) {
-                        data.chromas.forEach(chroma => {
-                            chromaData.push(chroma);
-                        });
-                    }
-
-                    const skinData: SkinData = {
-                        id: data.id,
-                        name: data.name,
-                        splashPath: data.splashPath,
-                        uncenteredSplashPath: data.uncenteredSplashPath,
-                        tilePath: data.tilePath,
-                        loadscreenPath: data.loadscreenPath,
-                        chromas: chromaData,
-                    };
-
-                    returnData.filter(r => r.id === +id)[0].skins.push(skinData);
+                    returnData.filter(r => r.id === +id)[0].skins.push({ ...data });
                 });
             });
 
         return returnData;
     }
 
-    public async  loadPerkData(): Promise<PerkData[]> {
+    public async loadPerkData(): Promise<PerkData[]> {
         const returnData: PerkData[] = [];
 
         const perkDataUrl = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perks.json";
@@ -127,21 +112,13 @@ export default class GameData {
         return returnData;
     }
 
-    public async  loadItemData(): Promise<ItemData[]> {
+    public async loadItemData(): Promise<ItemData[]> {
         const returnData: ItemData[] = [];
 
         const itemDataUrl = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/items.json";
         const items = await (await fetch(itemDataUrl)).json();
-        items.forEach((c: ItemData) => returnData.push({
-            id: c.id,
-            name: c.name,
-            categories: c.categories,
-            price: c.price,
-            priceTotal: c.priceTotal,
-            iconPath: c.iconPath,
-            from: [],
-            to: [],
-        }));
+        items.forEach((c: ItemData) => returnData.push({ ...c }));
+        returnData.forEach((c: ItemData) => { c.to = []; c.from = []; });
 
         items.forEach((i: any) => {
             const item = returnData.filter(r => r.id === +i.id)[0];
@@ -168,27 +145,27 @@ export default class GameData {
         if (message.cleanContent.length === 0) {
             let response = `I have info on the following categories; \`item\`,\`perk\`,\`champion\``;
             response += `type !${command} {search_type} {search_term} to use it`;
-            message.channel.sendMessage(response);
+            message.channel.send(response);
             return;
         }
 
         if (!["item", "perk", "champion"].some(i => i === args[0])) {
-            message.channel.sendMessage(`I'm sorry. I'm unable to parse the category \`${args[0]}\` at this moment. If you want it added, contact a guru`);
+            message.channel.send(`I'm sorry. I'm unable to parse the category \`${args[0]}\` at this moment. If you want it added, contact a guru`);
             return;
         }
 
         if (args[0] === "item") {
-            message.channel.sendMessage(this.findItem(args.slice(1).join(" ")));
+            message.channel.send(this.findItem(args.slice(1).join(" ")));
             return;
         }
 
         if (args[0] === "perk") {
-            message.channel.sendMessage(this.findPerk(args.slice(1).join(" ")));
+            message.channel.send(this.findPerk(args.slice(1).join(" ")));
             return;
         }
 
         if (args[0] === "champion") {
-            message.channel.sendMessage(this.findChampion(args.slice(1).join(" ")));
+            message.channel.send(this.findChampion(args.slice(1).join(" ")));
             return;
         }
     }
