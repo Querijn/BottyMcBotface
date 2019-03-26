@@ -57,6 +57,7 @@ export default class GameData {
         this.bot = bot;
 
         bot.on("ready", async () => {
+            this.reloadData();
             setInterval(this.reloadData, 86400 * 1000);
         });
     }
@@ -65,22 +66,23 @@ export default class GameData {
         this.champData = await this.loadChampionData();
         this.perkData = await this.loadPerkData();
         this.itemData = await this.loadItemData();
-        console.log("Game data reloaded!");
+        console.log("Game data loaded!");
     }
 
     public async loadChampionData(): Promise<ChampionData[]> {
         const returnData: ChampionData[] = [];
 
-        const championDataUrl = "https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/v1/champion-summary.json";
+        const championDataUrl = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-summary.json";
         const champions = await (await fetch(championDataUrl)).json();
-        champions.forEach((c: any) => returnData.push({
-            id: c.id,
-            name: c.name,
-            key: c.alias,
-            skins: [],
-        }));
+        champions.filter((c: any) => c.id > 0)
+            .forEach((c: any) => returnData.push({
+                id: c.id,
+                name: c.name,
+                key: c.alias,
+                skins: [],
+            }));
 
-        const skinDataUrl = "https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/v1/skins.json";
+        const skinDataUrl = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/skins.json";
         const skins = await (await fetch(skinDataUrl)).json() as SkinData[];
 
         (champions as ChampionData[]).map(c => c.id)
@@ -119,7 +121,7 @@ export default class GameData {
     public async  loadPerkData(): Promise<PerkData[]> {
         const returnData: PerkData[] = [];
 
-        const perkDataUrl = "https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/v1/perks.json";
+        const perkDataUrl = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perks.json";
         const perks = await (await fetch(perkDataUrl)).json() as PerkData[];
         perks.forEach(perk => returnData.push(perk));
         return returnData;
@@ -128,7 +130,7 @@ export default class GameData {
     public async  loadItemData(): Promise<ItemData[]> {
         const returnData: ItemData[] = [];
 
-        const itemDataUrl = "https://raw.communitydragon.org/pbe/plugins/rcp-be-lol-game-data/global/default/v1/items.json";
+        const itemDataUrl = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/items.json";
         const items = await (await fetch(itemDataUrl)).json();
         items.forEach((c: ItemData) => returnData.push({
             id: c.id,
@@ -146,95 +148,145 @@ export default class GameData {
 
             i.from.forEach((f: number) => {
                 const otherItem = returnData.filter(r => r.id === f)[0];
-                item.from.push(otherItem.name);
+                if (otherItem !== undefined) {
+                    item.from.push(otherItem.name);
+                }
             });
 
             i.to.forEach((f: number) => {
                 const otherItem = returnData.filter(r => r.id === f)[0];
-                item.to.push(otherItem.name);
+                if (otherItem !== undefined) {
+                    item.to.push(otherItem.name);
+                }
             });
         });
 
         return returnData;
     }
 
-    public async onLookup(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+    public onLookup(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         if (message.cleanContent.length === 0) {
             let response = `I have info on the following categories; \`item\`,\`perk\`,\`champion\``;
             response += `type !${command} {search_type} {search_term} to use it`;
-            message.channel.send(response);
+            message.channel.sendMessage(response);
             return;
         }
 
         if (!["item", "perk", "champion"].some(i => i === args[0])) {
-            message.channel.send(`I'm sorry. I'm unable to parse the category ${args[0]} at this moment. If you want it added, contat a guru`);
+            message.channel.sendMessage(`I'm sorry. I'm unable to parse the category ${args[0]} at this moment. If you want it added, contat a guru`);
             return;
         }
 
         if (args[0] === "item") {
-            return this.findItem(args.slice(1).join(" "));
+            message.channel.sendMessage(this.findItem(args.slice(1).join(" ")));
+            return;
         }
 
         if (args[0] === "perk") {
-            return this.findPerk(args.slice(1).join(" "));
+            message.channel.sendMessage(this.findPerk(args.slice(1).join(" ")));
+            return;
         }
 
         if (args[0] === "champion") {
-            return this.findChampion(args.slice(1).join(" "));
+            message.channel.sendMessage(this.findChampion(args.slice(1).join(" ")));
+            return;
         }
     }
 
-    public async findItem(search: string): Promise<string> {
-        if (!search || search === undefined || search == null || search.length === 0) {
-            return "There are currently ${itemData.length} items on the PBE server!";
+    public findItem(search: string): string {
+        if (!search) {
+            return `There are currently ${this.itemData.length} items on the PBE server!`;
         }
 
-        const result = this.itemData.filter(c => Math.max(levenshteinDistance(search, c.id.toString()), levenshteinDistance(search, c.name), levenshteinDistance(search, c.categories.toString())) < 3);
+        const result = this.itemData.filter(c => Math.min(
+            ...[
+                levenshteinDistance(search, c.id.toString()),
+                levenshteinDistance(search, c.name),
+                levenshteinDistance(search, c.categories.toString()),
+            ]) < 1);
+
+        if (result.length === 0) {
+            return "Unable to find any data for that search term.";
+        }
+
+        if (result.length > 3) {
+            let response = "Too many results returned for that search, please try another;\n";
+            result.forEach(r => response += `\`${r.name}\`, `);
+            response = response.slice(0, -2);
+            return response;
+        }
+
+        const returnedValue = {
+            id: result[0].id,
+            name: result[0].name,
+            combineCost: result[0].price,
+            cost: result[0].priceTotal,
+            from: result[0].from,
+            to: result[0].to,
+        } as any;
+
+        return "```" + JSON.stringify(returnedValue, null, 4) + "```";
+    }
+
+    public findPerk(search: string): string {
+        if (!search) {
+            return `There are currently ${this.perkData.length} perks on the PBE server!`;
+        }
+
+        const result = this.perkData.filter(c => Math.min(
+            ...[
+                levenshteinDistance(search, c.id.toString()),
+                levenshteinDistance(search, c.name),
+                levenshteinDistance(search, c.shortDesc),
+            ]) < 1);
 
         if (result.length === 0) {
             return "Unable to find any data for that search term.";
         }
 
         if (result.length > 1) {
-            return "Too many results returned for that search, please try another";
+            let response = "Too many results returned for that search, please try another;\n";
+            result.forEach(r => response += `\`${r}\`, `);
+            response = response.slice(0, -2);
+            return response;
         }
 
-        return "```" + JSON.stringify(result[0], null, 4) + "```";
+        const returnedValue = {
+            id: result[0].id,
+            name: result[0].name,
+            endOfGameStatDescs: result[0].endOfGameStatDescs,
+        } as any;
+
+        return "```" + JSON.stringify(returnedValue, null, 4) + "```";
     }
 
-    public async findPerk(search: string) {
-        if (!search || search === undefined || search == null || search.length === 0) {
-            return "There are currently ${perkData.length} perks on the PBE server!";
+    public findChampion(search: string): string {
+        if (!search) {
+            return `There are currently ${this.champData.length} champions on the PBE server!`;
         }
 
-        const result = this.perkData.filter(c => Math.max(levenshteinDistance(search, c.id.toString()), levenshteinDistance(search, c.name), levenshteinDistance(search, c.shortDesc)) < 3);
+        const result = this.champData.filter(c => Math.min(
+            ...[
+                levenshteinDistance(search, c.id.toString()),
+                levenshteinDistance(search, c.name),
+                levenshteinDistance(search, c.key),
+            ]) < 3);
 
         if (result.length === 0) {
             return "Unable to find any data for that search term.";
         }
 
         if (result.length > 1) {
-            return "Too many results returned for that search, please try another";
+            let response = "Too many results returned for that search, please try another;\n";
+            result.forEach(r => response += `\`${r}\`, `);
+            response = response.slice(0, -2);
+            return response;
         }
 
-        return "```" + JSON.stringify(result[0], null, 4) + "```";
-    }
+        // maybe return the skin names here?
+        const returnedValue = { ...result[0] } as any;
+        returnedValue.skins = returnedValue.skins.length;
 
-    public async findChampion(search: string) {
-        if (!search || search === undefined || search == null || search.length === 0) {
-            return "There are currently ${champData.length} champions on the PBE server!";
-        }
-
-        const result = this.champData.filter(c => Math.max(levenshteinDistance(search, c.id.toString()), levenshteinDistance(search, c.name), levenshteinDistance(search, c.key)) < 3);
-
-        if (result.length === 0) {
-            return "Unable to find any data for that search term.";
-        }
-
-        if (result.length > 1) {
-            return "Too many results returned for that search, please try another";
-        }
-
-        return "```" + JSON.stringify(result[0], null, 4) + "```";
+        return "```" + JSON.stringify(returnedValue, null, 4) + "```";
     }
 }
