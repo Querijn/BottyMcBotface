@@ -173,7 +173,7 @@ export default class GameData {
         }
 
         if (!["item", "perk", "champion"].some(i => i === args[0])) {
-            message.channel.sendMessage(`I'm sorry. I'm unable to parse the category ${args[0]} at this moment. If you want it added, contat a guru`);
+            message.channel.sendMessage(`I'm sorry. I'm unable to parse the category \`${args[0]}\` at this moment. If you want it added, contact a guru`);
             return;
         }
 
@@ -195,7 +195,7 @@ export default class GameData {
 
     public findItem(search: string): string {
         if (!search) {
-            return `There are currently ${this.itemData.length} items on the PBE server!`;
+            return `There are currently ${this.itemData.length} items in my lookup data!`;
         }
 
         const result = this.itemData.filter(c => Math.min(
@@ -230,7 +230,7 @@ export default class GameData {
 
     public findPerk(search: string): string {
         if (!search) {
-            return `There are currently ${this.perkData.length} perks on the PBE server!`;
+            return `There are currently ${this.perkData.length} perks in my lookup data!`;
         }
 
         const result = this.perkData.filter(c => Math.min(
@@ -262,7 +262,7 @@ export default class GameData {
 
     public findChampion(search: string): string {
         if (!search) {
-            return `There are currently ${this.champData.length} champions on the PBE server!`;
+            return `There are currently ${this.champData.length} champions in my lookup data!`;
         }
 
         const result = this.champData.filter(c => Math.min(
