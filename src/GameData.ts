@@ -210,7 +210,7 @@ export default class GameData {
         }
 
         if (result.length > 3) {
-            let response = "Too many results returned for that search, please try another;\n";
+            let response = "Too many results returned for that search, please try one of the options below:\n";
             result.forEach(r => response += `\`${r.name}\`, `);
             response = response.slice(0, -2);
             return response;
@@ -223,7 +223,7 @@ export default class GameData {
             cost: result[0].priceTotal,
             from: result[0].from,
             to: result[0].to,
-        } as any;
+        };
 
         return "```" + JSON.stringify(returnedValue, null, 4) + "```";
     }
@@ -245,7 +245,7 @@ export default class GameData {
         }
 
         if (result.length > 1) {
-            let response = "Too many results returned for that search, please try another;\n";
+            let response = "Too many results returned for that search, please try one of the options below:\n";
             result.forEach(r => response += `\`${r}\`, `);
             response = response.slice(0, -2);
             return response;
@@ -255,7 +255,7 @@ export default class GameData {
             id: result[0].id,
             name: result[0].name,
             endOfGameStatDescs: result[0].endOfGameStatDescs,
-        } as any;
+        };
 
         return "```" + JSON.stringify(returnedValue, null, 4) + "```";
     }
@@ -277,7 +277,7 @@ export default class GameData {
         }
 
         if (result.length > 1) {
-            let response = "Too many results returned for that search, please try another;\n";
+            let response = "Too many results returned for that search, please try one of the options below:\n";
             result.forEach(r => response += `\`${r}\`, `);
             response = response.slice(0, -2);
             return response;
