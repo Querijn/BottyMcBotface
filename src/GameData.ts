@@ -104,12 +104,8 @@ export default class GameData {
     }
 
     public async loadPerkData(): Promise<PerkData[]> {
-        const returnData: PerkData[] = [];
-
         const perkDataUrl = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perks.json";
-        const perks = await (await fetch(perkDataUrl)).json() as PerkData[];
-        perks.forEach(perk => returnData.push(perk));
-        return returnData;
+        return await (await fetch(perkDataUrl)).json() as PerkData[];
     }
 
     public async loadItemData(): Promise<ItemData[]> {
