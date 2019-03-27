@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 import Discord = require("discord.js");
-import levenshteinDistance from "./LevenshteinDistance";
+import { levenshteinDistance, levenshteinDistanceArray } from "./LevenshteinDistance";
 import { SharedSettings } from "./SharedSettings";
 
 interface ChampionData {
@@ -145,12 +145,13 @@ export default class GameData {
             return `There are currently ${this.itemData.length} items in my lookup data!`;
         }
 
-        const result = this.itemData.filter(c => Math.min(
-            ...[
-                levenshteinDistance(search, c.id.toString()),
+        // match name loosely, but ids strictly
+        const result = this.itemData.filter(c => (Math.min
+            (
                 levenshteinDistance(search, c.name),
-                levenshteinDistance(search, c.categories.toString()),
-            ]) < 1);
+                levenshteinDistanceArray(search, c.categories),
+
+            ) < 3) || levenshteinDistance(search, c.id.toString()) < 1);
 
         if (result.length === 0) {
             return "Unable to find any data for that search term.";

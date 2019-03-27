@@ -2,7 +2,7 @@ import Discord = require("discord.js");
 import fetch from "node-fetch";
 import { fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings, SharedSettings } from "./SharedSettings";
-import levenshteinDistance from "./LevenshteinDistance";
+import { levenshteinDistance } from "./LevenshteinDistance";
 import { setTimeout } from "timers";
 
 type EndpointName = string;

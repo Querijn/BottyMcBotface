@@ -1,6 +1,6 @@
 import { fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings, SharedSettings } from "./SharedSettings";
-import levenshteinDistance from "./LevenshteinDistance";
+import { levenshteinDistance } from "./LevenshteinDistance";
 
 import Discord = require("discord.js");
 import { GuildMember } from "discord.js";

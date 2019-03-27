@@ -11,7 +11,7 @@ import { clearTimeout, setTimeout } from "timers";
 
 import { APISchema, Path } from "./ApiSchema";
 import { fileBackedObject } from "./FileBackedObject";
-import levenshteinDistance from "./LevenshteinDistance";
+import { levenshteinDistance } from "./LevenshteinDistance";
 import { PersonalSettings, SharedSettings } from "./SharedSettings";
 
 class RatelimitResult {
