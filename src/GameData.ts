@@ -75,7 +75,7 @@ export default class GameData {
     public async loadChampionData(): Promise<ChampionData[]> {
         const returnData: ChampionData[] = [];
 
-        const champions = await (await fetch(this.sharedSettings.lookup.championUrl)).json();
+        const champions = await fetch(this.sharedSettings.lookup.championUrl).then(x => x.json());
         champions.filter((c: any) => c.id > 0)
             .forEach((c: any) => returnData.push({
                 id: c.id,
@@ -84,7 +84,7 @@ export default class GameData {
                 skins: [],
             }));
 
-        const skins = await (await fetch(this.sharedSettings.lookup.skinUrl)).json() as SkinData[];
+        const skins = await fetch(this.sharedSettings.lookup.skinUrl).then(x => x.json()) as SkinData[];
 
         (champions as ChampionData[]).map(c => c.id)
             .filter(id => id > 0)
@@ -105,13 +105,13 @@ export default class GameData {
     }
 
     public async loadPerkData(): Promise<PerkData[]> {
-        return await (await fetch(this.sharedSettings.lookup.perkUrl)).json() as PerkData[];
+        return await fetch(this.sharedSettings.lookup.perkUrl).then(x => x.json()) as PerkData[];
     }
 
     public async loadItemData(): Promise<ItemData[]> {
         const returnData: ItemData[] = [];
 
-        const items = await (await fetch(this.sharedSettings.lookup.itemUrl)).json();
+        const items = await fetch(this.sharedSettings.lookup.itemUrl).then(x => x.json());
         items.forEach((c: ItemData) => returnData.push({ ...c }));
         returnData.forEach((c: ItemData) => { c.to = []; c.from = []; });
 
