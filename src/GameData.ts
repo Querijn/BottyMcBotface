@@ -113,128 +113,150 @@ export default class GameData {
     }
 
     public onLookup(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-        if (message.cleanContent.length === 0) {
-            const response = `Usage: !${command} [type] [term]. Supported types are \`item\`, \`perk\`, \`rune\` and \`champion\`.`;
+        const supportedTypes = ["item", "perk", "rune", "champion"];
+
+        if (args.length === 0) {
+            const response = `Usage: !${command} [type] [term]. Supported types are ` + supportedTypes.map(x => "`" + x + "`").join(", ");
             message.channel.send(response);
             return;
         }
 
-        if (!["item", "perk", "rune", "champion"].includes(args[0])) {
+        if (!supportedTypes.includes(args[0])) {
             message.channel.send(`I'm sorry. I'm unable to parse the category \`${args[0]}\` at this moment. If you think it should be added, please contact a guru.`);
             return;
         }
 
-        if (args[0] === "item") {
-            message.channel.send(this.findItem(args.slice(1).join(" ")));
+        let result;
+        switch (args[0]) {
+            case "item": {
+                result = this.findItem(args.slice(1).join(" "));
+                break;
+            }
+            case "perk": // fall through
+            case "rune": {
+                result = this.findPerk(args.slice(1).join(" "));
+                break;
+            }
+            case "champion": {
+                result = this.findChampion(args.slice(1).join(" "));
+                break;
+            }
+        }
+
+        if (typeof (result) === "string") {
+            message.channel.send(result);
             return;
         }
 
-        if (args[0] === "perk" || args[0] === "rune") {
-            message.channel.send(this.findPerk(args.slice(1).join(" ")));
-            return;
-        }
-
-        if (args[0] === "champion") {
-            message.channel.send(this.findChampion(args.slice(1).join(" ")));
-            return;
-        }
+        (result as string[]).forEach(x => message.channel.send("```" + JSON.stringify(x, null, 4) + "```"));
     }
 
-    public findItem(search: string): string {
+    public findItem(search: string): string | {} {
         if (!search) {
             return `There are currently ${this.itemData.length} items in my lookup data!`;
         }
 
         // match name loosely, but ids strictly
-        const result = this.itemData.filter(c => (Math.min
-            (
+        const result = this.itemData.map(c => ({
+            value: c,
+            textscore: Math.min(
                 levenshteinDistance(search, c.name),
                 levenshteinDistanceArray(search, c.categories),
-
-            ) < 3) || levenshteinDistance(search, c.id.toString()) < 1);
+            ),
+            idscore: Math.min(
+                levenshteinDistance(search, c.id.toString()),
+            ),
+        })).filter(x => x.textscore < this.sharedSettings.lookup.textConfidence || x.idscore < this.sharedSettings.lookup.numberConfidence);
 
         if (result.length === 0) {
             return "Unable to find any data for that search term.";
         }
 
-        if (result.length > 3) {
-            let response = "Too many results returned for that search, please try one of the options below:\n";
-            result.forEach(r => response += `\`${r.name}\`, `);
-            response = response.slice(0, -2);
+        result.sort((a, b) => Math.min(a.textscore, a.idscore) > Math.min(b.textscore, b.idscore) ? 1 : -1);
+
+        if (result.length > this.sharedSettings.lookup.returnedEntryCount) {
+            let response = "Too many results returned for that search, did you mean one of the options below?\n";
+            response += result.map(x => `\`${x.value.name}\``).join("\n");
             return response;
         }
 
-        const returnedValue = {
-            id: result[0].id,
-            name: result[0].name,
-            combineCost: result[0].price,
-            cost: result[0].priceTotal,
-            from: result[0].from,
-            to: result[0].to,
-        };
-
-        return "```" + JSON.stringify(returnedValue, null, 4) + "```";
+        return result.slice(0, this.sharedSettings.lookup.returnedEntryCount).map(x => ({
+            id: x.value.id,
+            name: x.value.name,
+            combineCost: x.value.price,
+            cost: x.value.priceTotal,
+            from: x.value.from,
+            to: x.value.to,
+        }));
     }
 
-    public findPerk(search: string): string {
+    public findPerk(search: string): string | {} {
         if (!search) {
             return `There are currently ${this.perkData.length} perks in my lookup data!`;
         }
 
-        const result = this.perkData.filter(c => Math.min(
-            ...[
-                levenshteinDistance(search, c.id.toString()),
+        // match name loosely, but ids strictly
+        const result = this.perkData.map(c => ({
+            value: c,
+            textscore: Math.min(
                 levenshteinDistance(search, c.name),
-                levenshteinDistance(search, c.shortDesc),
-            ]) < 1);
+            ),
+            idscore: Math.min(
+                levenshteinDistance(search, c.id.toString()),
+            ),
+        })).filter(x => x.textscore < this.sharedSettings.lookup.textConfidence || x.idscore < this.sharedSettings.lookup.numberConfidence);
 
         if (result.length === 0) {
             return "Unable to find any data for that search term.";
         }
 
-        if (result.length > 1) {
-            let response = "Too many results returned for that search, please try one of the options below:\n";
-            result.forEach(r => response += `\`${r}\`, `);
-            response = response.slice(0, -2);
+        result.sort((a, b) => Math.min(a.textscore, a.idscore) > Math.min(b.textscore, b.idscore) ? 1 : -1);
+
+        if (result.length > this.sharedSettings.lookup.returnedEntryCount) {
+            let response = "Too many results returned for that search, did you mean one of the options below?\n";
+            response += result.map(x => `\`${x.value.name}\``).join("\n");
             return response;
         }
 
-        const returnedValue = {
-            id: result[0].id,
-            name: result[0].name,
-            endOfGameStatDescs: result[0].endOfGameStatDescs,
-        };
-
-        return "```" + JSON.stringify(returnedValue, null, 4) + "```";
+        return result.slice(0, this.sharedSettings.lookup.returnedEntryCount).map(x => ({
+            id: x.value.id,
+            name: x.value.name,
+            endOfGameStatDescs: x.value.endOfGameStatDescs,
+        }));
     }
 
-    public findChampion(search: string): string {
+    public findChampion(search: string): string | {} {
         if (!search) {
             return `There are currently ${this.champData.length} champions in my lookup data!`;
         }
 
-        const result = this.champData.filter(c => Math.min(
-            ...[
-                levenshteinDistance(search, c.id.toString()),
+        // match name loosely, but ids strictly
+        const result = this.champData.map(c => ({
+            value: c,
+            textscore: Math.min(
                 levenshteinDistance(search, c.name),
                 levenshteinDistance(search, c.key),
-            ]) < 3);
+            ),
+            idscore: Math.min(
+                levenshteinDistance(search, c.id.toString()),
+            ),
+        })).filter(x => x.textscore < this.sharedSettings.lookup.textConfidence || x.idscore < this.sharedSettings.lookup.numberConfidence);
 
         if (result.length === 0) {
             return "Unable to find any data for that search term.";
         }
 
-        if (result.length > 1) {
-            let response = "Too many results returned for that search, please try one of the options below:\n";
-            result.forEach(r => response += `\`${r}\`, `);
-            response = response.slice(0, -2);
+        result.sort((a, b) => Math.min(a.textscore, a.idscore) > Math.min(b.textscore, b.idscore) ? 1 : -1);
+
+        if (result.length > this.sharedSettings.lookup.returnedEntryCount) {
+            let response = "Too many results returned for that search, did you mean one of the options below?\n";
+            response += result.map(x => `\`${x.value.name}\``).join("\n");
             return response;
         }
 
-        // maybe return the skin names here?
-        const returnedValue = { ...result[0] } as any;
-        returnedValue.skins = returnedValue.skins.length;
-
-        return "```" + JSON.stringify(returnedValue, null, 4) + "```";
+        return result.slice(0, this.sharedSettings.lookup.returnedEntryCount).map(x => ({
+            ...x.value,
+            skins: x.value.skins.length,
+        }));
     }
 }
