@@ -42,6 +42,14 @@ export interface SharedSettings {
 
     botty: PersonalSettings;
 
+    lookup: {
+        refreshTimeout: number;
+        championUrl: string;
+        skinUrl: string;
+        perkUrl: string;
+        itemUrl: string;
+    };
+
     uptimeSettings: {
         checkInterval: number,
     };

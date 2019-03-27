@@ -55,7 +55,7 @@ const pageDiffer = new PageDiffer(bot.client, sharedSettings, "data/page_differ.
 const ttt = new TicTacToe(bot.client, "data/ttt_scores.json");
 const admin = new Admin(bot.client, sharedSettings, "data/admin_data.json");
 const spamKiller = new SpamKiller(bot.client, sharedSettings);
-const gameData = new GameData(bot.client);
+const gameData = new GameData(bot.client, sharedSettings);
 
 // Commands controller commands
 controller.registerCommand(commandList.controller.toggle, controller.onToggle.bind(controller));

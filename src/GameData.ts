@@ -1,6 +1,7 @@
 import fetch from "node-fetch";
 import Discord = require("discord.js");
 import levenshteinDistance from "./LevenshteinDistance";
+import { SharedSettings } from "./SharedSettings";
 
 interface ChampionData {
     id: number;
@@ -52,13 +53,15 @@ export default class GameData {
     private itemData: ItemData[];
 
     private bot: Discord.Client;
+    private sharedSettings: SharedSettings;
 
-    public constructor(bot: Discord.Client) {
+    public constructor(bot: Discord.Client, settings: SharedSettings) {
         this.bot = bot;
+        this.sharedSettings = settings;
 
         bot.on("ready", async () => {
             this.reloadData();
-            setInterval(this.reloadData, 86400 * 1000);
+            setInterval(this.reloadData, this.sharedSettings.lookup.refreshTimeout);
         });
     }
 
@@ -72,8 +75,7 @@ export default class GameData {
     public async loadChampionData(): Promise<ChampionData[]> {
         const returnData: ChampionData[] = [];
 
-        const championDataUrl = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-summary.json";
-        const champions = await (await fetch(championDataUrl)).json();
+        const champions = await (await fetch(this.sharedSettings.lookup.championUrl)).json();
         champions.filter((c: any) => c.id > 0)
             .forEach((c: any) => returnData.push({
                 id: c.id,
@@ -82,8 +84,7 @@ export default class GameData {
                 skins: [],
             }));
 
-        const skinDataUrl = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/skins.json";
-        const skins = await (await fetch(skinDataUrl)).json() as SkinData[];
+        const skins = await (await fetch(this.sharedSettings.lookup.skinUrl)).json() as SkinData[];
 
         (champions as ChampionData[]).map(c => c.id)
             .filter(id => id > 0)
@@ -104,15 +105,13 @@ export default class GameData {
     }
 
     public async loadPerkData(): Promise<PerkData[]> {
-        const perkDataUrl = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perks.json";
-        return await (await fetch(perkDataUrl)).json() as PerkData[];
+        return await (await fetch(this.sharedSettings.lookup.perkUrl)).json() as PerkData[];
     }
 
     public async loadItemData(): Promise<ItemData[]> {
         const returnData: ItemData[] = [];
 
-        const itemDataUrl = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/items.json";
-        const items = await (await fetch(itemDataUrl)).json();
+        const items = await (await fetch(this.sharedSettings.lookup.itemUrl)).json();
         items.forEach((c: ItemData) => returnData.push({ ...c }));
         returnData.forEach((c: ItemData) => { c.to = []; c.from = []; });
 
