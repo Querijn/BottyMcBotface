@@ -48,5 +48,5 @@ export function levenshteinDistance(a: string, b: string): number {
  * Counts the substitutions needed to transform a into b for each element in b, and returns the lowest matching score
  */
 export function levenshteinDistanceArray(a: string, b: string[]): number {
-    return b.map(x => levenshteinDistance(a, x)).sort((x, y) => x > y ? 1 : -1)[0];
+    return Math.min(...b.map(x => levenshteinDistance(a, x)));
 }

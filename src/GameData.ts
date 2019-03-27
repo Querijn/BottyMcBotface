@@ -126,7 +126,7 @@ export default class GameData {
             return;
         }
 
-        let result;
+        let result: string | any[] = [];
         switch (args[0]) {
             case "item": {
                 result = this.findItem(args.slice(1).join(" "));
@@ -143,15 +143,15 @@ export default class GameData {
             }
         }
 
-        if (typeof (result) === "string") {
+        if (typeof result === "string") {
             message.channel.send(result);
             return;
         }
 
-        (result as string[]).forEach(x => message.channel.send("```" + JSON.stringify(x, null, 4) + "```"));
+        result.forEach(x => message.channel.send("```" + JSON.stringify(x, null, 4) + "```"));
     }
 
-    public findItem(search: string): string | {} {
+    public findItem(search: string): string | any[] {
         if (!search) {
             return `There are currently ${this.itemData.length} items in my lookup data!`;
         }
@@ -190,7 +190,7 @@ export default class GameData {
         }));
     }
 
-    public findPerk(search: string): string | {} {
+    public findPerk(search: string): string | any[] {
         if (!search) {
             return `There are currently ${this.perkData.length} perks in my lookup data!`;
         }
@@ -225,7 +225,7 @@ export default class GameData {
         }));
     }
 
-    public findChampion(search: string): string | {} {
+    public findChampion(search: string): string | any[] {
         if (!search) {
             return `There are currently ${this.champData.length} champions in my lookup data!`;
         }
