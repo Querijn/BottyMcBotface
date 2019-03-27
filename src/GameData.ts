@@ -73,79 +73,54 @@ export default class GameData {
     }
 
     public async loadChampionData(): Promise<ChampionData[]> {
-        const returnData: ChampionData[] = [];
-
         const champions = await fetch(this.sharedSettings.lookup.championUrl).then(x => x.json());
-        champions.filter((c: any) => c.id > 0)
-            .forEach((c: any) => returnData.push({
+
+        const returnData: ChampionData[] = champions
+            .filter((c: any) => c.id > 0)
+            .map((c: any) => ({
                 id: c.id,
                 name: c.name,
                 key: c.alias,
                 skins: [],
             }));
 
-        const skins = await fetch(this.sharedSettings.lookup.skinUrl).then(x => x.json()) as SkinData[];
-
-        (champions as ChampionData[]).map(c => c.id)
-            .filter(id => id > 0)
-            .map(i => i.toString())
-            .forEach(id => {
-                const skinKeys = Object.keys(skins)
-                    .filter(k => k.startsWith(id))
-                    .filter(k => (k.length - id.length) === 3)
-                    .map(k => +k);
-
-                skinKeys.forEach(key => {
-                    const data = skins[key];
-                    returnData.filter(r => r.id === +id)[0].skins.push({ ...data });
-                });
-            });
+        const skins = await this.loadSkinData();
+        for (const champion of returnData) {
+            champion.skins = skins.filter(x => Math.floor(x.id / 1000) === champion.id);
+        }
 
         return returnData;
+    }
+
+    public async loadSkinData(): Promise<SkinData[]> {
+        return Object.values(await fetch(this.sharedSettings.lookup.skinUrl).then(x => x.json())) as SkinData[];
     }
 
     public async loadPerkData(): Promise<PerkData[]> {
-        return await fetch(this.sharedSettings.lookup.perkUrl).then(x => x.json()) as PerkData[];
+        return await fetch(this.sharedSettings.lookup.perkUrl).then(x => x.json());
     }
 
     public async loadItemData(): Promise<ItemData[]> {
-        const returnData: ItemData[] = [];
+        const items = await fetch(this.sharedSettings.lookup.itemUrl).then(x => x.json()) as ItemData[];
+        for (const item of items) {
+            const other = items.find(x => x.id === item.id)!;
 
-        const items = await fetch(this.sharedSettings.lookup.itemUrl).then(x => x.json());
-        items.forEach((c: ItemData) => returnData.push({ ...c }));
-        returnData.forEach((c: ItemData) => { c.to = []; c.from = []; });
+            other.from = item.from.map(x => items.find(y => y.id === +x)!).filter(x => x).map(x => x.name);
+            other.to = item.to.map(x => items.find(y => y.id === +x)!).filter(x => x).map(x => x.name);
+        }
 
-        items.forEach((i: any) => {
-            const item = returnData.filter(r => r.id === +i.id)[0];
-
-            i.from.forEach((f: number) => {
-                const otherItem = returnData.filter(r => r.id === f)[0];
-                if (otherItem !== undefined) {
-                    item.from.push(otherItem.name);
-                }
-            });
-
-            i.to.forEach((f: number) => {
-                const otherItem = returnData.filter(r => r.id === f)[0];
-                if (otherItem !== undefined) {
-                    item.to.push(otherItem.name);
-                }
-            });
-        });
-
-        return returnData;
+        return items;
     }
 
     public onLookup(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         if (message.cleanContent.length === 0) {
-            let response = `I have info on the following categories; \`item\`,\`perk\`,\`champion\``;
-            response += `type !${command} {search_type} {search_term} to use it`;
+            const response = `Usage: !${command} [type] [term]. Supported types are \`item\`, \`perk\`, \`rune\` and \`champion\`.`;
             message.channel.send(response);
             return;
         }
 
-        if (!["item", "perk", "champion"].some(i => i === args[0])) {
-            message.channel.send(`I'm sorry. I'm unable to parse the category \`${args[0]}\` at this moment. If you want it added, contact a guru`);
+        if (!["item", "perk", "rune", "champion"].includes(args[0])) {
+            message.channel.send(`I'm sorry. I'm unable to parse the category \`${args[0]}\` at this moment. If you think it should be added, please contact a guru.`);
             return;
         }
 
@@ -154,7 +129,7 @@ export default class GameData {
             return;
         }
 
-        if (args[0] === "perk") {
+        if (args[0] === "perk" || args[0] === "rune") {
             message.channel.send(this.findPerk(args.slice(1).join(" ")));
             return;
         }
