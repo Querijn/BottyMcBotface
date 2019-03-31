@@ -102,7 +102,7 @@ export default class CommandController {
 
         for (const handler of filtered) {
             this.commandStatuses[handler.identifier] = (this.getStatus(handler) === CommandStatus.DISABLED ? CommandStatus.ENABLED : CommandStatus.DISABLED);
-            message.channel.send(`${handler.prefix + handler.command.aliases.join("/")} is now ${this.getStatus(handler) === CommandStatus.ENABLED ? "enabled" : "disabled"}.`);
+            message.channel.send(`${handler.prefix}please ${handler.command.aliases.join("/")} is now ${this.getStatus(handler) === CommandStatus.ENABLED ? "enabled" : "disabled"}.`);
         }
     }
 
@@ -116,7 +116,7 @@ export default class CommandController {
                 title += "~~";
             }
 
-            title += `\`${holder.prefix}${holder.command.aliases}\``;
+            title += `\`${holder.prefix}please ${holder.command.aliases}\``;
 
             if (this.getStatus(holder) === CommandStatus.DISABLED) {
                 title += "~~";
@@ -181,8 +181,14 @@ export default class CommandController {
 
         const parts = message.content.split(" ");
         const prefix = parts[0][0];
-        const command = parts[0].substr(1);
+        const please = parts[0].substr(1);
+        const command = parts[1];
         const isAdmin = (message.member && this.sharedSettings.commands.adminRoles.some(x => message.member.roles.has(x)));
+
+        if (please && !command && please != "please") {
+            message.channel.send(`Please be civilized. Start your command with please.`);
+            return;
+        }
 
         this.commands.forEach(holder => {
 
@@ -192,7 +198,7 @@ export default class CommandController {
 
             // handlers that register the "*" command will get all commands with that prefix (unless they already have gotten it once)
 
-            const args = parts.slice(1).filter(a => a !== "");
+            const args = parts.slice(2).filter(a => a !== "");
             if (holder.command.aliases.some(x => x === command)) {
                 if (this.checkCooldown(holder, message)) {
                     holder.handler.call(null, message, isAdmin, command, args);
