@@ -48,9 +48,8 @@ export interface SharedSettings {
         skinUrl: string;
         perkUrl: string;
         itemUrl: string;
-        textConfidence: number;
-        numberConfidence: number;
-        returnedEntryCount: number;
+        confidence: number;
+        maxGuessCount: number;
     };
 
     uptimeSettings: {

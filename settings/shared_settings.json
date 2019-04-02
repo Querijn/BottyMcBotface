@@ -33,9 +33,8 @@
         "skinUrl": "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/skins.json",
         "perkUrl": "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perks.json",
         "itemUrl": "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/items.json",
-        "textConfidence": 3,
-        "numberConfidence": 1,
-        "returnedEntryCount": 3
+        "confidence": 3,
+        "maxGuessCount": 10
     },
     "commands": {
         "default_prefix": "!",
