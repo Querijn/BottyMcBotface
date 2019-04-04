@@ -45,11 +45,11 @@ interface ItemData {
     from: string[];
     to: string[];
 }
-interface SearchType {
+interface SearchObjectContainer {
     item: {
         id: number;
         name: string;
-        key?: string,
+        key?: string;
     };
     score: number;
 }
@@ -67,9 +67,9 @@ export default class GameData {
         this.bot = bot;
         this.sharedSettings = settings;
 
-        bot.on("ready", async () => {
+        bot.on("ready", () => {
             this.reloadData();
-            setInterval(this.reloadData, this.sharedSettings.lookup.refreshTimeout);
+            setInterval(this.reloadData.bind(this), this.sharedSettings.lookup.refreshTimeout);
         });
     }
 
@@ -157,10 +157,10 @@ export default class GameData {
             return;
         }
 
-        result.forEach(x => message.channel.send("```" + JSON.stringify(x, (k, v) => { if (v !== null) return v; }, 4) + "```"));
+        message.channel.send("```" + JSON.stringify(result, null, 4) + "```");
     }
 
-    public sortSearch(search: string, a: SearchType, b: SearchType) {
+    public sortSearch(search: string, a: SearchObjectContainer, b: SearchObjectContainer) {
         if (a.score === 0) return -1;
         if (b.score === 0) return 1;
 
@@ -177,8 +177,8 @@ export default class GameData {
         if (nameB.includes(search) && !nameA.includes(search)) return 1;
 
         if (a.item.key && b.item.key) {
-            const keyA = a.item.key!;
-            const keyB = b.item.key!;
+            const keyA = a.item.key;
+            const keyB = b.item.key;
 
             if (keyA === search) return -1;
             if (keyB === search) return 1;
@@ -213,25 +213,19 @@ export default class GameData {
             return `There are currently ${this.itemData.length} items in my lookup data!`;
         }
 
-        let searchResult: SearchType[];
-        if (search.match(/^\d+$/)) {
-            searchResult = this.itemData.map(i => ({ item: i, score: levenshteinDistance(search, i.id.toString()) }));
-        } else {
-            searchResult = this.itemData.map(i => ({ item: i, score: levenshteinDistance(search, i.name.toLowerCase()) }));
-        }
-
-        searchResult = searchResult.sort((a, b) => this.sortSearch(search, a, b)).slice(0, this.sharedSettings.lookup.maxGuessCount);
+        const searchResult: SearchObjectContainer[] = this.itemData.map(i => ({
+            item: i,
+            score: levenshteinDistance(search, search.match(/^\d+$/) ? i.id.toString() : i.name.toLowerCase()),
+        }))
+            .sort((a, b) => this.sortSearch(search, a, b))
+            .slice(0, this.sharedSettings.lookup.maxGuessCount);
 
         // no exact match, so give alternatives
         if (searchResult[0].score !== 0) {
-            if (searchResult.length > 0) {
-                let response = "Too many results returned for that search, did you mean one of the options below?\n```";
-                response += searchResult.map(x => `${x.item.name} (Alternate terms: ${x.item.id})`).join("\n");
-                response += "```";
-                return response;
-            } else {
-                return "Unable to find any data for that search term.";
-            }
+            let response = "Too many results returned for that search, did you mean one of the options below?\n```";
+            response += searchResult.map(x => `${x.item.name} (Alternate terms: ${x.item.id})`).join("\n");
+            response += "```";
+            return response;
         }
 
         return searchResult.map(x => x.item as ItemData)
@@ -240,35 +234,29 @@ export default class GameData {
                 name: x.name,
                 combineCost: x.price,
                 cost: x.priceTotal,
-                from: x.from.length > 0 ? x.from : null,
-                to: x.to.length > 0 ? x.to : null,
-            })).slice(0, 1);
+                from: x.from,
+                to: x.to,
+            }))[0];
     }
 
-    public findPerk(search: string): string | any[] {
+    public findPerk(search: string): string | any {
         if (!search) {
             return `There are currently ${this.perkData.length} perks in my lookup data!`;
         }
 
-        let searchResult: SearchType[];
-        if (search.match(/^\d+$/)) {
-            searchResult = this.perkData.map(i => ({ item: i, score: levenshteinDistance(search, i.id.toString()) }));
-        } else {
-            searchResult = this.perkData.map(i => ({ item: i, score: levenshteinDistance(search, i.name.toLowerCase()) }));
-        }
-
-        searchResult = searchResult.sort((a, b) => this.sortSearch(search, a, b)).slice(0, this.sharedSettings.lookup.maxGuessCount);
+        const searchResult: SearchObjectContainer[] = this.perkData.map(i => ({
+            item: i,
+            score: levenshteinDistance(search, search.match(/^\d+$/) ? i.id.toString() : i.name.toLowerCase()),
+        }))
+            .sort((a, b) => this.sortSearch(search, a, b))
+            .slice(0, this.sharedSettings.lookup.maxGuessCount);
 
         // no exact match, so give alternatives
         if (searchResult[0].score !== 0) {
-            if (searchResult.length > 0) {
-                let response = "Too many results returned for that search, did you mean one of the options below?\n```";
-                response += searchResult.map(x => `${x.item.name} (Alternate terms: ${x.item.id})`).join("\n");
-                response += "```";
-                return response;
-            } else {
-                return "Unable to find any data for that search term.";
-            }
+            let response = "Too many results returned for that search, did you mean one of the options below?\n```";
+            response += searchResult.map(x => `${x.item.name} (Alternate terms: ${x.item.id})`).join("\n");
+            response += "```";
+            return response;
         }
 
         return searchResult.map(x => x.item as PerkData)
@@ -276,45 +264,36 @@ export default class GameData {
                 id: x.id,
                 name: x.name,
                 endOfGameStatDescs: x.endOfGameStatDescs,
-            })).slice(0, 1);
+            }))[0];
     }
 
-    public findChampion(search: string): string | any[] {
+    public findChampion(search: string): string | any {
         if (!search) {
             return `There are currently ${this.champData.length} champions in my lookup data!`;
         }
 
-        let searchResult: SearchType[];
-        if (search.match(/^\d+$/)) {
-            searchResult = this.champData.map(i => ({ item: i, score: levenshteinDistance(search, i.id.toString()) }));
-        } else {
-            searchResult = this.champData.map(i => ({
-                item: i,
-                score: Math.min(
-                    levenshteinDistance(search, i.name.toLowerCase()),
-                    levenshteinDistance(search, i.key.toLowerCase()),
-                ),
-            }));
-        }
-
-        searchResult = searchResult.sort((a, b) => this.sortSearch(search, a, b)).slice(0, this.sharedSettings.lookup.maxGuessCount);
+        const searchResult: SearchObjectContainer[] = this.champData.map(i => ({
+            item: i,
+            score: search.match(/^\d+$/) ? levenshteinDistance(search, i.id.toString()) : Math.min(
+                levenshteinDistance(search, i.name.toLowerCase()),
+                levenshteinDistance(search, i.key.toLowerCase()),
+            ),
+        }))
+            .sort((a, b) => this.sortSearch(search, a, b))
+            .slice(0, this.sharedSettings.lookup.maxGuessCount);
 
         // no exact match, so give alternatives
         if (searchResult[0].score !== 0) {
-            if (searchResult.length > 0) {
-                let response = "Too many results returned for that search, did you mean one of the options below?\n```";
-                response += searchResult.map(x => `${x.item.name} (Alternate terms: ${x.item.id} / ${x.item.key})`).join("\n");
-                response += "```";
-                return response;
-            } else {
-                return "Unable to find any data for that search term.";
-            }
+            let response = "Too many results returned for that search, did you mean one of the options below?\n```";
+            response += searchResult.map(x => `${x.item.name} (Alternate terms: ${x.item.id} / ${x.item.key})`).join("\n");
+            response += "```";
+            return response;
         }
 
         return searchResult.map(x => x.item as ChampionData)
             .map(x => ({
                 ...x,
                 skins: x.skins.map(s => s.name).filter(s => s !== x.name),
-            })).slice(0, 1);
+            }))[0];
     }
 }
