@@ -6,7 +6,7 @@ import url = require("url");
 import Botty from "./Botty";
 import CategorisedMessage from "./CategorisedMessage";
 import Discord = require("discord.js");
-import levenshteinDistance from "./LevenshteinDistance";
+import { levenshteinDistance } from "./LevenshteinDistance";
 import VersionChecker from "./VersionChecker";
 
 interface InfoFile {
@@ -214,7 +214,7 @@ export default class Info {
 
         const noteName = args[1].toLowerCase();
         const newNoteName = args[2].toLowerCase();
-        
+
         if (this.adminCommands.indexOf(newNoteName) >= 0 || this.badNoteNames.indexOf(newNoteName) >= 0) {
             message.channel.send("This note is a note command or a disallowed note name, and cannot be used.");
             return;
@@ -273,7 +273,7 @@ export default class Info {
 
         const name = args[1].toLowerCase();
         const text = args.splice(2).join(" ");
-        
+
         if (this.adminCommands.indexOf(name) >= 0 || this.badNoteNames.indexOf(name) >= 0) {
             message.channel.send("This note is a note command or a disallowed note name, and cannot be used.");
             return;

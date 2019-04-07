@@ -9,6 +9,15 @@
             "description": "Restarts Botty."
         }
     },
+    "gamedata": {
+        "lookup": {
+            "aliases": [
+                "lookup",
+                "search"
+            ],
+            "description": "Search for information on that content in the game"
+        }
+    },
     "games": {
         "ttt": {
             "aliases": [
