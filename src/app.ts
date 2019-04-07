@@ -25,6 +25,7 @@ import { SharedSettings } from "./SharedSettings";
 import TicTacToe from "./games/TicTacToe";
 import SpamKiller from "./SpamKiller";
 import Admin from "./Admin";
+import GameData from "./GameData";
 
 // Load and initialise settings
 const sharedSettings = overrideFileBackedObject<SharedSettings>("settings/shared_settings.json", "private/shared_settings.json");
@@ -54,6 +55,7 @@ const pageDiffer = new PageDiffer(bot.client, sharedSettings, "data/page_differ.
 const ttt = new TicTacToe(bot.client, "data/ttt_scores.json");
 const admin = new Admin(bot.client, sharedSettings, "data/admin_data.json");
 const spamKiller = new SpamKiller(bot.client, sharedSettings);
+const gameData = new GameData(bot.client, sharedSettings);
 
 // Commands controller commands
 controller.registerCommand(commandList.controller.toggle, controller.onToggle.bind(controller));
@@ -61,6 +63,9 @@ controller.registerCommand(commandList.controller.help, controller.onHelp.bind(c
 
 // Botty commands
 controller.registerCommand(commandList.botty.restart, bot.onRestart.bind(bot));
+
+// gamedata commands
+controller.registerCommand(commandList.gamedata.lookup, gameData.onLookup.bind(gameData));
 
 // TTT commands
 controller.registerCommand(commandList.games.ttt, ttt.onInvite.bind(ttt));

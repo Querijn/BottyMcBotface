@@ -2,7 +2,7 @@ import Discord = require("discord.js");
 import fetch from "node-fetch";
 import XRegExp = require("xregexp");
 
-import levenshteinDistance from "./LevenshteinDistance";
+import { levenshteinDistance } from "./LevenshteinDistance";
 import { SharedSettings } from "./SharedSettings";
 
 import { clearTimeout, setTimeout } from "timers";
@@ -105,7 +105,7 @@ export class ParameterType {
     /** A human readable description (e.g. "a positive integer") */
     public description: string;
 
-    constructor(description: string, isValidValue: (value: string) => boolean){
+    constructor(description: string, isValidValue: (value: string) => boolean) {
         this.description = description;
         this.isValidValue = isValidValue;
     }

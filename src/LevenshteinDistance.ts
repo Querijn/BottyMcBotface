@@ -4,7 +4,7 @@
  * @param a first string
  * @param b seconds string
  */
-export default function levenshteinDistance(a: string, b: string): number {
+export function levenshteinDistance(a: string, b: string): number {
     if (a === b) {
         return 0;
     }
@@ -42,4 +42,11 @@ export default function levenshteinDistance(a: string, b: string): number {
     }
 
     return v1[b.length];
+}
+
+/**
+ * Counts the substitutions needed to transform a into b for each element in b, and returns the lowest matching score
+ */
+export function levenshteinDistanceArray(a: string, b: string[]): number {
+    return Math.min(...b.map(x => levenshteinDistance(a, x)));
 }
