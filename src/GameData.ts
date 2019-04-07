@@ -45,6 +45,7 @@ interface ItemData {
     from: string[];
     to: string[];
 }
+
 interface SearchObjectContainer {
     item: {
         id: number;
@@ -55,7 +56,6 @@ interface SearchObjectContainer {
 }
 
 export default class GameData {
-
     private champData: ChampionData[];
     private perkData: PerkData[];
     private itemData: ItemData[];
@@ -146,7 +146,8 @@ export default class GameData {
                 result = this.findPerk(searchTerm);
                 break;
             }
-            case "champion": {
+            case "champion": // fall through
+            case "champ": {
                 result = this.findChampion(searchTerm);
                 break;
             }
@@ -157,7 +158,7 @@ export default class GameData {
             return;
         }
 
-        message.channel.send("```" + JSON.stringify(result, null, 4) + "```");
+        message.channel.send("```json\n" + JSON.stringify(result, null, 4) + "```");
     }
 
     public sortSearch(search: string, a: SearchObjectContainer, b: SearchObjectContainer) {
