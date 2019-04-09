@@ -196,7 +196,7 @@ export default class CommandController {
             // handlers that register the "*" command will get all commands with that prefix (unless they already have gotten it once)
 
             const args = parts.slice(1).filter(a => a !== "");
-            if (holder.command.aliases.some(x => x === command)) {
+            if (holder.command.aliases.some(x => x.toLowerCase() === command)) {
                 if (this.checkCooldown(holder, message)) {
                     holder.handler.call(null, message, isAdmin, command, args);
                 }
