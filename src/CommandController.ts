@@ -171,7 +171,7 @@ export default class CommandController {
     public registerCommand(newCommand: Command, commandHandler: SingleCommand) {
         this.commands.push({
             identifier: commandHandler.name,
-            command: newCommand,
+            command: { ...newCommand, aliases: newCommand.aliases.map(i => i.toLowerCase()) },
             cooldown: newCommand.cooldown || 0,
             handler: commandHandler,
             prefix: newCommand.prefix || this.sharedSettings.commands.default_prefix,
@@ -196,7 +196,7 @@ export default class CommandController {
             // handlers that register the "*" command will get all commands with that prefix (unless they already have gotten it once)
 
             const args = parts.slice(1).filter(a => a !== "");
-            if (holder.command.aliases.some(x => x.toLowerCase() === command)) {
+            if (holder.command.aliases.some(x => x === command)) {
                 if (this.checkCooldown(holder, message)) {
                     holder.handler.call(null, message, isAdmin, command, args);
                 }
