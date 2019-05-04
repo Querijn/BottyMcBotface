@@ -121,7 +121,7 @@ export default class GameData {
     }
 
     public onLookup(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-        const supportedTypes = ["item", "perk", "rune", "champion"];
+        const supportedTypes = ["item", "perk", "rune", "champion", "champ"];
 
         if (args.length === 0) {
             const response = `Usage: !${command} [type] [term]. Supported types are ` + supportedTypes.map(x => "`" + x + "`").join(", ");
