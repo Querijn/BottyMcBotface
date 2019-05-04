@@ -171,7 +171,7 @@ export default class CommandController {
     public registerCommand(newCommand: Command, commandHandler: SingleCommand) {
         this.commands.push({
             identifier: commandHandler.name,
-            command: newCommand,
+            command: { ...newCommand, aliases: newCommand.aliases.map(i => i.toLowerCase()) },
             cooldown: newCommand.cooldown || 0,
             handler: commandHandler,
             prefix: newCommand.prefix || this.sharedSettings.commands.default_prefix,
@@ -184,7 +184,7 @@ export default class CommandController {
 
         const parts = message.content.split(" ");
         const prefix = parts[0][0];
-        const command = parts[0].substr(1);
+        const command = parts[0].substr(1).toLowerCase();
         const isAdmin = (message.member && this.sharedSettings.commands.adminRoles.some(x => message.member.roles.has(x)));
 
         this.commands.forEach(holder => {

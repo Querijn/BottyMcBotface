@@ -122,7 +122,7 @@ export default class RiotAPILibraries {
     }
 
     private async initList() {
-        
+
         const response = await fetch(this.settings.riotApiLibraries.baseURL, this.fetchSettings);
         if (response.status !== 200) {
             console.error(this.settings.riotApiLibraries.githubErrorList + response.status);
@@ -181,7 +181,7 @@ export default class RiotAPILibraries {
 
         // Check if alias
         for (const [key, values] of Object.entries(this.settings.riotApiLibraries.aliases)) {
-            if (values.find(self => self.toLowerCase() === language.toLowerCase())) {
+            if (values.find(self => self.toLowerCase() === language)) {
                 return this.getListForLanguage(message, key);
             }
         }
@@ -191,10 +191,10 @@ export default class RiotAPILibraries {
         let libraryDescriptions: LibraryDescription[] = [];
         try {
             libraryDescriptions = (await this.getLibrariesForLanguage(language))
-            .sort((a, b) => b.stars - a.stars); // Sort by stars
+                .sort((a, b) => b.stars - a.stars); // Sort by stars
         }
         catch (e) {
-            message.channel.send(e);
+            message.channel.send(e.message);
             return;
         }
 
