@@ -1,5 +1,7 @@
 Hey there! I'm Botty, let me be the first to welcome you to the Riot API Discord :)
 
+First and foremost: **This is not a helpdesk. We cannot ban or unban any Riot Games account. We cannot buff or nerf any champion. We cannot help you with technical issues in your game.** The Rioters here *do not work on the games*. If you have problems with League of Legends or Teamfight Tactics, please contact support. https://support.riotgames.com/hc/en-us
+
 Here's some tips to help you on your way:
 1. If you have any questions about the Riot API, I recommend you post them in #riot-api. Please don't ask if you can ask a question, just ask it! If someone knows the answer, they will respond, while "Can I ask a question?" will rarely be replied to.
 2. If your English is not that great, you can ask a translator, which have yellow names. Feel free to mention them with `@Translator <your language>`.
