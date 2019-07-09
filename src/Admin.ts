@@ -102,7 +102,11 @@ export default class Admin {
 
         for (const id in this.data.muted) {
             this.handleMuteData(id);
-        }
+		}
+		
+		this.bot.on("guildMemberAdd", (user: Discord.GuildMember) => {
+			this.handleMuteData(user.id);
+		});
     }
 
     private async handleMuteData(id: string) {
