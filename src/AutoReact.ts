@@ -157,6 +157,7 @@ export default class AutoReact {
             "shubho oporanno", "shubho shondha",
             // Japanese
             "おはよう　ございます", "こんにちは",
+            "ohayou gozaimasu",
             "ohayō gozaimasu", "konnichiwa",
             "こんばんは", "おやすみ　なさい",
             "konbanwa", "oyasumi nasai",
