@@ -154,6 +154,9 @@ export default class GameData {
     public onLookup(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         const supportedTypes = ["item", "perk", "rune", "champion", "champ"];
 
+            args.unshift(command);
+        }
+
         if (args.length === 0) {
             const response = `Usage: !${command} [type] [term]. Supported types are ` + supportedTypes.map(x => "`" + x + "`").join(", ");
             message.channel.send(response);
@@ -198,15 +201,25 @@ export default class GameData {
         switch(rawData.type) {
             case "ChampionDatum":
                 embed.setThumbnail(`https://cdn.communitydragon.org/latest/champion/${rawData.id}/square.png`)
+                embed.setURL(this.sharedSettings.lookup.championUrl);
                 break;
             case "ItemDatum":
-            case "PerkDatum":
-                let imageString = (`https://raw.communitydragon.org/latest/plugins${rawData.iconPath}`
+                var imageString = (`https://raw.communitydragon.org/latest/plugins${rawData.iconPath}`
                     .replace("lol-game-data", "rcp-be-lol-game-data/global/default")
                     .replace("/assets", "")
                     .toLowerCase()
                     );
                 embed.setThumbnail(imageString);
+                embed.setURL(this.sharedSettings.lookup.itemUrl);
+                break;
+            case "PerkDatum":
+                var imageString = (`https://raw.communitydragon.org/latest/plugins${rawData.iconPath}`
+                    .replace("lol-game-data", "rcp-be-lol-game-data/global/default")
+                    .replace("/assets", "")
+                    .toLowerCase()
+                    );
+                embed.setThumbnail(imageString);
+                embed.setURL(this.sharedSettings.lookup.perkUrl);
                 break;
         }
         delete rawData.type;
@@ -215,14 +228,16 @@ export default class GameData {
         embed.setTitle(rawData["name"]);
 
         for (let [key, value] of Object.entries(rawData)) {
-            if (Array.isArray(value)) {
-                if (value.length > 4) {
-                    embed.addField(key.toString().charAt(0).toUpperCase() + key.toString().slice(1), `${value.slice(0, 4).join(', ')} + ${value.length - 4} more...`)
-                } else {
-                    embed.addField(key.toString().charAt(0).toUpperCase() + key.toString().slice(1), `${value.join(", ")}`)
+            if (value != "") {
+                if (Array.isArray(value)) {
+                    if (value.length > 4) {
+                        embed.addField(key.toString().charAt(0).toUpperCase() + key.toString().slice(1), `${value.slice(0, 4).join(', ')} + ${value.length - 4} more...`)
+                    } else {
+                        embed.addField(key.toString().charAt(0).toUpperCase() + key.toString().slice(1), `${value.join(", ")}`)
+                    }
+                } else if (value.toString() != "") {
+                    embed.addField(key.toString().charAt(0).toUpperCase() + key.toString().slice(1), value, true);
                 }
-            } else if (value.toString() != "") {
-                embed.addField(key.toString().charAt(0).toUpperCase() + key.toString().slice(1), value, true);
             }
         }
 
