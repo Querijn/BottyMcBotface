@@ -154,6 +154,7 @@ export default class GameData {
     public onLookup(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         const supportedTypes = ["item", "perk", "rune", "champion", "champ"];
 
+        if (supportedTypes.includes(command)) {
             args.unshift(command);
         }
 
