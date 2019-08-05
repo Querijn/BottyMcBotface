@@ -41,7 +41,7 @@ interface ItemData {
     categories: string[];
     price: number;
     priceTotal: number;
-    iconPath: number;
+    iconPath: string;
     from: string[];
     to: string[];
 }
@@ -54,6 +54,37 @@ interface SearchObjectContainer {
     };
     score: number;
 }
+
+interface ChampionDatum {
+    id: number;
+    name: string;
+    key: string;
+    skins: string[];
+    type: string;
+    iconPath: string;
+}
+
+interface PerkDatum {
+    id: number;
+    name: string;
+    shortDesc: string;
+    endOfGameStatDescs: string[];
+    type: string;
+    iconPath: string;
+}
+
+interface ItemDatum {
+    id: number;
+    name: string;
+    combineCost: number;
+    cost: number;
+    from: string[];
+    to: string[];
+    type: string;
+    iconPath: string;
+}
+
+type EmbeddableDatum = ChampionDatum | PerkDatum | ItemDatum;
 
 export default class GameData {
     private champData: ChampionData[];
@@ -135,7 +166,7 @@ export default class GameData {
         }
 
         const searchTerm = args.slice(1).join(" ").toLowerCase();
-        let result: string | any[] = [];
+        let result: string | EmbeddableDatum = "";
         switch (args[0]) {
             case "item": {
                 result = this.findItem(searchTerm);
@@ -156,9 +187,46 @@ export default class GameData {
         if (typeof result === "string") {
             message.channel.send(result);
             return;
+        } else {
+            message.channel.send(this.buildEmbed(result));
+        }
+    }
+
+    public buildEmbed(rawData : EmbeddableDatum) {
+        let embed = new Discord.RichEmbed()
+
+        switch(rawData.type) {
+            case "ChampionDatum":
+                embed.setThumbnail(`https://cdn.communitydragon.org/latest/champion/${rawData.id}/square.png`)
+                break;
+            case "ItemDatum":
+            case "PerkDatum":
+                let imageString = (`https://raw.communitydragon.org/latest/plugins${rawData.iconPath}`
+                    .replace("lol-game-data", "rcp-be-lol-game-data/global/default")
+                    .replace("/assets", "")
+                    .toLowerCase()
+                    );
+                embed.setThumbnail(imageString);
+                break;
+        }
+        delete rawData.type;
+        delete rawData.iconPath;
+        
+        embed.setTitle(rawData["name"]);
+
+        for (let [key, value] of Object.entries(rawData)) {
+            if (Array.isArray(value)) {
+                if (value.length > 4) {
+                    embed.addField(key.toString().charAt(0).toUpperCase() + key.toString().slice(1), `${value.slice(0, 4).join(', ')} + ${value.length - 4} more...`)
+                } else {
+                    embed.addField(key.toString().charAt(0).toUpperCase() + key.toString().slice(1), `${value.join(", ")}`)
+                }
+            } else if (value.toString() != "") {
+                embed.addField(key.toString().charAt(0).toUpperCase() + key.toString().slice(1), value, true);
+            }
         }
 
-        message.channel.send("```json\n" + JSON.stringify(result, null, 4) + "```");
+        return embed;
     }
 
     public sortSearch(search: string, a: SearchObjectContainer, b: SearchObjectContainer) {
@@ -209,7 +277,7 @@ export default class GameData {
         return 0;
     }
 
-    public findItem(search: string): string | any {
+    public findItem(search: string): string | ItemDatum {
         if (!search) {
             return `There are currently ${this.itemData.length} items in my lookup data!`;
         }
@@ -237,10 +305,12 @@ export default class GameData {
                 cost: x.priceTotal,
                 from: x.from,
                 to: x.to,
+                iconPath: x.iconPath,
+                type: "ItemDatum"
             }))[0];
     }
 
-    public findPerk(search: string): string | any {
+    public findPerk(search: string): string | PerkDatum {
         if (!search) {
             return `There are currently ${this.perkData.length} perks in my lookup data!`;
         }
@@ -264,11 +334,14 @@ export default class GameData {
             .map(x => ({
                 id: x.id,
                 name: x.name,
+                shortDesc: x.shortDesc,
                 endOfGameStatDescs: x.endOfGameStatDescs,
+                iconPath: x.iconPath,
+                type: "PerkDatum"
             }))[0];
     }
 
-    public findChampion(search: string): string | any {
+    public findChampion(search: string): string | ChampionDatum {
         if (!search) {
             return `There are currently ${this.champData.length} champions in my lookup data!`;
         }
@@ -295,6 +368,8 @@ export default class GameData {
             .map(x => ({
                 ...x,
                 skins: x.skins.map(s => s.name).filter(s => s !== x.name),
+                type: "ChampionDatum",
+                iconPath: ""
             }))[0];
     }
 }
