@@ -3,31 +3,31 @@ import Discord = require("discord.js");
 import { levenshteinDistance, levenshteinDistanceArray } from "./LevenshteinDistance";
 import { SharedSettings } from "./SharedSettings";
 
-interface ChampionData {
+interface ChampionDataContainer {
     id: number;
     name: string;
     key: string;
-    skins: SkinData[];
+    skins: SkinDataContainer[];
 }
 
-interface SkinData {
+interface SkinDataContainer {
     id: number;
     name: string;
     splashPath: string;
     uncenteredSplashPath: string;
     tilePath: string;
     loadscreenPath: string;
-    chromas: ChromaData[];
+    chromas: ChromaDataContainer[];
 }
 
-interface ChromaData {
+interface ChromaDataContainer {
     id: number;
     name: string;
     chromaPath: string;
     colors: string[];
 }
 
-interface PerkData {
+interface PerkDataContainer {
     id: number;
     name: string;
     shortDesc: string;
@@ -35,7 +35,7 @@ interface PerkData {
     endOfGameStatDescs: string[];
 }
 
-interface ItemData {
+interface ItemDataContainer {
     id: number;
     name: string;
     categories: string[];
@@ -55,16 +55,15 @@ interface SearchObjectContainer {
     score: number;
 }
 
-interface ChampionDatum {
+interface ChampionData {
     id: number;
     name: string;
     key: string;
     skins: string[];
     type: string;
-    iconPath: string;
 }
 
-interface PerkDatum {
+interface PerkData {
     id: number;
     name: string;
     shortDesc: string;
@@ -73,7 +72,7 @@ interface PerkDatum {
     iconPath: string;
 }
 
-interface ItemDatum {
+interface ItemData {
     id: number;
     name: string;
     combineCost: number;
@@ -84,12 +83,12 @@ interface ItemDatum {
     iconPath: string;
 }
 
-type EmbeddableDatum = ChampionDatum | PerkDatum | ItemDatum;
+type EmbeddableDatum = ChampionData | PerkData | ItemData;
 
 export default class GameData {
-    private champData: ChampionData[];
-    private perkData: PerkData[];
-    private itemData: ItemData[];
+    private champData: ChampionDataContainer[];
+    private perkData: PerkDataContainer[];
+    private itemData: ItemDataContainer[];
 
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
@@ -111,10 +110,10 @@ export default class GameData {
         console.log("Game data loaded!");
     }
 
-    public async loadChampionData(): Promise<ChampionData[]> {
+    public async loadChampionData(): Promise<ChampionDataContainer[]> {
         const champions = await fetch(this.sharedSettings.lookup.championUrl).then(x => x.json());
 
-        const returnData: ChampionData[] = champions
+        const returnData: ChampionDataContainer[] = champions
             .filter((c: any) => c.id > 0)
             .map((c: any) => ({
                 id: c.id,
@@ -131,16 +130,16 @@ export default class GameData {
         return returnData;
     }
 
-    public async loadSkinData(): Promise<SkinData[]> {
-        return Object.values(await fetch(this.sharedSettings.lookup.skinUrl).then(x => x.json())) as SkinData[];
+    public async loadSkinData(): Promise<SkinDataContainer[]> {
+        return Object.values(await fetch(this.sharedSettings.lookup.skinUrl).then(x => x.json())) as SkinDataContainer[];
     }
 
-    public async loadPerkData(): Promise<PerkData[]> {
+    public async loadPerkData(): Promise<PerkDataContainer[]> {
         return await fetch(this.sharedSettings.lookup.perkUrl).then(x => x.json());
     }
 
-    public async loadItemData(): Promise<ItemData[]> {
-        const items = await fetch(this.sharedSettings.lookup.itemUrl).then(x => x.json()) as ItemData[];
+    public async loadItemData(): Promise<ItemDataContainer[]> {
+        const items = await fetch(this.sharedSettings.lookup.itemUrl).then(x => x.json()) as ItemDataContainer[];
         for (const item of items) {
             const other = items.find(x => x.id === item.id)!;
 
@@ -154,14 +153,19 @@ export default class GameData {
     public onLookup(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         const supportedTypes = ["item", "perk", "rune", "champion", "champ"];
 
-        if (supportedTypes.includes(command)) {
-            args.unshift(command);
-        }
-
         if (args.length === 0) {
-            const response = `Usage: !${command} [type] [term]. Supported types are ` + supportedTypes.map(x => "`" + x + "`").join(", ");
+            let response = "";
+            if (supportedTypes.includes(command)) {
+                response = `Usage: !${command} [term]. Supported types are ` + supportedTypes.map(x => "`" + x + "`").join(", ");
+            } else {
+                response = `Usage: !${command} [type] [term]. Supported types are ` + supportedTypes.map(x => "`" + x + "`").join(", ");
+            }
             message.channel.send(response);
             return;
+        }
+
+        if (supportedTypes.includes(command)) {
+            args.unshift(command);
         }
 
         if (!supportedTypes.includes(args[0])) {
@@ -196,48 +200,56 @@ export default class GameData {
         }
     }
 
-    public buildEmbed(rawData : EmbeddableDatum) {
-        let embed = new Discord.RichEmbed()
+    public buildEmbed(rawData: EmbeddableDatum) {
+        const embed = new Discord.RichEmbed();
 
-        switch(rawData.type) {
-            case "ChampionDatum":
-                embed.setThumbnail(`https://cdn.communitydragon.org/latest/champion/${rawData.id}/square.png`)
-                embed.setURL(this.sharedSettings.lookup.championUrl);
-                break;
-            case "ItemDatum":
-                var imageString = (`https://raw.communitydragon.org/latest/plugins${rawData.iconPath}`
+        switch (rawData.type) {
+            case "ChampionDatum": {
+                const imageString = `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${rawData.id}`
                     .replace("lol-game-data", "rcp-be-lol-game-data/global/default")
                     .replace("/assets", "")
-                    .toLowerCase()
-                    );
+                    .toLowerCase();
+                embed.setThumbnail(imageString);
+                embed.setURL(this.sharedSettings.lookup.championUrl);
+                break;
+            }
+            case "ItemDatum": {
+                const imageString = `https://raw.communitydragon.org/latest/plugins${(rawData as ItemData).iconPath}`
+                    .replace("lol-game-data", "rcp-be-lol-game-data/global/default")
+                    .replace("/assets", "")
+                    .toLowerCase();
                 embed.setThumbnail(imageString);
                 embed.setURL(this.sharedSettings.lookup.itemUrl);
                 break;
-            case "PerkDatum":
-                var imageString = (`https://raw.communitydragon.org/latest/plugins${rawData.iconPath}`
+            }
+            case "PerkDatum": {
+                const imageString = `https://raw.communitydragon.org/latest/plugins${(rawData as PerkData).iconPath}`
                     .replace("lol-game-data", "rcp-be-lol-game-data/global/default")
                     .replace("/assets", "")
-                    .toLowerCase()
-                    );
+                    .toLowerCase();
                 embed.setThumbnail(imageString);
                 embed.setURL(this.sharedSettings.lookup.perkUrl);
                 break;
+            }
         }
         delete rawData.type;
-        delete rawData.iconPath;
-        
+        if ("iconPath" in rawData) {
+            delete rawData.iconPath;
+        }
+
         embed.setTitle(rawData["name"]);
 
-        for (let [key, value] of Object.entries(rawData)) {
-            if (value != "") {
+        for (const [key, value] of Object.entries(rawData)) {
+            const keyString = key.toString();
+            if (value) {
                 if (Array.isArray(value)) {
                     if (value.length > 4) {
-                        embed.addField(key.toString().charAt(0).toUpperCase() + key.toString().slice(1), `${value.slice(0, 4).join(', ')} + ${value.length - 4} more...`)
+                        embed.addField(keyString.charAt(0).toUpperCase() + keyString.slice(1), `${value.slice(0, 4).join(", ")} + ${value.length - 4} more…`);
                     } else {
-                        embed.addField(key.toString().charAt(0).toUpperCase() + key.toString().slice(1), `${value.join(", ")}`)
+                        embed.addField(keyString.charAt(0).toUpperCase() + keyString.slice(1), `${value.join(", ")}`);
                     }
-                } else if (value.toString() != "") {
-                    embed.addField(key.toString().charAt(0).toUpperCase() + key.toString().slice(1), value, true);
+                } else if (value) {
+                    embed.addField(keyString.charAt(0).toUpperCase() + keyString.slice(1), value, true);
                 }
             }
         }
@@ -293,7 +305,7 @@ export default class GameData {
         return 0;
     }
 
-    public findItem(search: string): string | ItemDatum {
+    public findItem(search: string): string | ItemData {
         if (!search) {
             return `There are currently ${this.itemData.length} items in my lookup data!`;
         }
@@ -313,7 +325,7 @@ export default class GameData {
             return response;
         }
 
-        return searchResult.map(x => x.item as ItemData)
+        return searchResult.map(x => x.item as ItemDataContainer)
             .map(x => ({
                 id: x.id,
                 name: x.name,
@@ -322,11 +334,11 @@ export default class GameData {
                 from: x.from,
                 to: x.to,
                 iconPath: x.iconPath,
-                type: "ItemDatum"
+                type: "ItemDatum",
             }))[0];
     }
 
-    public findPerk(search: string): string | PerkDatum {
+    public findPerk(search: string): string | PerkData {
         if (!search) {
             return `There are currently ${this.perkData.length} perks in my lookup data!`;
         }
@@ -346,18 +358,18 @@ export default class GameData {
             return response;
         }
 
-        return searchResult.map(x => x.item as PerkData)
+        return searchResult.map(x => x.item as PerkDataContainer)
             .map(x => ({
                 id: x.id,
                 name: x.name,
                 shortDesc: x.shortDesc,
                 endOfGameStatDescs: x.endOfGameStatDescs,
                 iconPath: x.iconPath,
-                type: "PerkDatum"
+                type: "PerkDatum",
             }))[0];
     }
 
-    public findChampion(search: string): string | ChampionDatum {
+    public findChampion(search: string): string | ChampionData {
         if (!search) {
             return `There are currently ${this.champData.length} champions in my lookup data!`;
         }
@@ -380,12 +392,11 @@ export default class GameData {
             return response;
         }
 
-        return searchResult.map(x => x.item as ChampionData)
+        return searchResult.map(x => x.item as ChampionDataContainer)
             .map(x => ({
                 ...x,
                 skins: x.skins.map(s => s.name).filter(s => s !== x.name),
                 type: "ChampionDatum",
-                iconPath: ""
             }))[0];
     }
 }
