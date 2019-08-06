@@ -60,7 +60,7 @@ interface ChampionData {
     name: string;
     key: string;
     skins: string[];
-    type: string;
+    type: "ChampionDatum";
 }
 
 interface PerkData {
@@ -68,7 +68,7 @@ interface PerkData {
     name: string;
     shortDesc: string;
     endOfGameStatDescs: string[];
-    type: string;
+    type: "PerkDatum";
     iconPath: string;
 }
 
@@ -79,7 +79,7 @@ interface ItemData {
     cost: number;
     from: string[];
     to: string[];
-    type: string;
+    type: "ItemDatum";
     iconPath: string;
 }
 
@@ -334,7 +334,6 @@ export default class GameData {
                 from: x.from,
                 to: x.to,
                 iconPath: x.iconPath,
-                type: "ItemDatum",
             }))[0];
     }
 
