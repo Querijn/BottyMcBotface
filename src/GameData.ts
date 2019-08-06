@@ -60,7 +60,7 @@ interface ChampionDatum {
     name: string;
     key: string;
     skins: string[];
-    type: string;
+    type: "ChampionDatum";
     iconPath: string;
 }
 
@@ -69,7 +69,7 @@ interface PerkDatum {
     name: string;
     shortDesc: string;
     endOfGameStatDescs: string[];
-    type: string;
+    type: "PerkDatum";
     iconPath: string;
 }
 
@@ -80,7 +80,7 @@ interface ItemDatum {
     cost: number;
     from: string[];
     to: string[];
-    type: string;
+    type: "ItemDatum";
     iconPath: string;
 }
 
