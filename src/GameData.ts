@@ -241,14 +241,14 @@ export default class GameData {
 
         for (const [key, value] of Object.entries(rawData)) {
             const keyString = key.toString();
-            if (value) {
+            if (value != "") { // != here is intentional. It's checking for emptiness.
                 if (Array.isArray(value)) {
                     if (value.length > 4) {
                         embed.addField(keyString.charAt(0).toUpperCase() + keyString.slice(1), `${value.slice(0, 4).join(", ")} + ${value.length - 4} more…`);
                     } else {
                         embed.addField(keyString.charAt(0).toUpperCase() + keyString.slice(1), `${value.join(", ")}`);
                     }
-                } else if (value) {
+                } else {
                     embed.addField(keyString.charAt(0).toUpperCase() + keyString.slice(1), value, true);
                 }
             }
@@ -334,7 +334,7 @@ export default class GameData {
                 from: x.from,
                 to: x.to,
                 iconPath: x.iconPath,
-            }))[0];
+            }))[0] as ItemData;
     }
 
     public findPerk(search: string): string | PerkData {
@@ -365,7 +365,7 @@ export default class GameData {
                 endOfGameStatDescs: x.endOfGameStatDescs,
                 iconPath: x.iconPath,
                 type: "PerkDatum",
-            }))[0];
+            }))[0] as PerkData;
     }
 
     public findChampion(search: string): string | ChampionData {
@@ -396,6 +396,6 @@ export default class GameData {
                 ...x,
                 skins: x.skins.map(s => s.name).filter(s => s !== x.name),
                 type: "ChampionDatum",
-            }))[0];
+            }))[0] as ChampionData;
     }
 }
