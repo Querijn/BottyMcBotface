@@ -60,7 +60,7 @@ interface ChampionData {
     name: string;
     key: string;
     skins: string[];
-    type: "ChampionDatum";
+    type: "ChampionData";
 }
 
 interface PerkData {
@@ -68,7 +68,7 @@ interface PerkData {
     name: string;
     shortDesc: string;
     endOfGameStatDescs: string[];
-    type: "PerkDatum";
+    type: "PerkData";
     iconPath: string;
 }
 
@@ -79,7 +79,7 @@ interface ItemData {
     cost: number;
     from: string[];
     to: string[];
-    type: "ItemDatum";
+    type: "ItemData";
     iconPath: string;
 }
 
@@ -204,16 +204,13 @@ export default class GameData {
         const embed = new Discord.RichEmbed();
 
         switch (rawData.type) {
-            case "ChampionDatum": {
-                const imageString = `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${rawData.id}`
-                    .replace("lol-game-data", "rcp-be-lol-game-data/global/default")
-                    .replace("/assets", "")
-                    .toLowerCase();
+            case "ChampionData": {
+                const imageString = `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${rawData.id}.png`;
                 embed.setThumbnail(imageString);
                 embed.setURL(this.sharedSettings.lookup.championUrl);
                 break;
             }
-            case "ItemDatum": {
+            case "ItemData": {
                 const imageString = `https://raw.communitydragon.org/latest/plugins${(rawData as ItemData).iconPath}`
                     .replace("lol-game-data", "rcp-be-lol-game-data/global/default")
                     .replace("/assets", "")
@@ -222,7 +219,7 @@ export default class GameData {
                 embed.setURL(this.sharedSettings.lookup.itemUrl);
                 break;
             }
-            case "PerkDatum": {
+            case "PerkData": {
                 const imageString = `https://raw.communitydragon.org/latest/plugins${(rawData as PerkData).iconPath}`
                     .replace("lol-game-data", "rcp-be-lol-game-data/global/default")
                     .replace("/assets", "")
@@ -241,7 +238,7 @@ export default class GameData {
 
         for (const [key, value] of Object.entries(rawData)) {
             const keyString = key.toString();
-            if (value != "") { // != here is intentional. It's checking for emptiness.
+            if (value && value.length > 0) { 
                 if (Array.isArray(value)) {
                     if (value.length > 4) {
                         embed.addField(keyString.charAt(0).toUpperCase() + keyString.slice(1), `${value.slice(0, 4).join(", ")} + ${value.length - 4} more…`);
@@ -334,6 +331,7 @@ export default class GameData {
                 from: x.from,
                 to: x.to,
                 iconPath: x.iconPath,
+                type: "ItemData",
             }))[0] as ItemData;
     }
 
@@ -364,7 +362,7 @@ export default class GameData {
                 shortDesc: x.shortDesc,
                 endOfGameStatDescs: x.endOfGameStatDescs,
                 iconPath: x.iconPath,
-                type: "PerkDatum",
+                type: "PerkData",
             }))[0] as PerkData;
     }
 
@@ -395,7 +393,7 @@ export default class GameData {
             .map(x => ({
                 ...x,
                 skins: x.skins.map(s => s.name).filter(s => s !== x.name),
-                type: "ChampionDatum",
+                type: "ChampionData",
             }))[0] as ChampionData;
     }
 }
