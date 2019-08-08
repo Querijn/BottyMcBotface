@@ -234,7 +234,7 @@ export default class GameData {
             delete rawData.iconPath;
         }
 
-        embed.setTitle(rawData["name"]);
+        embed.setTitle(rawData.name);
 
         for (const [key, value] of Object.entries(rawData)) {
             const keyString = key.toString();
