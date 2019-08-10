@@ -36,7 +36,16 @@ export default class ESportsAPI {
         bot.on("ready", async () => {
 
             const channel = this.settings.esports.printChannel;
-            this.esportsChannel = this.bot.guilds.get(this.settings.server)!.channels.find("name", channel);
+            const guild = this.bot.guilds.get(this.settings.server);
+            this.esportsChannel = guild!.channels.find("name", channel);
+            if (this.esportsChannel == null) {
+                if (this.settings.botty.isProduction) {
+                    console.error("Esports API ran into an error: We don't have an esports channel but we're on production!");
+                }
+                else {
+                    this.esportsChannel = await guild!.createChannel(channel, "text");
+                }
+            }
 
             await this.loadData();
             this.postInfo(true);
