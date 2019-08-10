@@ -23,19 +23,23 @@ export default class KeyFinder {
 
         this.bot = bot;
 
-        this.bot.on("ready", () => {
+        this.bot.on("ready", async() => {
+            
             const guild = this.bot.guilds.get(this.sharedSettings.server);
-
-            if (guild) {
-                const channel = guild.channels.find("name", this.sharedSettings.keyFinder.reportChannel) as Discord.TextChannel;
-                if (channel) {
-                    this.channel = channel;
-                } else {
-                    console.error(`KeyFinder: Unable to find channel: ${this.sharedSettings.keyFinder.reportChannel}`);
-                }
-            } else {
+            if (guild == null) {
                 console.error(`KeyFinder: Unable to find server with ID: ${this.sharedSettings.server}`);
+                return;
             }
+
+            let channel = guild.channels.find("name", this.sharedSettings.keyFinder.reportChannel) as Discord.TextChannel;
+            if (channel == null) {
+                this.channel = await guild!.createChannel(this.sharedSettings.keyFinder.reportChannel, "text") as Discord.TextChannel;
+            } 
+            else if (this.sharedSettings.botty.isProduction) {
+                console.error(`KeyFinder: Unable to find channel: ${this.sharedSettings.keyFinder.reportChannel}`);
+                return;
+            }
+            this.channel = channel;
 
             console.log("KeyFinder extension loaded.");
             this.testAllKeys();

@@ -22,7 +22,7 @@ export default class Techblog {
 
         this.bot = bot;
 
-        this.bot.on("ready", () => {
+        this.bot.on("ready", async() => {
             if (!this.data.Last) this.data.Last = Date.now();
 
             const guild = this.bot.guilds.get(this.sharedSettings.server);
@@ -33,8 +33,13 @@ export default class Techblog {
 
             this.channel = guild.channels.find("name", this.sharedSettings.techBlog.channel) as Discord.TextChannel;
             if (!this.channel) {
-                console.error(`TechBlog: Unable to find channel: ${this.sharedSettings.techBlog.channel}`);
-                return;
+                if (this.sharedSettings.botty.isProduction) {
+                    console.error(`TechBlog: Unable to find channel: ${this.sharedSettings.techBlog.channel}`);
+                    return;
+                }
+                else {
+                    this.channel = await guild!.createChannel(this.sharedSettings.techBlog.channel, "text") as Discord.TextChannel;
+                }
             }
 
             console.log("TechblogReader extension loaded.");

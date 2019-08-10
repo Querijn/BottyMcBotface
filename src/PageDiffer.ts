@@ -42,10 +42,15 @@ export default class PageDiffer {
             return;
         }
 
-        const channel = guild.channels.find("name", this.sharedSettings.pageDiffer.channel);
+        let channel = guild.channels.find("name", this.sharedSettings.pageDiffer.channel);
         if (!channel || !(channel instanceof Discord.TextChannel)) {
-            console.error(`PageDiffer: Unable to find channel: ${this.sharedSettings.pageDiffer.channel}`);
-            return;
+            if (this.sharedSettings.botty.isProduction) {
+                console.error(`PageDiffer: Unable to find channel: ${this.sharedSettings.pageDiffer.channel}`);
+                return;
+            }
+            else {
+                channel = await guild!.createChannel(this.sharedSettings.pageDiffer.channel, "text");
+            }
         }
 
         this.channel = channel as Discord.TextChannel;

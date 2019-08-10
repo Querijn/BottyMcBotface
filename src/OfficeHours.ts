@@ -150,7 +150,7 @@ export default class OfficeHours {
         this.close(this.channel);
     }
 
-    private setupOpenState() {
+    private async setupOpenState() {
 
         this.guild = this.bot.guilds.get(this.sharedSettings.server)!;
         if (!this.guild) {
@@ -160,8 +160,13 @@ export default class OfficeHours {
 
         this.channel = this.guild.channels.find("name", "office-hours") as Discord.TextChannel;
         if (!this.channel || !(this.channel instanceof Discord.TextChannel)) {
-            console.error(`Office-Hours: Unable to find channel: #office-hours`);
-            return;
+            if (this.sharedSettings.botty.isProduction) {
+                console.error(`Office-Hours: Unable to find channel: #office-hours`);
+                return;
+            }
+            else {
+                this.channel = await this.guild.createChannel("office-hours", "text") as Discord.TextChannel;
+            }
         }
 
         const everyone = this.guild.roles.find("name", "@everyone");

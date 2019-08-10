@@ -28,17 +28,22 @@ export default class VersionChecker {
         this.bot.on("ready", this.onBot.bind(this));
     }
 
-    private onBot() {
+    private async onBot() {
         const guild = this.bot.guilds.get(this.sharedSettings.server);
         if (!guild) {
             console.error(`VersionChecker: Unable to find server with ID: ${this.sharedSettings.server}`);
             return;
         }
 
-        const channel = guild.channels.find("name", this.sharedSettings.forum.channel);
+        let channel = guild.channels.find("name", this.sharedSettings.forum.channel);
         if (!channel || !(channel instanceof Discord.TextChannel)) {
-            console.error(`VersionChecker: Unable to find channel: ${this.sharedSettings.forum.channel}`);
-            return;
+            if (this.sharedSettings.botty.isProduction) {
+                console.error(`VersionChecker: Unable to find external activity channel!`);
+                return;
+            }
+            else {
+                channel = await guild!.createChannel(this.sharedSettings.forum.channel, "text");
+            }
         }
 
         this.channel = channel as Discord.TextChannel;
