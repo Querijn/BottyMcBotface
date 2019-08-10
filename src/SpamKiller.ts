@@ -1,6 +1,7 @@
 import Discord = require("discord.js");
 import prettyMs = require("pretty-ms");
 import { SharedSettings } from "./SharedSettings";
+import url = require('url');
 
 class Violator {
     public response : Discord.Message;
@@ -20,7 +21,21 @@ export default class SpamKiller {
         bot.on("message", async(message: Discord.Message) => {
             if (!message.guild || message.author.bot) return;
 
-            if (message.content.indexOf("http://") < 0 && message.content.indexOf("https://") < 0)
+            const httpOffset = message.content.indexOf("http://");
+            const httpsOffset = message.content.indexOf("https://");
+            if (httpOffset < 0 && httpsOffset < 0)
+                return;
+
+            // Get the url object parsed from the offset of the msg
+            let urlString: string;
+            if (httpOffset >= 0)
+                urlString = message.content.substr(httpOffset);
+            else // if (httpsOffset >= 0)
+                urlString = message.content.substr(httpsOffset);
+
+            const d = url.parse(urlString);
+            const hostname = d.hostname || "";
+            if (sharedSettings.spam.allowedUrls.findIndex(u => u.endsWith(hostname)) != -1)
                 return;
 
             const member = message.member ? message.member : await message.guild.fetchMember(message.author.id);

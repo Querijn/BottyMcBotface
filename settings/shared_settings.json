@@ -196,5 +196,11 @@
         "listId": 619532,
         "updateTimeout": 3600000,
         "printMode": "BRACKET"
+    },
+    "spam": {
+        "allowedUrls": [
+            "riotgames.com",
+            "leagueoflegends.com"
+        ]
     }
 }

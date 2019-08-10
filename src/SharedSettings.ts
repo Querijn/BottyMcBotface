@@ -186,4 +186,8 @@ export interface SharedSettings {
         groupPickUrl: string;
         printMode: PickemPrintMode;
     };
+
+    spam: {
+        allowedUrls: string[];
+    }
 }
