@@ -235,17 +235,17 @@ export default class GameData {
 
         embed.setTitle(rawData.name);
         for (const [key, value] of Object.entries(rawData)) {
-            const keyString = key.toString();
+            const keyString = key.toString().charAt(0).toUpperCase() + key.toString().slice(1);
             const valueString = value.toString();
             if (valueString !== "") { 
                 if (Array.isArray(value)) {
                     if (value.length > 4) {
-                        embed.addField(keyString.charAt(0).toUpperCase() + keyString.slice(1), `${value.slice(0, 4).join(", ")} + ${value.length - 4} more…`);
+                        embed.addField(keyString, `${value.slice(0, 4).join(", ")} + ${value.length - 4} more…`);
                     } else {
-                        embed.addField(keyString.charAt(0).toUpperCase() + keyString.slice(1), `${value.join(", ")}`);
+                        embed.addField(keyString, `${value.join(", ")}`);
                     }
                 } else {
-                    embed.addField(keyString.charAt(0).toUpperCase() + keyString.slice(1), valueString, true);
+                    embed.addField(keyString, valueString, true);
                 }
             }
         }
