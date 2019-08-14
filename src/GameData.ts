@@ -202,7 +202,6 @@ export default class GameData {
 
     public buildEmbed(rawData: EmbeddableDatum) {
         const embed = new Discord.RichEmbed();
-
         switch (rawData.type) {
             case "ChampionData": {
                 const imageString = `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${rawData.id}.png`;
@@ -234,11 +233,11 @@ export default class GameData {
             delete rawData.iconPath;
         }
 
-        embed.setTitle(rawData["name"]);
-
+        embed.setTitle(rawData.name);
         for (const [key, value] of Object.entries(rawData)) {
             const keyString = key.toString();
-            if (value && value.length > 0) { 
+            const valueString = value.toString();
+            if (valueString !== "") { 
                 if (Array.isArray(value)) {
                     if (value.length > 4) {
                         embed.addField(keyString.charAt(0).toUpperCase() + keyString.slice(1), `${value.slice(0, 4).join(", ")} + ${value.length - 4} more…`);
@@ -246,7 +245,7 @@ export default class GameData {
                         embed.addField(keyString.charAt(0).toUpperCase() + keyString.slice(1), `${value.join(", ")}`);
                     }
                 } else {
-                    embed.addField(keyString.charAt(0).toUpperCase() + keyString.slice(1), value, true);
+                    embed.addField(keyString.charAt(0).toUpperCase() + keyString.slice(1), valueString, true);
                 }
             }
         }
