@@ -2,6 +2,7 @@ import fetch from "node-fetch";
 import Discord = require("discord.js");
 import { levenshteinDistance, levenshteinDistanceArray } from "./LevenshteinDistance";
 import { SharedSettings } from "./SharedSettings";
+import striptags = require("striptags");
 
 interface ChampionDataContainer {
     id: number;
@@ -194,7 +195,6 @@ export default class GameData {
 
         if (typeof result === "string") {
             message.channel.send(result);
-            return;
         } else {
             message.channel.send(this.buildEmbed(result));
         }
@@ -204,7 +204,7 @@ export default class GameData {
         const embed = new Discord.RichEmbed();
         switch (rawData.type) {
             case "ChampionData": {
-                const imageString = `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/${rawData.id}.png`;
+                const imageString = `https://cdn.communitydragon.org/latest/champion/${rawData.id}/square`;
                 embed.setThumbnail(imageString);
                 embed.setURL(this.sharedSettings.lookup.championUrl);
                 break;
@@ -236,7 +236,7 @@ export default class GameData {
         embed.setTitle(rawData.name);
         for (const [key, value] of Object.entries(rawData)) {
             const keyString = key.toString().charAt(0).toUpperCase() + key.toString().slice(1);
-            const valueString = value.toString();
+            const valueString = striptags(value.toString());
             if (valueString !== "") { 
                 if (Array.isArray(value)) {
                     if (value.length > 4) {
