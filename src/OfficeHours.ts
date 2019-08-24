@@ -130,10 +130,15 @@ export default class OfficeHours {
             return;
         }
 
-        const questionIndex = this.data.questions.findIndex(q => q.uuid === id);
-        if (questionIndex >= 0) {
+        const question = this.data.questions.find(q => q.uuid === id);
+        if (question) {
             this.data.questions = this.data.questions.filter(q => q.uuid !== id);
             message.channel.send(this.sharedSettings.officehours.removedMessage);
+           
+            const moderatorChannel = this.guild.channels.find("name", "moderators");
+            if (moderatorChannel instanceof Discord.TextChannel) {
+                moderatorChannel.send(`${message.author.username} just removed question ${question.uuid} (by ${question.authorName}): \n>>> ${question.question}`);
+            }
         }
         else {
             message.channel.send("Could not find this question!");
@@ -209,7 +214,7 @@ export default class OfficeHours {
 
         const moderatorChannel = this.guild.channels.find("name", "moderators");
         if (moderatorChannel instanceof Discord.TextChannel) {
-            moderatorChannel.send(`${author.username} just asked a question: \`${question}\`, you can remove it with \`!question remove ${questionData.uuid}\``);
+            moderatorChannel.send(`${author.username} just asked a question (remove with \`!question remove ${questionData.uuid}\`):\n>>> ${question}`);
         }
     }
 
