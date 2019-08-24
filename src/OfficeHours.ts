@@ -214,7 +214,8 @@ export default class OfficeHours {
 
         const moderatorChannel = this.guild.channels.find("name", "moderators");
         if (moderatorChannel instanceof Discord.TextChannel) {
-            moderatorChannel.send(`${author.username} just asked a question (remove with \`!question remove ${questionData.uuid}\`):\n>>> ${question}`);
+            const link = message.guild ? `https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id}` : `This came from a direct message`; // Prepend with link if it's from the server
+            moderatorChannel.send(`${author.username} just asked a question (remove with \`!question remove ${questionData.uuid}\`):\n${link}\n>>> ${question}`);
         }
     }
 
