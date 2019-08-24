@@ -3,6 +3,7 @@ import Discord = require("discord.js");
 import { levenshteinDistance, levenshteinDistanceArray } from "./LevenshteinDistance";
 import { SharedSettings } from "./SharedSettings";
 import striptags = require("striptags");
+import joinArguments from "./JoinArguments";
 
 interface ChampionDataContainer {
     id: number;
@@ -151,7 +152,7 @@ export default class GameData {
         return items;
     }
 
-    public onLookup(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+    public onLookup(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
         const supportedTypes = ["item", "perk", "rune", "champion", "champ"];
 
         if (args.length === 0) {
@@ -174,7 +175,7 @@ export default class GameData {
             return;
         }
 
-        const searchTerm = args.slice(1).join(" ").toLowerCase();
+        const searchTerm = joinArguments(args, separators, 1).toLowerCase();
         let result: string | EmbeddableDatum = "";
         switch (args[0]) {
             case "item": {
