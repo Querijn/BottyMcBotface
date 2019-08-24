@@ -70,16 +70,26 @@ export default class Admin {
         this.bot.on("ready", this.onBot.bind(this));
     }
 
-    public onBot() {
+    public async onBot() {
         const guild = this.bot.guilds.get(this.sharedSettings.server);
         if (!guild) {
             console.error(`Admin: Unable to find server with ID: ${this.sharedSettings.server}`);
             return;
         }
 
-        const adminChannel = guild.channels.find("name", "moderators");
-        if (!adminChannel || !(adminChannel instanceof Discord.TextChannel)) {
-            console.error(`Admin: Unable to find moderators channel!`);
+        let adminChannel = guild.channels.find("name", "moderators");
+        if (!adminChannel) {
+            if (this.sharedSettings.botty.isProduction) {
+                console.error(`Admin: Unable to find moderators channel!`);
+                return;
+            }
+            else {
+                adminChannel = await guild!.createChannel("moderators", "text");
+            }
+        }
+
+        if (!(adminChannel instanceof Discord.TextChannel)) {
+            console.error(`Admin: Unexpected; moderators channel is not a text channel!`);
             return;
         }
         
