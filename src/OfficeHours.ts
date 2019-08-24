@@ -124,13 +124,19 @@ export default class OfficeHours {
             }
         }
 
-        if (args.length === 1) {
-            this.data.questions = this.data.questions.filter(q => q.uuid !== id);
-            message.channel.send(this.sharedSettings.officehours.removedMessage);
+        if (args.length !== 1) {
+            message.channel.send("Invalid use of command, use !question remove {id}");
             return;
         }
 
-        message.channel.send("Invalid use of command, use !question remove {id}");
+        const questionIndex = this.data.questions.findIndex(q => q.uuid === id);
+        if (questionIndex >= 0) {
+            this.data.questions = this.data.questions.filter(q => q.uuid !== id);
+            message.channel.send(this.sharedSettings.officehours.removedMessage);
+        }
+        else {
+            message.channel.send("Could not find this question!");
+        }
     }
 
     public onOpen(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
