@@ -13,7 +13,12 @@
         "lookup": {
             "aliases": [
                 "lookup",
-                "search"
+                "search",
+                "item", 
+                "perk", 
+                "rune", 
+                "champion", 
+                "champ"
             ],
             "description": "Search for information on that content in the game"
         }
