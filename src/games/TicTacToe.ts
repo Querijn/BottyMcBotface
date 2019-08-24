@@ -77,6 +77,11 @@ export default class TicTacToe {
             return;
         }
 
+        if (message.guild == null) {
+            message.reply("You're required to type this command in the server!");
+            return;
+        }
+
         const opponentName = opponent.username.toLowerCase();
         const senderName = message.author.username.toLowerCase();
 
