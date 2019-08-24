@@ -182,7 +182,7 @@ export default class CommandController {
     private handleCommands(message: Discord.Message) {
         if (message.author.bot) return;
 
-        const parts = message.content.split(" ");
+        const parts = message.content.split(/[\n\r\s]/);
         const prefix = parts[0][0];
         const command = parts[0].substr(1).toLowerCase();
         const isAdmin = (message.member && this.sharedSettings.commands.adminRoles.some(x => message.member.roles.has(x)));
