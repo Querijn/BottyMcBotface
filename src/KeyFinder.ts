@@ -132,7 +132,7 @@ export default class KeyFinder {
      * @returns 'true' if a working AnswerHubAPI key was found in the message, 'false' if one wasn't
      */
     public async findKey(user: string, message: string, location: string, timestamp: number): Promise<boolean> {
-        const matches = message.match(/(RGAPI-)?[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}/ig);
+        const matches = message.match(/(RGAPI-)?[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}/ig);
         if (!matches) return false;
 
         let found = false;
