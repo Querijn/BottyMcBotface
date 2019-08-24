@@ -315,7 +315,7 @@ export default class GameData {
             .slice(0, this.sharedSettings.lookup.maxGuessCount);
 
         // no exact match, so give alternatives
-        if (searchResult[0].score !== 0) {
+        if (searchResult[0].score > this.sharedSettings.lookup.confidence) {
             let response = "Too many results returned for that search, did you mean one of the options below?\n```";
             response += searchResult.map(x => `${x.item.name} (Alternate terms: ${x.item.id})`).join("\n");
             response += "```";
@@ -348,7 +348,7 @@ export default class GameData {
             .slice(0, this.sharedSettings.lookup.maxGuessCount);
 
         // no exact match, so give alternatives
-        if (searchResult[0].score !== 0) {
+        if (searchResult[0].score > this.sharedSettings.lookup.confidence) {
             let response = "Too many results returned for that search, did you mean one of the options below?\n```";
             response += searchResult.map(x => `${x.item.name} (Alternate terms: ${x.item.id})`).join("\n");
             response += "```";
@@ -382,7 +382,7 @@ export default class GameData {
             .slice(0, this.sharedSettings.lookup.maxGuessCount);
 
         // no exact match, so give alternatives
-        if (searchResult[0].score !== 0) {
+        if (searchResult[0].score > this.sharedSettings.lookup.confidence) {
             let response = "Too many results returned for that search, did you mean one of the options below?\n```";
             response += searchResult.map(x => `${x.item.name} (Alternate terms: ${x.item.id} / ${x.item.key})`).join("\n");
             response += "```";
