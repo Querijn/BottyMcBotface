@@ -184,7 +184,7 @@ export default class CommandController {
     private handleCommands(message: Discord.Message) {
         if (message.author.bot) return;
 
-        const messageContent = message.content.replace(/\n\n+/g, "\n").replace(/\s\s+/g, ' ');
+        const messageContent = message.content.replace(/\n\n+/g, "\n").replace(/\s\s+/g, " ");
         const parts = messageContent.split(/[\n\s]/g);
         const prefix = parts[0][0];
         const command = parts[0].substr(1).toLowerCase();
@@ -195,27 +195,26 @@ export default class CommandController {
         let partSize = 0;
         for (let i = 0; i < parts.length - 1; i++) {
             partSize += parts[i].length; // Get the char at the end of the word
-            separators.push(messageContent.charAt(partSize)); 
+            separators.push(messageContent.charAt(partSize));
             partSize++; // Make sure you add the length of the separator too
         }
 
         this.commands.forEach(holder => {
 
-            if (this.getStatus(holder) === CommandStatus.DISABLED) return;
-            if (holder.command.admin && !isAdmin) return;
             if (holder.prefix !== prefix) return;
+            if (!isAdmin) {
+                if (this.getStatus(holder) === CommandStatus.DISABLED) return;
+                if (holder.command.admin) return;
+                if (!this.checkCooldown(holder, message)) return;
+            }
 
             // handlers that register the "*" command will get all commands with that prefix (unless they already have gotten it once)
 
             const args = parts.slice(1);
             if (holder.command.aliases.some(x => x === command)) {
-                if (this.checkCooldown(holder, message)) {
-                    holder.handler.call(null, message, isAdmin, command, args, separators);
-                }
+                holder.handler.call(null, message, isAdmin, command, args, separators);
             } else if (holder.command.aliases.some(x => x === "*")) {
-                if (this.checkCooldown(holder, message)) {
-                    holder.handler.call(null, message, isAdmin, "*", Array<string>().concat(command, args));
-                }
+                holder.handler.call(null, message, isAdmin, "*", Array<string>().concat(command, args));
             }
         });
     }
