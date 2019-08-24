@@ -33,13 +33,15 @@ export default class KeyFinder {
 
             let channel = guild.channels.find("name", this.sharedSettings.keyFinder.reportChannel) as Discord.TextChannel;
             if (channel == null) {
+                if (this.sharedSettings.botty.isProduction) {
+                    console.error(`KeyFinder: Unable to find channel: ${this.sharedSettings.keyFinder.reportChannel}`);
+                    return;
+                }
                 this.channel = await guild!.createChannel(this.sharedSettings.keyFinder.reportChannel, "text") as Discord.TextChannel;
-            } 
-            else if (this.sharedSettings.botty.isProduction) {
-                console.error(`KeyFinder: Unable to find channel: ${this.sharedSettings.keyFinder.reportChannel}`);
-                return;
             }
-            this.channel = channel;
+            else {
+                this.channel = channel;
+            }
 
             console.log("KeyFinder extension loaded.");
             this.testAllKeys();
