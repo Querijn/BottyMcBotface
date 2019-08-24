@@ -3,6 +3,7 @@ import { SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
 import fetch from "node-fetch";
+import joinArguments from "./JoinArguments";
 
 interface QuestionData {
     uuid: number;
@@ -61,8 +62,8 @@ export default class OfficeHours {
         this.bot.on("ready", this.setupOpenState.bind(this));
     }
 
-    public onAsk(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-        const question = args.join(" ");
+    public onAsk(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
+        const question = joinArguments(args, separators);
 
         if (args[0] === "remove") {
             this.onQuestionRemove(message, isAdmin, args[0], args.slice(1));
@@ -79,11 +80,11 @@ export default class OfficeHours {
         this.storeQuestion(question, message, message.author, message.author.username);
     }
 
-    public onAskFor(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+    public onAskFor(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
         const asker = message.mentions.users.first();
         if (!asker) return;
 
-        const question = args.slice(1).join(" ");
+        const question = joinArguments(args, separators, 1);
         this.storeQuestion(question, message, asker, message.author.username);
     }
 

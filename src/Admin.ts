@@ -4,6 +4,7 @@ import { clearTimeout, setTimeout } from "timers";
 
 import Discord = require("discord.js");
 import prettyMs = require("pretty-ms");
+import joinArguments from "./JoinArguments";
 
 class TicketData {
     constructor(reason: string) {
@@ -163,9 +164,9 @@ export default class Admin {
         return member.user.username;
     }
     
-    public async onMute(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+    public async onMute(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
 
-        const reason = args.join(" ");
+        const reason = joinArguments(args, separators);
 
         const muteAddedFor = [];
         for (const [ id, member ] of message.mentions.members) {
@@ -215,12 +216,12 @@ export default class Admin {
         }
     }
 
-    public async onTicket(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+    public async onTicket(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
 
         let mentions = message.mentions.members;
         
         if (args[0] == 'add') {
-            this.addTicket(mentions, message, args.slice(1).join(" "));
+            this.addTicket(mentions, message, joinArguments(args, separators, 1));
             return;
         }
 

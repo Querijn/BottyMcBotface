@@ -1,6 +1,7 @@
 import fetch from "node-fetch";
 import Discord = require("discord.js");
 import { SharedSettings } from "./SharedSettings";
+import joinArguments from "./JoinArguments";
 
 export enum PickemPrintMode {
     GROUP = "GROUP", BRACKET = "BRACKET", BOTH = "BOTH",
@@ -323,14 +324,14 @@ export default class Pickem {
         return "```" + lines.join("\n") + "```";
     }
 
-    public async onPickem(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+    public async onPickem(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
 
         if (this.esportsChannel && message.channel.id !== this.esportsChannel.id) {
             message.channel.send(`To avoid spoilers, this command is restricted to #${this.esportsChannel.name}.`);
             return;
         }
 
-        if (args.length > 1) args[0] = args.join(" ");
+        if (args.length > 1) args[0] = joinArguments(args, separators);
 
         if (args.length === 0) {
             const bestPick = await this.getCorrectPickem();

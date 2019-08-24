@@ -8,6 +8,7 @@ import CategorisedMessage from "./CategorisedMessage";
 import Discord = require("discord.js");
 import { levenshteinDistance } from "./LevenshteinDistance";
 import VersionChecker from "./VersionChecker";
+import joinArguments from "./JoinArguments";
 
 interface InfoFile {
     messages: InfoData[];
@@ -135,7 +136,7 @@ export default class Info {
         }
     }
 
-    public async onNote(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+    public async onNote(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
 
         // the note we are trying to fetch (or the sub-command)
         const action = args[0];
@@ -157,7 +158,7 @@ export default class Info {
         }
 
         if (action === "add") {
-            this.handleNoteAdd(message, isAdmin, command, args);
+            this.handleNoteAdd(message, isAdmin, command, args, separators);
             return;
         }
 
@@ -172,14 +173,14 @@ export default class Info {
         }
 
         if (action === "replace") {
-            this.handleNoteReplace(message, isAdmin, command, args);
+            this.handleNoteReplace(message, isAdmin, command, args, separators);
             return;
         }
 
         return this.onAll(message, isAdmin, command, args);
     }
 
-    private handleNoteReplace(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+    private handleNoteReplace(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
         // we need more than 2 arguments to replace a note.
         //   cmd    1     2     3++
         // (!note replace name data...)
@@ -194,7 +195,7 @@ export default class Info {
         });
 
         if (info) {
-            const body = args.splice(2).join(" ");
+            const body = joinArguments(args, separators, 2);
             info.message = body;
 
             message.channel.send(`Note '${noteName}' has been changed to:\n ${body}`);
@@ -263,7 +264,7 @@ export default class Info {
         message.channel.send(`Successfully removed ${noteName}`);
     }
 
-    private async handleNoteAdd(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+    private async handleNoteAdd(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
         // we need atleast 3 arguments to add a note.
         //  cmd   1   2    3
         // (!note add name message)
@@ -272,7 +273,7 @@ export default class Info {
         }
 
         const name = args[1].toLowerCase();
-        const text = args.splice(2).join(" ");
+        const text = joinArguments(args, separators, 2);
 
         if (this.adminCommands.indexOf(name) >= 0 || this.badNoteNames.indexOf(name) >= 0) {
             message.channel.send("This note is a note command or a disallowed note name, and cannot be used.");

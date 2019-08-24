@@ -2,8 +2,10 @@ import Discord = require("discord.js");
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 import url = require("url");
+import fs = require("fs-extra");
+import fetch from "node-fetch";
 
-type SingleCommand = (message: Discord.Message, isAdmin: boolean, command: string, args: string[]) => void;
+type SingleCommand = (message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) => void;
 
 export interface CommandHolder {
     identifier: string;
@@ -182,10 +184,20 @@ export default class CommandController {
     private handleCommands(message: Discord.Message) {
         if (message.author.bot) return;
 
-        const parts = message.content.split(/[\n\r\s]/);
+        const messageContent = message.content.replace(/\n\n+/g, "\n").replace(/\s\s+/g, ' ');
+        const parts = messageContent.split(/[\n\s]/g);
         const prefix = parts[0][0];
         const command = parts[0].substr(1).toLowerCase();
         const isAdmin = (message.member && this.sharedSettings.commands.adminRoles.some(x => message.member.roles.has(x)));
+
+        // Collect the separators
+        const separators: string[] = [];
+        let partSize = 0;
+        for (let i = 0; i < parts.length - 1; i++) {
+            partSize += parts[i].length; // Get the char at the end of the word
+            separators.push(messageContent.charAt(partSize)); 
+            partSize++; // Make sure you add the length of the separator too
+        }
 
         this.commands.forEach(holder => {
 
@@ -195,10 +207,10 @@ export default class CommandController {
 
             // handlers that register the "*" command will get all commands with that prefix (unless they already have gotten it once)
 
-            const args = parts.slice(1).filter(a => a !== "");
+            const args = parts.slice(1);
             if (holder.command.aliases.some(x => x === command)) {
                 if (this.checkCooldown(holder, message)) {
-                    holder.handler.call(null, message, isAdmin, command, args);
+                    holder.handler.call(null, message, isAdmin, command, args, separators);
                 }
             } else if (holder.command.aliases.some(x => x === "*")) {
                 if (this.checkCooldown(holder, message)) {
