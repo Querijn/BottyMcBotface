@@ -7,7 +7,7 @@ export default function joinArguments(args: string[], separators: string[], inde
 
     let len = args.length < separators.length ? args.length : separators.length; // Just a precaution
 
-    for (let i = index; i < len; i++) {
+    for (let i = index; i <= len; i++) {
         if (i < args.length)
             result += args[i];
         
