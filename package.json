@@ -7,7 +7,8 @@
   },
   "scripts": {
     "compile": "tsc -p .",
-    "start": "tsc -p . && node ./dist/app.js"
+    "start": "tsc -p . && node ./dist/app.js",
+    "test": "mocha -r ts-node/register test/**/*.spec.ts"
   },
   "author": "Querijn Heijmans <querijn@irule.at>",
   "license": "MIT",
@@ -30,12 +31,19 @@
     "xregexp": "^4.2.0"
   },
   "devDependencies": {
+    "@types/chai": "^4.2.3",
     "@types/cheerio": "^0.22.8",
+    "@types/mocha": "^5.2.7",
     "@types/node": "^8.0.22",
     "@types/node-fetch": "^1.6.7",
     "@types/pretty-ms": "^3.0.0",
     "@types/xregexp": "^3.0.29",
-    "typescript": "^2.4.2",
-    "tslint": "^5.10.0"
+    "chai": "^4.2.0",
+    "mocha": "^6.2.1",
+    "ts-mockito": "^2.5.0",
+    "ts-node": "^8.4.1",
+    "tslint": "^5.10.0",
+    "typemoq": "^2.1.0",
+    "typescript": "^2.4.2"
   }
 }
