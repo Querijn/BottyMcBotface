@@ -198,7 +198,7 @@ export default class Info {
             const body = joinArguments(args, separators, 2);
             info.message = body;
 
-            message.channel.send(`Note '${noteName}' has been changed to:\n ${body}`);
+            message.channel.send(`Note '${noteName}' has been changed to:\n${body}`);
             return;
         }
 
