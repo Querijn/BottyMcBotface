@@ -5,14 +5,18 @@ export default function joinArguments(args: string[], separators: string[], inde
         console.error(`Expected [ ${args.join(", ")} ] (${args.length}) to be the same length as [ ${separators.join(", ")} ] (${separators.length})!`);
     }
 
-    let len = args.length < separators.length ? args.length : separators.length; // Just a precaution
+    const len = args.length < separators.length ? args.length : separators.length; // Just a precaution
 
     for (let i = index; i <= len; i++) {
-        if (i < args.length)
+        if (i < separators.length) {
+            if (i !== index) {
+                result += separators[i];
+            }
+        }
+
+        if (i < args.length) {
             result += args[i];
-        
-        if (i < separators.length)
-            result += separators[i];
+        }
     }
 
     return result;
