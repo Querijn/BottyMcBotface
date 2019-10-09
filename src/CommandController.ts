@@ -184,8 +184,9 @@ export default class CommandController {
     private handleCommands(message: Discord.Message) {
         if (message.author.bot) return;
 
-        const messageContent = message.content.replace(/\n\n+/g, "\n").replace(/\s\s+/g, ' ');
-        const parts = messageContent.split(/[\n\s]/g);
+        // \s matches \n too, so no need to check both
+        const messageContent = message.content.replace(/(\s){2,}/g, "$1");
+        const parts = messageContent.split(/\s/g);
         const prefix = parts[0][0];
         const command = parts[0].substr(1).toLowerCase();
         const isAdmin = (message.member && this.sharedSettings.commands.adminRoles.some(x => message.member.roles.has(x)));
@@ -195,7 +196,7 @@ export default class CommandController {
         let partSize = 0;
         for (let i = 0; i < parts.length - 1; i++) {
             partSize += parts[i].length; // Get the char at the end of the word
-            separators.push(messageContent.charAt(partSize)); 
+            separators.push(messageContent.charAt(partSize));
             partSize++; // Make sure you add the length of the separator too
         }
 
