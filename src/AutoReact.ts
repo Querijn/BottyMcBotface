@@ -167,6 +167,11 @@ export default class AutoReact {
             "goedenavond",
             "goedenacht", "goede nacht",
             "goedendag", "houdoe",
+            // Montenegrian
+            "zdravo", "ćao", "hej",
+            "dobro jutro", "jutro",
+            "dobro veče", "laku noć",
+            "dobar dan", "dobar dan"
         ];
 
         const endChars = [
