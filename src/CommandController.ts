@@ -183,10 +183,10 @@ export default class CommandController {
 
     private handleCommands(message: Discord.Message) {
         if (message.author.bot) return;
-
-        // \s matches \n too, so no need to check both
+      
         const messageContent = message.content.replace(/(\s){2,}/g, "$1");
         const parts = messageContent.split(/\s/g);
+      
         const prefix = parts[0][0];
         const command = parts[0].substr(1).toLowerCase();
         const isAdmin = (message.member && this.sharedSettings.commands.adminRoles.some(x => message.member.roles.has(x)));
@@ -202,21 +202,20 @@ export default class CommandController {
 
         this.commands.forEach(holder => {
 
-            if (this.getStatus(holder) === CommandStatus.DISABLED) return;
-            if (holder.command.admin && !isAdmin) return;
             if (holder.prefix !== prefix) return;
+            if (!isAdmin) {
+                if (this.getStatus(holder) === CommandStatus.DISABLED) return;
+                if (holder.command.admin) return;
+                if (!this.checkCooldown(holder, message)) return;
+            }
 
             // handlers that register the "*" command will get all commands with that prefix (unless they already have gotten it once)
 
             const args = parts.slice(1);
             if (holder.command.aliases.some(x => x === command)) {
-                if (this.checkCooldown(holder, message)) {
-                    holder.handler.call(null, message, isAdmin, command, args, separators);
-                }
+                holder.handler.call(null, message, isAdmin, command, args, separators);
             } else if (holder.command.aliases.some(x => x === "*")) {
-                if (this.checkCooldown(holder, message)) {
-                    holder.handler.call(null, message, isAdmin, "*", Array<string>().concat(command, args));
-                }
+                holder.handler.call(null, message, isAdmin, "*", Array<string>().concat(command, args));
             }
         });
     }
