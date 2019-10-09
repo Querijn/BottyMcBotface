@@ -2,6 +2,7 @@ import fetch from "node-fetch";
 import Discord = require("discord.js");
 import { SharedSettings } from "./SharedSettings";
 import joinArguments from "./JoinArguments";
+import { clearTimeout, setTimeout } from "timers";
 
 export enum PickemPrintMode {
     GROUP = "GROUP", BRACKET = "BRACKET", BOTH = "BOTH",
@@ -115,18 +116,20 @@ export default class Pickem {
         this.settings = settings;
 
         bot.on("ready", async () => {
-            const channel = this.settings.esports.printChannel;
-            
-            const guild = this.bot.guilds.get(this.settings.server);
-            this.esportsChannel = guild!.channels.find("name", channel);
-            if (this.esportsChannel == null) {
-                if (this.settings.botty.isProduction) {
-                    console.error("Pickem ran into an error: We don't have an e-sports channel but we're on production!");
+            setTimeout(async () => {
+                const channel = this.settings.esports.printChannel;
+
+                const guild = this.bot.guilds.get(this.settings.server);
+                this.esportsChannel = guild!.channels.find("name", channel);
+                if (this.esportsChannel == null) {
+                    if (this.settings.botty.isProduction) {
+                        console.error("Pickem ran into an error: We don't have an e-sports channel but we're on production!");
+                    }
+                    else {
+                        await guild!.createChannel(channel, "text");
+                    }
                 }
-                else {
-                    this.esportsChannel = await guild!.createChannel(channel, "text");
-                }
-            }
+            }, 1000);
 
             await this.updateUserList();
         });
