@@ -238,7 +238,7 @@ export default class GameData {
         for (const [key, value] of Object.entries(rawData)) {
             const keyString = key.toString().charAt(0).toUpperCase() + key.toString().slice(1);
             const valueString = striptags(value.toString());
-            if (valueString !== "") { 
+            if (valueString !== "") {
                 if (Array.isArray(value)) {
                     if (value.length > 4) {
                         embed.addField(keyString, `${value.slice(0, 4).join(", ")} + ${value.length - 4} more…`);
@@ -258,48 +258,54 @@ export default class GameData {
         if (a.score === 0) return -1;
         if (b.score === 0) return 1;
 
-        const nameA = a.item.name.toLowerCase();
-        const nameB = b.item.name.toLowerCase();
+        const ishCompare = (x: string, y: string) => {
+            const lowerX = x.toLowerCase();
+            const lowerY = y.toLowerCase();
 
-        if (nameA === search) return -1;
-        if (nameB === search) return 1;
+            if (lowerX === lowerY) return 0;
+            if (lowerX === search) return -1;
+            if (lowerY === search) return 1;
 
-        if (nameA.startsWith(search) && !nameB.startsWith(search)) return -1;
-        if (nameB.startsWith(search) && !nameA.startsWith(search)) return 1;
+            const xStarts = lowerX.startsWith(search);
+            const yStarts = lowerY.startsWith(search);
 
-        if (nameA.includes(search) && !nameB.includes(search)) return -1;
-        if (nameB.includes(search) && !nameA.includes(search)) return 1;
+            if (xStarts && yStarts) return 0;
+            if (xStarts) return -1;
+            if (yStarts) return 1;
+
+            const xIncludes = lowerX.includes(search);
+            const yIncludes = lowerY.includes(search);
+
+            if (xIncludes && yIncludes) return 0;
+            if (xIncludes) return -1;
+            if (yIncludes) return 1;
+
+            return 0;
+        };
+
+        const nameCmp = ishCompare(a.item.name, b.item.name);
+        if (nameCmp !== 0) return nameCmp;
 
         if (a.item.key && b.item.key) {
-            const keyA = a.item.key;
-            const keyB = b.item.key;
-
-            if (keyA === search) return -1;
-            if (keyB === search) return 1;
-
-            if (keyA.startsWith(search) && !keyB.startsWith(search)) return -1;
-            if (keyB.startsWith(search) && !keyA.startsWith(search)) return 1;
-
-            if (keyA.includes(search) && !keyB.includes(search)) return -1;
-            if (keyB.includes(search) && !keyA.includes(search)) return 1;
+            const keyCmp = ishCompare(a.item.key, b.item.key);
+            if (keyCmp !== 0) return keyCmp;
         }
 
-        const idA = a.item.id.toString();
-        const idB = a.item.id.toString();
-
-        if (idA === search) return -1;
-        if (idB === search) return 1;
-
-        if (idA.startsWith(search) && !idB.startsWith(search)) return -1;
-        if (idB.startsWith(search) && !idA.startsWith(search)) return 1;
-
-        if (idA.includes(search) && !idB.includes(search)) return -1;
-        if (idB.includes(search) && !idA.includes(search)) return 1;
+        const idCmp = ishCompare(a.item.id.toString(), b.item.id.toString());
+        if (idCmp !== 0) return idCmp;
 
         if (a.score < b.score) return -1;
         if (b.score < a.score) return 1;
 
-        return 0;
+        const aCmpBName = a.item.name.localeCompare(b.item.name);
+        if (aCmpBName !== 0) return aCmpBName;
+
+        if (a.item.key && b.item.key) {
+            const aCmpBKey = a.item.key.localeCompare(b.item.key);
+            if (aCmpBKey !== 0) return aCmpBKey;
+        }
+
+        return a.item.id - b.item.id;
     }
 
     public findItem(search: string): string | ItemData {
