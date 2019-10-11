@@ -109,7 +109,7 @@ export default class Pickem {
     private bot: Discord.Client;
     private settings: SharedSettings;
     private esportsChannel: Discord.GuildChannel | null = null;
-    private currentMemberList: PickemUser[];
+    private currentMemberList: PickemUser[] = [];
 
     constructor(bot: Discord.Client, settings: SharedSettings) {
         this.bot = bot;
@@ -131,7 +131,10 @@ export default class Pickem {
                 }
             }, 1000);
 
-            await this.updateUserList();
+            const ids = this.settings.pickem.listId;
+            for (const id of ids) {
+                await this.updateUserList(String(id));
+            }
         });
     }
 
@@ -167,35 +170,19 @@ export default class Pickem {
         return (await data.json()) as PickemUserPoints[];
     }
 
-    public async updateUserList() {
-        const url = this.settings.pickem.leaderboardUrl.replace("{listId}", String(this.settings.pickem.listId));
+    public async updateUserList(listId: string) {
+        const url = this.settings.pickem.leaderboardUrl.replace("{listId}", listId);
         const data = await fetch(url);
         const leaderboard: PickemLeaderboard = await data.json();
-        const returnList: PickemUser[] = [];
 
         for (const entry of leaderboard.stageToRankings["both"]) {
-            returnList.push({ summonerName: entry.summonerName, id: entry.id });
+            const newItem = { summonerName: entry.summonerName, id: entry.id };
+            if (this.currentMemberList.indexOf(newItem) === -1) {
+                this.currentMemberList.push(newItem);
+            }
         }
 
-        this.currentMemberList = returnList;
         setTimeout(this.updateUserList.bind(this), this.settings.pickem.updateTimeout);
-    }
-
-    public async getMembersWithName(): Promise<PickemPick[]> {
-
-        const url = this.settings.pickem.leaderboardUrl.replace("{listId}", String(this.settings.pickem.listId));
-
-        const data = await fetch(url);
-        const leaderboard: PickemLeaderboard = await data.json();
-        const returnList: PickemPick[] = [];
-
-        for (const entry of leaderboard.stageToRankings["both"]) {
-            const group = await this.getGroupPicks(this.settings.pickem.worldsId, entry.id);
-            const bracket = await this.getBracketPicks(this.settings.pickem.worldsId, entry.id);
-            returnList.push({ group, bracket, summoner: { name: entry.summonerName, id: entry.id } });
-        }
-
-        return returnList;
     }
 
     public async printLeaderboard(channel: Discord.TextChannel) {
@@ -339,11 +326,6 @@ export default class Pickem {
         if (args.length === 0) {
             const bestPick = await this.getCorrectPickem();
             this.doPrint(message.channel as Discord.TextChannel, bestPick.group, bestPick.bracket);
-            return;
-        }
-
-        if (this.currentMemberList === undefined) {
-            message.channel.send(`We're updating the user-list, please retry this command in a bit..`);
             return;
         }
 
