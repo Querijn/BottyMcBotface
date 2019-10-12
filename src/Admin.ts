@@ -7,44 +7,48 @@ import prettyMs = require("pretty-ms");
 import joinArguments from "./JoinArguments";
 
 class TicketData {
+
+    public dateString: string;
+    public reason: string;
+
     constructor(reason: string) {
         this.reason = reason;
         this.dateString = new Date().toString();
     }
 
-    getDate() {
+    public getDate() {
         return new Date(this.dateString);
     }
-    
-    dateString: string;
-    reason: string;
-};
+}
 
 class MuteData {
+
+    public muterId: string;
+    public unmuteDateString: string;
+    public reason: string;
+
     constructor(muterId: string, reason: string, unmuteDate: Date) {
         this.muterId = muterId;
         this.reason = reason;
         this.unmuteDateString = unmuteDate.toString();
     }
 
-    getUnmuteDate() {
+    public getUnmuteDate() {
         return new Date(this.unmuteDateString);
     }
 
-    muterId: string;
-    unmuteDateString: string;
-    reason: string;
-};
+}
 
 class AdminData {
+
+    public tickets: { [userId: string]: TicketData[] };
+    public muted: { [userId: string]: MuteData | null; };
+
     constructor() {
         this.tickets = {};
         this.muted = {};
     }
-
-    tickets: { [userId: string]: TicketData[]};
-    muted: { [userId: string]: MuteData | null; };
-};
+}
 
 /**
  * Log handler.
@@ -92,7 +96,7 @@ export default class Admin {
             console.error(`Admin: Unexpected; moderators channel is not a text channel!`);
             return;
         }
-        
+
         let muteRole: Discord.Role | null = null;
         if (this.sharedSettings.admin.muteRoleId)
             muteRole = guild.roles.find("id", this.sharedSettings.admin.muteRoleId);
@@ -101,32 +105,99 @@ export default class Admin {
             muteRole = guild.roles.find("name", this.sharedSettings.admin.muteRoleName);
             if (!muteRole) {
                 console.error(`Admin: Unable to find the muted role!`);
-                return; 
+                return;
             }
 
             console.log("Mute role id = " + muteRole.id);
         }
         this.muteRole = muteRole;
-		
+
         this.adminChannel = adminChannel as Discord.TextChannel;
         console.log("Admin extension loaded.");
 
         for (const id in this.data.muted) {
             this.handleMuteData(id);
-		}
-		
-		this.bot.on("guildMemberAdd", (user: Discord.GuildMember) => {
-			this.handleMuteData(user.id);
-		});
+        }
+
+        this.bot.on("guildMemberAdd", (user: Discord.GuildMember) => {
+            this.handleMuteData(user.id);
+        });
+    }
+
+    public async onMute(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
+
+        const reason = joinArguments(args, separators);
+
+        const muteAddedFor = [];
+        for (const [id, member] of message.mentions.members) {
+
+            if (this.sharedSettings.commands.adminRoles.some(x => member.roles.has(x)))
+                continue;
+
+            muteAddedFor.push(await this.mute(message, member, reason));
+        }
+
+        if (muteAddedFor.length > 0) {
+            this.addTicket(message.mentions.members, null, `${message.author.username} muted ${muteAddedFor.join("/")} (message: ${reason})`);
+            this.replySecretMessage(message, `I have muted ${muteAddedFor.join("/")}.`);
+        }
+        else
+            this.replySecretMessage(message, `No one you mentioned can be muted.`);
+    }
+
+    public async onUnmute(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+
+        const unmutedUsers = [];
+        for (const [id, member] of message.mentions.members) {
+            const userName = await this.unmute(id);
+            if (userName) unmutedUsers.push(userName);
+        }
+
+        if (unmutedUsers.length === 0)
+            this.replySecretMessage(message, `No one you mentioned seems muted.`);
+    }
+
+    public async onTicket(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
+
+        let mentions = message.mentions.members;
+
+        if (args[0] === "add") {
+            this.addTicket(mentions, message, joinArguments(args, separators, 1));
+            return;
+        }
+
+        if (mentions.size === 0) {
+            mentions = new Discord.Collection<string, Discord.GuildMember>();
+            mentions.set(message.author.id, message.member);
+        }
+
+        const tickets: string[] = [];
+
+        const dateOptions = { year: "numeric", month: "long", day: "numeric" };
+        for (const [id, member] of mentions) {
+
+            if (!this.data.tickets[id])
+                continue;
+            const ticketData = this.data.tickets[id];
+
+            for (const ticket of ticketData)
+                tickets.push(`\`${new Date(ticket.dateString).toLocaleDateString("en-US", dateOptions)}\`: ${ticket.reason}`);
+        }
+
+        const ticketMessage = tickets.length > 0 ?
+            `I have the following tickets for ${mentions.map(u => u.user.username).join("/")}: \n${tickets.join("\n")}` :
+            `I have no tickets for ${mentions.map(u => u.user.username).join("/")}.`;
+
+        this.replySecretMessage(message, ticketMessage);
     }
 
     private async handleMuteData(id: string) {
 
-        let data = this.data.muted[id];
+        const data = this.data.muted[id];
         if (!data)
             return;
 
-        var diff = new Date(data.unmuteDateString).getTime() - new Date().getTime();
+        const diff = new Date(data.unmuteDateString).getTime() - new Date().getTime();
         if (diff < 0) {
             this.unmute(id);
             return;
@@ -142,24 +213,30 @@ export default class Admin {
     private async mute(message: Discord.Message, member: Discord.GuildMember, reason: string): Promise<string> {
         this.data.muted[member.id] = new MuteData(message.author.id, reason, new Date((new Date()).getTime() + this.sharedSettings.admin.muteTimeout));
         await member.addRole(this.muteRole);
-        
+
         this.handleMuteData(member.id);
         return member.user.username;
     }
 
-    private async unmute(id: string): Promise<string|null> {
+    private async unmute(id: string): Promise<string | null> {
 
         const data = this.data.muted[id];
         if (!data)
             return null;
 
         const muter = await this.muteRole.guild.fetchMember(data.muterId);
-        const member = await this.muteRole.guild.fetchMember(id);
-        await member.removeRole(this.muteRole);
-        console.log("Unmuted " + member.user.username);
+        const member = await this.bot.fetchUser(id);
+
+        try {
+            const serverUser = await this.muteRole.guild.fetchMember(id);
+            await serverUser.removeRole(this.muteRole);
+            console.log("Removed mute role from " + serverUser.user.username);
+        } catch (e) {
+            console.log(`${member.username} has left the server, so we are unable to remove their role`);
+        }
 
         if (this.adminChannel) {
-            this.adminChannel.send(`${muter}, I just unmuted ${member.user.username}.`);
+            this.adminChannel.send(`${muter}, I just unmuted ${member.username}.`);
         }
 
         if (this.muteTimers[id]) {
@@ -171,42 +248,9 @@ export default class Admin {
             this.data.muted[id] = null;
         }
 
-        return member.user.username;
+        return member.username;
     }
-    
-    public async onMute(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
 
-        const reason = joinArguments(args, separators);
-
-        const muteAddedFor = [];
-        for (const [ id, member ] of message.mentions.members) {
-            
-            if (this.sharedSettings.commands.adminRoles.some(x => member.roles.has(x)))
-                continue;
-
-            muteAddedFor.push(await this.mute(message, member, reason));
-        }
-
-        if (muteAddedFor.length > 0) {
-            this.addTicket(message.mentions.members, null, `${message.author.username} muted ${muteAddedFor.join("/")} (message: ${reason})`);
-            this.replySecretMessage(message, `I have muted ${muteAddedFor.join("/")}.`);
-        }
-        else 
-            this.replySecretMessage(message, `No one you mentioned can be muted.`);
-    }
-    
-    public async onUnmute(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-
-        const unmutedUsers = [];
-        for (const [ id, member ] of message.mentions.members) {
-            const userName = await this.unmute(id);
-            if (userName) unmutedUsers.push(userName);
-        }
-
-        if (unmutedUsers.length == 0)
-            this.replySecretMessage(message, `No one you mentioned seems muted.`);
-    }
-    
     private async replySecretMessage(message: Discord.Message, reply: string) {
 
         if (!this.adminChannel) {
@@ -220,50 +264,16 @@ export default class Admin {
         }
         else { // If redirected to another channel, mention the author
 
-            if (reply.charAt(0) != 'I' || reply.charAt(1) != ' ')
+            if (reply.charAt(0) !== "I" || reply.charAt(1) !== " ")
                 reply = reply.charAt(0).toLowerCase() + reply.substr(1);
             this.adminChannel.send(message.author + ", " + reply);
         }
     }
 
-    public async onTicket(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
-
-        let mentions = message.mentions.members;
-        
-        if (args[0] == 'add') {
-            this.addTicket(mentions, message, joinArguments(args, separators, 1));
-            return;
-        }
-
-        if (mentions.size == 0) {
-            mentions = new Discord.Collection<string, Discord.GuildMember>();
-            mentions.set(message.author.id, message.member);
-        }
-
-        let tickets: string[] = [];
-
-        const dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-        for (const [ id, member ] of mentions) {
-
-            if (!this.data.tickets[id])
-                continue;
-            const ticketData = this.data.tickets[id];
-
-            for (let ticket of ticketData)
-                tickets.push(`\`${new Date(ticket.dateString).toLocaleDateString("en-US", dateOptions)}\`: ${ticket.reason}`);
-        }
-
-        let ticketMessage = tickets.length > 0 ? 
-            `I have the following tickets for ${mentions.map(u => u.user.username).join("/")}: \n${tickets.join("\n")}` : 
-            `I have no tickets for ${mentions.map(u => u.user.username).join("/")}.`;
-
-        this.replySecretMessage(message, ticketMessage);
-    }
-
-    public async addTicket(users: Discord.Collection<string, Discord.GuildMember>, message: Discord.Message | null, reason: string) {
+    private async addTicket(users: Discord.Collection<string, Discord.GuildMember>, message: Discord.Message | null, reason: string) {
 
         const ticketAddedFor = [];
-        for (const [ id, member ] of users) {
+        for (const [id, member] of users) {
 
             if (!this.data.tickets[id])
                 this.data.tickets[id] = [];
