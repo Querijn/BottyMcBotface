@@ -316,7 +316,7 @@ export default class Pickem {
 
     public async onPickem(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
 
-        if (this.esportsChannel && message.channel.id !== this.esportsChannel.id) {
+        if (!(message.channel instanceof Discord.DMChannel) && this.esportsChannel && message.channel.id !== this.esportsChannel.id) {
             message.channel.send(`To avoid spoilers, this command is restricted to #${this.esportsChannel.name}.`);
             return;
         }
