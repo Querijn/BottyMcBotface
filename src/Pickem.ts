@@ -182,7 +182,7 @@ export default class Pickem {
             }
         }
 
-        setTimeout(this.updateUserList.bind(this), this.settings.pickem.updateTimeout);
+        setTimeout(this.updateUserList.bind(this, listId), this.settings.pickem.updateTimeout);
     }
 
     public async printLeaderboard(channel: Discord.TextChannel) {
