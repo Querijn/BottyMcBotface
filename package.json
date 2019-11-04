@@ -31,7 +31,6 @@
     "xregexp": "^4.2.0"
   },
   "devDependencies": {
-    "@types/chai": "^4.2.3",
     "@types/cheerio": "^0.22.8",
     "@types/mocha": "^5.2.7",
     "@types/node": "^8.0.22",
