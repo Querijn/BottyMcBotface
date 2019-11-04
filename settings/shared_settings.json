@@ -195,7 +195,7 @@
         "blankId": 4643536,
         "listId": [783467, 829304],
         "updateTimeout": 3600000,
-        "printMode": "GROUP"
+        "printMode": "BRACKET"
     },
     "spam": {
         "allowedUrls": [
