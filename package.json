@@ -14,7 +14,7 @@
   "license": "MIT",
   "dependencies": {
     "@types/fs-extra": "^5.0.4",
-    "bufferutil": "^3.0.0",
+    "bufferutil": "^4.0.0",
     "cheerio": "^1.0.0-rc.2",
     "crc-32": "^1.2.0",
     "discord.js": "11.3.2",
@@ -31,6 +31,7 @@
     "xregexp": "^4.2.0"
   },
   "devDependencies": {
+    "@types/chai": "^4.2.4",
     "@types/cheerio": "^0.22.8",
     "@types/mocha": "^5.2.7",
     "@types/node": "^8.0.22",

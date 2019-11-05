@@ -1,5 +1,7 @@
 # BottyMcBotface
 
+[![Build Status](https://travis-ci.org/pseudonym117/BottyMcBotface.svg?branch=master)](https://travis-ci.org/pseudonym117/BottyMcBotface)
+
 The Riot Games API Discord Bot. This is the bot that helps out with your questions regarding the Riot Games API. 
 
 ## Available commands
