@@ -75,6 +75,10 @@ export default class OfficeHours {
                 this.onQuestionList(message, isAdmin, args[0], args.slice(1));
                 return;
             }
+            else if (args[0] === "answer") {
+                this.onQuestionAnswer(message, isAdmin, args[0], args.slice(1), separators);
+                return;
+            }
         }
 
         this.storeQuestion(question, message, message.author, message.author.username);
@@ -138,6 +142,28 @@ export default class OfficeHours {
             const moderatorChannel = this.guild.channels.find("name", "moderators");
             if (moderatorChannel instanceof Discord.TextChannel) {
                 moderatorChannel.send(`${message.author.username} just removed question ${question.uuid} (by ${question.authorName}): \n>>> ${question.question}`);
+            }
+        }
+        else {
+            message.channel.send("Could not find this question!");
+        }
+    }
+
+    public onQuestionAnswer(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
+        const id = +args[0];
+        const officehoursChannel = this.guild.channels.find("name", "office-hours");
+        const question = this.data.questions.find(q => q.uuid === id);
+
+        if (question) {
+            if (officehoursChannel instanceof Discord.TextChannel) {
+                const answer = joinArguments(args, separators.slice(1), 1);
+                officehoursChannel.send(`${message.author.toString()} answered a question asked by ${question.authorMention} \n ${question.question}\n\nAnswer: ${answer}`);
+                this.data.questions = this.data.questions.filter(q => q.uuid !== id);
+
+                const moderatorChannel = this.guild.channels.find("name", "moderators");
+                if (moderatorChannel instanceof Discord.TextChannel) {
+                    moderatorChannel.send(`${message.author.username} just answered question ${question.uuid} (by ${question.authorName}): \n>>> ${question.question}`);
+                }
             }
         }
         else {
