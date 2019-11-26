@@ -196,6 +196,11 @@ export default class Admin {
         const data = this.data.muted[id];
         if (!data)
             return;
+        
+        const user = await this.bot.fetchUser(id);
+        if (user) {
+            await user.addRole(this.muteRole);
+        }
 
         const diff = new Date(data.unmuteDateString).getTime() - new Date().getTime();
         if (diff < 0) {
