@@ -199,9 +199,11 @@ export default class Admin {
         
         const user = await this.bot.fetchUser(id);
         if (user) {
-            await user.addRole(this.muteRole);
+            const guildmember = this.adminChannel!.guild.member(user);
+            if (guildmember) {
+                await guildmember.addRole(this.muteRole);
+            }
         }
-
         const diff = new Date(data.unmuteDateString).getTime() - new Date().getTime();
         if (diff < 0) {
             this.unmute(id);
