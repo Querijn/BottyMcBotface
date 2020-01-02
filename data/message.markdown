@@ -8,7 +8,8 @@ Here's some tips to help you on your way:
 3. The pins in the Riot API channel might hold some resources that are not on DDragon. If they're not in the pins, be sure to check out CommunityDragon; http://stelar7.no/cdragon/latest/
 4. I can help you find issues in your url, and also show you the results. Just paste any Riot API url and I will work my magic. Make sure that your key is not in the URL!
 5. You can check the status of the API with `!status`.
-6. Be sure to read the rules! #rules-faq
+6. You can follow the updates of the Github issues in #external-activity
+7. Be sure to read the rules! #rules-faq
 
 Finally, even though Riot Games doesn't endorse any libraries, we want you to be able to contact the developers of libraries. If you want to discuss something about a specific library, you can mention the developers of that library, if available. For example, you can mention the Cassiopeia devs with `@Cassiopeia devs`. This is **not** for debugging your application, but for discussions about the library itself. The available mentions are `@Cassiopeia devs`, `@Kayn devs` and `@Orianna devs`.
 
