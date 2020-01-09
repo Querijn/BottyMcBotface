@@ -38,7 +38,10 @@ export interface PageDifferPage {
 }
 
 export interface SharedSettings {
-    server: string;
+    server: {
+        guildId: string;
+        guruChannel: string;
+    };
 
     botty: PersonalSettings;
 

@@ -29,7 +29,7 @@ export default class VersionChecker {
     }
 
     private async onBot() {
-        const guild = this.bot.guilds.get(this.sharedSettings.server);
+        const guild = this.bot.guilds.get(this.sharedSettings.server.guildId);
         if (!guild) {
             console.error(`VersionChecker: Unable to find server with ID: ${this.sharedSettings.server}`);
             return;

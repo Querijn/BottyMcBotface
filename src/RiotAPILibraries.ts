@@ -134,7 +134,7 @@ export default class RiotAPILibraries {
         this.languageList = [];
         for (const language of languageNames) {
             const libraries = await this.getLibrariesForLanguage(language);
-            if (libraries.length == 0) continue;
+            if (libraries.length === 0) continue;
             this.languageList.push(language);
         }
 
@@ -172,7 +172,7 @@ export default class RiotAPILibraries {
         }
         const promises = libraryList.map(lib => this.describeAPILibrary(lib));
         const libraryDescriptions = (await Promise.all(promises))
-            .filter(l => l.valid && l.library) // Only valid ones
+            .filter(l => l.valid && l.library); // Only valid ones
 
         return libraryDescriptions;
     }

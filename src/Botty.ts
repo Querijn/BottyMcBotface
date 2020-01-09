@@ -101,7 +101,7 @@ export default class Botty {
     private onConnect() {
         console.log("Bot is logged in and ready.");
 
-        const guild = this.client.guilds.get(this.sharedSettings.server);
+        const guild = this.client.guilds.get(this.sharedSettings.server.guildId);
         if (!guild) {
             console.error(`Botty: Incorrect setting for the server: ${this.sharedSettings.server}`);
 

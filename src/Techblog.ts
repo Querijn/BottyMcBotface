@@ -22,10 +22,10 @@ export default class Techblog {
 
         this.bot = bot;
 
-        this.bot.on("ready", async() => {
+        this.bot.on("ready", async () => {
             if (!this.data.Last) this.data.Last = Date.now();
 
-            const guild = this.bot.guilds.get(this.sharedSettings.server);
+            const guild = this.bot.guilds.get(this.sharedSettings.server.guildId);
             if (!guild) {
                 console.error(`TechBlog: Unable to find server with ID: ${this.sharedSettings.server}`);
                 return;
