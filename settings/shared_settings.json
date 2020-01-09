@@ -51,7 +51,7 @@
         "muteTimeout": 86400000
     },
     "esports": {
-        "printChannel": "esports-spoilers",
+        "printChannel": "lol-esports",
         "updateTimeout": 18000000,
         "printToChannelTimeout": 43200000
     },
@@ -64,7 +64,7 @@
         "url": "https://engineering.riotgames.com/news/feed"
     },
     "keyFinder": {
-        "reportChannel": "moderators"
+        "reportChannel": "gurus"
     },
     "forum": {
         "checkInterval": 10000,
