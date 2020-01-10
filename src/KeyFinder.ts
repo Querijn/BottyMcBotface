@@ -1,6 +1,8 @@
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 
+import { clearTimeout, setTimeout } from "timers";
+
 import Discord = require("discord.js");
 import fetch from "node-fetch";
 
@@ -10,7 +12,7 @@ export default class KeyFinder {
     private bot: Discord.Client;
     private channel?: Discord.TextChannel = undefined;
 
-    private timeOut: number | null = null;
+    private timeOut: NodeJS.Timer | null = null;
 
     constructor(bot: Discord.Client, sharedSettings: SharedSettings, keyFile: string) {
         console.log("Requested KeyFinder extension..");
@@ -23,15 +25,15 @@ export default class KeyFinder {
 
         this.bot = bot;
 
-        this.bot.on("ready", async() => {
-            
-            const guild = this.bot.guilds.get(this.sharedSettings.server);
+        this.bot.on("ready", async () => {
+
+            const guild = this.bot.guilds.get(this.sharedSettings.server.guildId);
             if (guild == null) {
                 console.error(`KeyFinder: Unable to find server with ID: ${this.sharedSettings.server}`);
                 return;
             }
 
-            let channel = guild.channels.find("name", this.sharedSettings.keyFinder.reportChannel) as Discord.TextChannel;
+            const channel = guild.channels.find("name", this.sharedSettings.keyFinder.reportChannel) as Discord.TextChannel;
             if (channel == null) {
                 if (this.sharedSettings.botty.isProduction) {
                     console.error(`KeyFinder: Unable to find channel: ${this.sharedSettings.keyFinder.reportChannel}`);

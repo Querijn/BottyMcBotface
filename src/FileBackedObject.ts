@@ -1,5 +1,5 @@
 import fs = require("fs-extra");
-import path = require('path');
+import path = require("path");
 
 export function fileBackedObject<T>(location: string, backupLocation: string | null = null): T {
     const contents = fs.readFileSync(location, "utf8");
@@ -7,16 +7,16 @@ export function fileBackedObject<T>(location: string, backupLocation: string | n
 
     if (backupLocation)
         fs.ensureDirSync(path.dirname(backupLocation));
-        
+
     return generateProxy(obj, location, backupLocation);
 }
 
 export function isObject(item: any) {
-    return (item && typeof item === 'object' && !Array.isArray(item));
+    return (item && typeof item === "object" && !Array.isArray(item));
 }
-  
+
 export default function mergeDeep(target: any, source: any) {
-    let output = Object.assign({}, target);
+    const output = Object.assign({}, target);
     if (isObject(target) && isObject(source)) {
         Object.keys(source).forEach(key => {
             if (isObject(source[key])) {

@@ -1,5 +1,8 @@
 {
-    "server": "342988445498474498",
+    "server": {
+        "guildId": "342988445498474498",
+        "guruChannel": "gurus"
+    },
     "botty": {
         "discord": {
             "key": "",
@@ -51,7 +54,7 @@
         "muteTimeout": 86400000
     },
     "esports": {
-        "printChannel": "esports-spoilers",
+        "printChannel": "lol-esports",
         "updateTimeout": 18000000,
         "printToChannelTimeout": 43200000
     },
@@ -64,7 +67,7 @@
         "url": "https://engineering.riotgames.com/news/feed"
     },
     "keyFinder": {
-        "reportChannel": "moderators"
+        "reportChannel": "gurus"
     },
     "forum": {
         "checkInterval": 10000,
@@ -74,8 +77,7 @@
     "pageDiffer": {
         "checkInterval": 600000,
         "channel": "external-activity",
-        "pages": [
-            {
+        "pages": [{
                 "name": "Champion Update Schedule",
                 "ident": "202294884",
                 "type": "article"
@@ -86,7 +88,7 @@
                 "type": "page"
             }
         ],
-        "articleHost": "https://support.riotgames.com/api/v2/help_center/en-us/articles/{id}.json",
+        "articleHost": "https://support-leagueoflegends.riotgames.com/api/v2/help_center/en-us/articles/{id}.json",
         "embedImageUrl": "https://irule.at/riot/api/morello.png"
     },
     "info": {

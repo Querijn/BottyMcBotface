@@ -14,7 +14,7 @@ interface ESportsAPIReturnData {
 
 interface ESportsLeagueSchedule {
     league: string;
-    url: string;
+    url: string | undefined;
     time: string;
     teamA: string;
     teamB: string;
@@ -36,7 +36,7 @@ export default class ESportsAPI {
         bot.on("ready", async () => {
 
             const channel = this.settings.esports.printChannel;
-            const guild = this.bot.guilds.get(this.settings.server);
+            const guild = this.bot.guilds.get(this.settings.server.guildId);
             this.esportsChannel = guild!.channels.find("name", channel);
             if (this.esportsChannel == null) {
                 if (this.settings.botty.isProduction) {
@@ -173,7 +173,7 @@ export default class ESportsAPI {
 
                 output += `${game.teamA} vs ${game.teamB}, ${moment.fromNow()}\n`;
             }
-            
+
             if (output.trim().length === 0)
                 continue;
 

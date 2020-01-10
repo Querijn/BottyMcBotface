@@ -119,7 +119,7 @@ export default class Pickem {
             setTimeout(async () => {
                 const channel = this.settings.esports.printChannel;
 
-                const guild = this.bot.guilds.get(this.settings.server);
+                const guild = this.bot.guilds.get(this.settings.server.guildId);
                 this.esportsChannel = guild!.channels.find("name", channel);
                 if (this.esportsChannel == null) {
                     if (this.settings.botty.isProduction) {

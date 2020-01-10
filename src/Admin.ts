@@ -75,13 +75,13 @@ export default class Admin {
     }
 
     public async onBot() {
-        const guild = this.bot.guilds.get(this.sharedSettings.server);
+        const guild = this.bot.guilds.get(this.sharedSettings.server.guildId);
         if (!guild) {
             console.error(`Admin: Unable to find server with ID: ${this.sharedSettings.server}`);
             return;
         }
 
-        let adminChannel = guild.channels.find("name", "moderators");
+        let adminChannel = guild.channels.find("name", this.sharedSettings.server.guruChannel);
         if (!adminChannel) {
             if (this.sharedSettings.botty.isProduction) {
                 console.error(`Admin: Unable to find moderators channel!`);
@@ -196,7 +196,7 @@ export default class Admin {
         const data = this.data.muted[id];
         if (!data)
             return;
-        
+
         const user = await this.bot.fetchUser(id);
         if (user) {
             const guildmember = this.adminChannel!.guild.member(user);

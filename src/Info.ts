@@ -97,7 +97,7 @@ export default class Info {
         }
 
         // Remove reaction if we're on our server.
-        if (messageReaction.message.guild && messageReaction.message.guild.id === this.sharedSettings.server) {
+        if (messageReaction.message.guild && messageReaction.message.guild.id === this.sharedSettings.server.guildId) {
             messageReaction.remove(user);
         }
     }

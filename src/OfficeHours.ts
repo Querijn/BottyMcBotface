@@ -107,13 +107,13 @@ export default class OfficeHours {
         if (!isAdmin) {
 
             // Get user questions
-            const questions = this.data.questions.filter(q => q.authorId == message.author.id);
-            if (questions.length == 0)
+            const questions = this.data.questions.filter(q => q.authorId === message.author.id);
+            if (questions.length === 0)
                 return;
 
             // Get the question user requested to delete
-            const question = questions.find(q => q.uuid == id);
-            if (!question) {
+            const userQuestion = questions.find(q => q.uuid === id);
+            if (!userQuestion) {
                 let reply = "I'm sorry, but you must have entered the wrong ID. You own the following questions: \n";
 
                 for (const ownedQuestion of questions) {
@@ -134,7 +134,7 @@ export default class OfficeHours {
         if (question) {
             this.data.questions = this.data.questions.filter(q => q.uuid !== id);
             message.channel.send(this.sharedSettings.officehours.removedMessage);
-           
+
             const moderatorChannel = this.guild.channels.find("name", "moderators");
             if (moderatorChannel instanceof Discord.TextChannel) {
                 moderatorChannel.send(`${message.author.username} just removed question ${question.uuid} (by ${question.authorName}): \n>>> ${question.question}`);
@@ -164,7 +164,7 @@ export default class OfficeHours {
 
     private async setupOpenState() {
 
-        this.guild = this.bot.guilds.get(this.sharedSettings.server)!;
+        this.guild = this.bot.guilds.get(this.sharedSettings.server.guildId)!;
         if (!this.guild) {
             console.error(`Office-Hours: Unable to find server with ID: ${this.sharedSettings.server}`);
             return;

@@ -171,7 +171,7 @@ export default class AutoReact {
             "zdravo", "ćao", "hej",
             "dobro jutro", "jutro",
             "dobro veče", "laku noć",
-            "dobar dan", "dobar dan"
+            "dobar dan", "dobar dan",
         ];
 
         const endChars = [
