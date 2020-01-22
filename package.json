@@ -35,7 +35,7 @@
     "@types/cheerio": "^0.22.8",
     "@types/mocha": "^5.2.7",
     "@types/node": "^8.0.22",
-    "@types/node-fetch": "^1.6.7",
+    "@types/node-fetch": "^2.5.4",
     "@types/pretty-ms": "^3.0.0",
     "@types/xregexp": "^3.0.29",
     "chai": "^4.2.0",
