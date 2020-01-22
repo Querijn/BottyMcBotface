@@ -104,36 +104,36 @@ export default class VersionChecker {
 
             do {
                 nextMinor++;
-                patchNotes = `https://na.leagueoflegends.com/en/news/game-updates/patch/patch-${nextMajor.toString()}${nextMinor.toString()}-notes`;
+                patchNotes = `https://na.leagueoflegends.com/en/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
                 tries++;
 
                 let response = await fetch(patchNotes, {
                     method: "GET",
                 });
 
-                if (response.status === 200) {
+                if (response.status === 200 && response.redirected === false) {
                     lastNewValidMajor = nextMajor;
                     lastNewValidMinor = nextMinor;
                     validPatchNotes = patchNotes;
                     newPatch = true;
-                } else if (response.status === 404) {
+                } else if (response.status === 200 && response.redirected === true) {
                     // check for change in season
                     nextMajor++;
                     nextMinor = 1;
 
-                    patchNotes = `https://na.leagueoflegends.com/en/news/game-updates/patch/patch-${nextMajor.toString()}${nextMinor.toString()}-notes`;
+                    patchNotes = `https://na.leagueoflegends.com/en/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
                     tries++;
 
                     response = await fetch(patchNotes, {
                         method: "GET",
                     });
 
-                    if (response.status === 200) {
+                    if (response.status === 200 && response.redirected === false) {
                         lastNewValidMajor = nextMajor;
                         lastNewValidMinor = nextMinor;
                         validPatchNotes = patchNotes;
                         newPatch = true;
-                    } else if (response.status === 404) break;
+                    } else if (response.status === 200 && response.redirected === true) break;
                 }
             }
             while (tries < 100);
