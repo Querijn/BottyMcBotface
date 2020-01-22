@@ -104,36 +104,36 @@ export default class VersionChecker {
 
             do {
                 nextMinor++;
-                patchNotes = `https://na.leagueoflegends.com/en/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
+                patchNotes = `https://na.leagueoflegends.com/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
                 tries++;
 
                 let response = await fetch(patchNotes, {
                     method: "GET",
                 });
 
-                if (response.status === 200 && response.redirected === false) {
+                if (response.status === 200) {
                     lastNewValidMajor = nextMajor;
                     lastNewValidMinor = nextMinor;
                     validPatchNotes = patchNotes;
                     newPatch = true;
-                } else if (response.status === 200 && response.redirected === true) {
+                } else if (response.status === 404) {
                     // check for change in season
                     nextMajor++;
                     nextMinor = 1;
 
-                    patchNotes = `https://na.leagueoflegends.com/en/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
+                    patchNotes = `https://na.leagueoflegends.com/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
                     tries++;
 
                     response = await fetch(patchNotes, {
                         method: "GET",
                     });
 
-                    if (response.status === 200 && response.redirected === false) {
+                    if (response.status === 200) {
                         lastNewValidMajor = nextMajor;
                         lastNewValidMinor = nextMinor;
                         validPatchNotes = patchNotes;
                         newPatch = true;
-                    } else if (response.status === 200 && response.redirected === true) break;
+                    } else if (response.status === 404) break;
                 }
             }
             while (tries < 100);
