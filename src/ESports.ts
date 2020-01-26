@@ -20,6 +20,46 @@ interface ESportsLeagueSchedule {
     teamB: string;
 }
 
+interface EsportsAPILeagueResponseEntry {
+    id: string;
+    slug: string;
+    name: string;
+    region: string;
+    image: string;
+    priority: number;
+}
+
+interface EsportsAPILeagueResponse {
+    data: {
+        leagues: EsportsAPILeagueResponseEntry[];
+    };
+}
+
+interface EsportsAPIEventListItem {
+    startTime: string;
+
+    match: {
+        teams: {
+            code: string;
+            image: string;
+        }[];
+    };
+
+    league: {
+        id: string;
+        slug: string;
+        name: string;
+    };
+}
+
+interface EsportsAPIEventListResponse {
+    data: {
+        esports: {
+            events: EsportsAPIEventListItem[];
+        };
+    };
+}
+
 export default class ESportsAPI {
     private bot: Discord.Client;
     private settings: SharedSettings;
@@ -47,7 +87,7 @@ export default class ESportsAPI {
                 }
             }
 
-            await this.loadData();
+            await this.loadData2020();
             this.postInfo(true);
         });
     }
@@ -186,6 +226,50 @@ export default class ESportsAPI {
         channel.send({ embed });
     }
 
+    private async loadData2020() {
+
+        const leagueLists = await (await fetch("https://esports-api.lolesports.com/persisted/gw/getLeagues?hl=en-US", {
+            headers: { "x-api-key": "0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z" },
+        })).json() as EsportsAPILeagueResponse;
+
+        const leagueIds = leagueLists.data.leagues.map(l => l.id).reduce((prev, next) => prev + "," + next, "");
+
+        const events = await (await fetch(`https://esports-api.lolesports.com/persisted/gw/getEventList?hl=en-US&leagueId=${leagueIds}`, {
+            headers: { "x-api-key": "0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z" },
+        })).json() as EsportsAPIEventListResponse;
+
+        const schedule: Map<string, Map<string, ESportsLeagueSchedule[]>> = new Map();
+        events.data.esports.events.forEach(e => {
+            const gameData: ESportsLeagueSchedule = {
+                league: e.league.slug,
+                url: e.league.slug,
+                time: e.startTime,
+                teamA: e.match.teams[0].code,
+                teamB: e.match.teams[1].code,
+            };
+
+            const dateSplit = e.startTime.split("-");
+            const realDate = `${dateSplit[0]} ${dateSplit[1]} ${dateSplit[2].split("T")[0]}`;
+
+            if (!schedule.has(realDate)) {
+                schedule.set(realDate, new Map());
+            }
+
+            if (!schedule.get(realDate)!.has(e.league.name)) {
+                schedule.get(realDate)!.set(e.league.name, []);
+            }
+
+            schedule.get(realDate)!.get(e.league.name)!.push(gameData);
+        });
+
+        this.schedule = schedule;
+        if (this.loadDataTimeOut) {
+            clearTimeout(this.loadDataTimeOut);
+            this.loadDataTimeOut = null;
+        }
+        this.loadDataTimeOut = setTimeout(this.loadData2020.bind(this), this.settings.esports.updateTimeout);
+    }
+
     // this can also check for older games by using resultsHtml instead of fixures
     private async loadData() {
         // pull data
@@ -265,6 +349,6 @@ export default class ESportsAPI {
 
     private getUrlByLeague(leagueName: ESportsLeagueSchedule) {
 
-        return "https://eu.lolesports.com" + leagueName.url;
+        return "https://watch.lolesports.com/schedule?leagues=" + leagueName.url;
     }
 }
