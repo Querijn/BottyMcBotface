@@ -118,6 +118,7 @@ export default class PageDiffer {
             const curTime = Date.now();
             fs.writeFileSync("www/" + folderName + curTime + "_info.json", JSON.stringify(page));
             fs.writeFileSync("www/" + folderName + curTime + ".html", body);
+            fs.writeFileSync("www/" + folderName + curTime + "_debug.txt", diffBody);
             fs.writeFileSync("www/" + folderName + "index.json", JSON.stringify(fs.readdirSync("www/" + folderName).filter(f => f.endsWith(".html")).map(f => f.replace(/.html/g, ""))));
             this.data.hashes[page.type + page.ident] = hash;
 
