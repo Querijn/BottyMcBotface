@@ -7,6 +7,7 @@ import { SharedSettings } from "./SharedSettings";
 export interface VersionCheckerData {
     latestGameVersion: string;
     latestDataDragonVersion: string;
+    latestNewsPost: string;
 }
 
 export default class VersionChecker {
@@ -87,6 +88,42 @@ export default class VersionChecker {
         }
     }
 
+    private async updateGameVersion2020() {
+
+        const jsonUrl = "https://lolstatic-a.akamaihd.net/frontpage/apps/prod/harbinger-l10-website/en-us/master/en-us/page-data/news/game-updates/page-data.json";
+        const response = await fetch(jsonUrl);
+        const data = await response.json();
+
+        const sections = data["result"]["pageContext"]["data"]["sections"];
+        const articles = sections[0]["props"]["articles"];
+
+        for (const article of articles) {
+            if (article.title === this.data.latestNewsPost) {
+                return;
+            }
+
+            // this should filter out TFT notes, since they start with Teamfight Tactics.. (maybe not wanted?)
+            if (!article.title.startsWith("Patch")) {
+                return;
+            }
+
+            this.data.latestNewsPost = article.title;
+            this.data.latestGameVersion = article.title.split("atch ")[1].split(" notes")[0];
+
+            const urlBase = "https://na.leagueoflegends.com/en-us/";
+            const validPatchNotes = urlBase + article.link.url;
+
+            const embed = new Discord.RichEmbed()
+            .setColor(0xf442e5)
+            .setTitle("New League of Legends version!")
+            .setDescription(`Version ${this.data.latestGameVersion} of League of Legends has posted its patch notes. You can expect the game to update soon.\n\nYou can find the notes here:\n${validPatchNotes}`)
+            .setURL(validPatchNotes)
+            .setThumbnail(this.sharedSettings.versionChecker.gameThumbnail);
+
+            this.channel.send({ embed });
+        }
+    }
+
     private async updateGameVersion() {
         try {
             const currentVersionArray = this.data.latestGameVersion.split(".");
@@ -157,7 +194,7 @@ export default class VersionChecker {
 
     private async onUpdate() {
         await this.updateDataDragonVersion();
-        await this.updateGameVersion();
+        await this.updateGameVersion2020();
 
         setTimeout(this.onUpdate.bind(this), this.sharedSettings.versionChecker.checkInterval);
     }
