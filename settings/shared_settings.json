@@ -182,7 +182,7 @@
     "endpoint": {
         "updateInterval": 86400,
         "timeOutDuration": 10800000,
-        "baseUrl": "https://developer.riotgames.com/api-methods/#",
+        "baseUrl": "https://developer.riotgames.com/apis#",
         "maxDistance": 3,
         "aliases": {
             "lol-status-v4": [
