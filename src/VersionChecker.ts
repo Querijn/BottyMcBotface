@@ -107,33 +107,36 @@ export default class VersionChecker {
                 patchNotes = `https://na.leagueoflegends.com/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
                 tries++;
 
-                let response = await fetch(patchNotes, {
+                let response = await fetch(`https://lolstatic-a.akamaihd.net/frontpage/apps/prod/harbinger-l10-website/en-us/production/en-us/page-data/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/page-data.json`, {
                     method: "GET",
                 });
 
-                if (response.status === 200) {
+                if (response.ok) {
                     lastNewValidMajor = nextMajor;
                     lastNewValidMinor = nextMinor;
                     validPatchNotes = patchNotes;
                     newPatch = true;
-                } else if (response.status === 404) {
-                    // check for change in season
+                }
+                else { // check for change in season
                     nextMajor++;
                     nextMinor = 1;
 
                     patchNotes = `https://na.leagueoflegends.com/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
                     tries++;
 
-                    response = await fetch(patchNotes, {
+                    response = await fetch(`https://lolstatic-a.akamaihd.net/frontpage/apps/prod/harbinger-l10-website/en-us/production/en-us/page-data/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/page-data.json`, {
                         method: "GET",
                     });
 
-                    if (response.status === 200) {
+                    if (response.ok) {
                         lastNewValidMajor = nextMajor;
                         lastNewValidMinor = nextMinor;
                         validPatchNotes = patchNotes;
                         newPatch = true;
-                    } else if (response.status === 404) break;
+                    }
+                    else {
+                        break;
+                    }
                 }
             }
             while (tries < 100);
