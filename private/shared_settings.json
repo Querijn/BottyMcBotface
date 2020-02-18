@@ -1,5 +1,8 @@
 {
-    "server": "342988445498474498",
+    "server": {
+        "guildId": "342988445498474498",
+        "guruChannel": "gurus"
+    },
     "botty": {
         "discord": {
             "key": "",
