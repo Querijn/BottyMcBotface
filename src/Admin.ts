@@ -129,8 +129,8 @@ export default class Admin {
         const reason = joinArguments(args, separators);
 
         const muteAddedFor = [];
-        for (const [id, member] of message.mentions.members) {
-
+        for (const [id, cachedMember] of message.mentions.members) {
+            const member = await this.muteRole.guild.fetchMember(id);
             if (this.sharedSettings.commands.adminRoles.some(x => member.roles.has(x)))
                 continue;
 
@@ -231,7 +231,6 @@ export default class Admin {
         if (!data)
             return null;
 
-        const muter = await this.muteRole.guild.fetchMember(data.muterId);
         const member = await this.bot.fetchUser(id);
 
         try {
@@ -243,6 +242,7 @@ export default class Admin {
         }
 
         if (this.adminChannel) {
+            const muter = await this.muteRole.guild.fetchMember(data.muterId);
             this.adminChannel.send(`${muter}, I just unmuted ${member.username}.`);
         }
 
@@ -273,7 +273,7 @@ export default class Admin {
 
             if (reply.charAt(0) !== "I" || reply.charAt(1) !== " ")
                 reply = reply.charAt(0).toLowerCase() + reply.substr(1);
-            this.adminChannel.send(message.author + ", " + reply);
+            this.adminChannel.send(message.author.username + ", " + reply);
         }
     }
 
