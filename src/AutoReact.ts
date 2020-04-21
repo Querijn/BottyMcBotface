@@ -84,7 +84,7 @@ export default class AutoReact {
         }
 
         // Otherwise use our custom ones
-        const emoji = message.guild.emojis.filter((x: Discord.Emoji) => x.name.includes("thinking")).random();
+        const emoji = message.guild.emojis.filter((x: Discord.Emoji) => this.isThinkingEmojiName(x.name)).random();
         if (emoji) {
             message.react(emoji);
             return;
@@ -196,11 +196,15 @@ export default class AutoReact {
 
         message.react(this.greetingEmoji);
     }
+    
+    private isThinkingEmojiName(emojiName) {
+        return emojiName.toLowerCase().includes("think") || emojiName.toLowerCase().includes("thonk");
+    }
 
     private refreshThinkingEmojis() {
         const guilds = this.bot.guilds.array();
         for (const guild of guilds) {
-            const emojiSet = guild.emojis.filter((x: Discord.Emoji) => x.name.includes("thinking"));
+            const emojiSet = guild.emojis.filter((x: Discord.Emoji) => this.isThinkingEmojiName(x.name));
             this.thinkingEmojis = this.thinkingEmojis.concat(emojiSet.array());
         }
     }
