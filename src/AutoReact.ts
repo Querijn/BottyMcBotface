@@ -197,7 +197,7 @@ export default class AutoReact {
         message.react(this.greetingEmoji);
     }
     
-    private isThinkingEmojiName(emojiName) {
+    private isThinkingEmojiName(emojiName: string) {
         return emojiName.toLowerCase().includes("think") || emojiName.toLowerCase().includes("thonk");
     }
 
