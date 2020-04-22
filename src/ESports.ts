@@ -87,7 +87,7 @@ export default class ESportsAPI {
                 }
             }
 
-            await this.loadData2020();
+            await this.loadData();
             this.postInfo(true);
         });
     }
@@ -226,8 +226,7 @@ export default class ESportsAPI {
         channel.send({ embed });
     }
 
-    private async loadData2020() {
-
+    private async loadData() {
         const leagueLists = await (await fetch("https://esports-api.lolesports.com/persisted/gw/getLeagues?hl=en-US", {
             headers: { "x-api-key": "0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z" },
         })).json() as EsportsAPILeagueResponse;
@@ -268,83 +267,6 @@ export default class ESportsAPI {
             this.loadDataTimeOut = null;
         }
         this.loadDataTimeOut = setTimeout(this.loadData2020.bind(this), this.settings.esports.updateTimeout);
-    }
-
-    // this can also check for older games by using resultsHtml instead of fixures
-    private async loadData() {
-        // pull data
-        const data = await fetch("https://eu.lolesports.com/en/api/widget/schedule?timezone=UTC&slug=all");
-        const html = (await data.json() as ESportsAPIReturnData).fixturesHtml;
-        const schedule: Map<string, Map<string, ESportsLeagueSchedule[]>> = new Map();
-
-        // for each date
-        const asHtml = CheerioAPI.load(html);
-        const parents = asHtml.root().find(".schedule__row-group");
-        let currentYear = new Date().getFullYear();
-        let currentMonth = new Date().getMonth() + 1;
-        parents.each((_, dayGroup) => {
-            // the current date
-            const dayRoot = CheerioAPI.load(dayGroup).root();
-            const date = dayRoot.find(".schedule__row--date").find("h2").text().split(" ");
-
-            // get month number from text
-            const gameMonth = new Date(`${date[1]} ${date[2]}`).getMonth() + 1;
-            if (gameMonth < currentMonth) {
-                currentMonth = gameMonth;
-                currentYear++;
-            }
-
-            const realDate = `${currentYear} ${gameMonth} ${date[1]}`;
-            schedule.set(realDate, new Map());
-
-            // for each league
-            const titles = dayRoot.find(".schedule__row--title");
-            for (let index = 0; index < titles.length; index++) {
-                const titleRow = titles.get(index);
-                const tableRow = titleRow.next;
-
-                // league title
-                const titleRoot = CheerioAPI.load(titleRow).root();
-                const title = titleRoot.find("h3 a").text();
-                const url = titleRoot.find("h3 a").attr("href");
-                schedule.get(realDate)!.set(title, []);
-
-                // league games
-                const tableRoot = CheerioAPI.load(tableRow).root();
-                const games = tableRoot.find(".schedule__table-row");
-
-                // for each game
-                for (let gameIndex = 0; gameIndex < games.length; gameIndex++) {
-                    const gameRow = games.get(gameIndex);
-                    const gameRoot = CheerioAPI.load(gameRow).root();
-
-                    // game start time
-                    const start = gameRoot.find(".schedule__table-cell--time .time").last().text().trim();
-                    const timestamp = realDate + ` ${start}`;
-
-                    // teams
-                    const content = gameRoot.find(".schedule__table-cell--content .team");
-                    const teamA = content.first().text();
-                    const teamB = content.last().text();
-
-                    const gameData: ESportsLeagueSchedule = {
-                        league: title,
-                        url,
-                        time: timestamp,
-                        teamA,
-                        teamB,
-                    };
-                    schedule.get(realDate)!.get(title)!.push(gameData);
-                }
-            }
-        });
-        this.schedule = schedule;
-
-        if (this.loadDataTimeOut) {
-            clearTimeout(this.loadDataTimeOut);
-            this.loadDataTimeOut = null;
-        }
-        this.loadDataTimeOut = setTimeout(this.loadData.bind(this), this.settings.esports.updateTimeout);
     }
 
     private getUrlByLeague(leagueName: ESportsLeagueSchedule) {
