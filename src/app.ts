@@ -22,7 +22,6 @@ import { APISchema } from "./ApiSchema";
 import { CommandList } from "./CommandController";
 import { overrideFileBackedObject, fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
-import TicTacToe from "./games/TicTacToe";
 import SpamKiller from "./SpamKiller";
 import Admin from "./Admin";
 import GameData from "./GameData";
@@ -38,7 +37,6 @@ const apiSchema = new APISchema(sharedSettings);
 const joinMessaging = new JoinMessaging(bot.client, sharedSettings, controller);
 const logger = new Logger(bot.client, sharedSettings);
 const keyFinder = new KeyFinder(bot.client, sharedSettings, "data/riot_keys.json");
-// const forum = new ForumReader(bot.client, sharedSettings, "data/forum_data.json", keyFinder);
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
 const apiUrlInterpreter = new ApiUrlInterpreter(bot.client, sharedSettings, apiSchema);
 const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
@@ -52,7 +50,6 @@ const esports = new ESportsAPI(bot.client, sharedSettings);
 const pickem = new Pickem(bot.client, sharedSettings);
 const endpoint = new Endpoint(sharedSettings, "data/endpoints.json");
 const pageDiffer = new PageDiffer(bot.client, sharedSettings, "data/page_differ.json");
-const ttt = new TicTacToe(bot.client, "data/ttt_scores.json");
 const admin = new Admin(bot.client, sharedSettings, "data/admin_data.json");
 const spamKiller = new SpamKiller(bot.client, sharedSettings);
 const gameData = new GameData(bot.client, sharedSettings);
@@ -66,9 +63,6 @@ controller.registerCommand(commandList.botty.restart, bot.onRestart.bind(bot));
 
 // gamedata commands
 controller.registerCommand(commandList.gamedata.lookup, gameData.onLookup.bind(gameData));
-
-// TTT commands
-controller.registerCommand(commandList.games.ttt, ttt.onInvite.bind(ttt));
 
 // Admin commands
 controller.registerCommand(commandList.admin.unmute, admin.onUnmute.bind(admin));

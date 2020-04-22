@@ -38,7 +38,6 @@ The Riot Games API Discord Bot. This is the bot that helps out with your questio
 - **JoinMessaging**: Sends a message on join to new users so that they can get started right away.
 - **Logger**: A simple module that hooks console.log, warning and error so that we get any errors the bot outputs without having to check out the terminal it is running on.
 - **KeyFinder**: Scans messages for keys, and then keeps track of them. 
-- **ForumReader**: Updates #external-activity with posts from the forum.
 - **Techblog**: Updates #external-activity with posts on the Tech Blog.
 - **ApiUrlInterpreter**: Scans for API Urls and tries identifying issues. Otherwise, posts what the result of that API call would be.
 - **VersionChecker**: Checks out if League of Legends or DDragon has updated to a new version. If so, posts in #external-activity.
