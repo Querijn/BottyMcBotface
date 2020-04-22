@@ -202,7 +202,7 @@ export default class GameData {
     }
 
     public buildEmbed(rawData: EmbeddableDatum) {
-        const embed = new Discord.RichEmbed();
+        const embed = new Discord.MessageEmbed();
         switch (rawData.type) {
             case "ChampionData": {
                 const imageString = `https://cdn.communitydragon.org/latest/champion/${rawData.id}/square`;

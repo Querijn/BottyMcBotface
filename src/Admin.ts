@@ -74,21 +74,23 @@ export default class Admin {
         this.bot.on("ready", this.onBot.bind(this));
     }
 
+    public get channel() { return this.adminChannel; }
+
     public async onBot() {
-        const guild = this.bot.guilds.get(this.sharedSettings.server.guildId);
+        const guild = this.bot.guilds.cache.get(this.sharedSettings.server.guildId);
         if (!guild) {
             console.error(`Admin: Unable to find server with ID: ${this.sharedSettings.server}`);
             return;
         }
 
-        let adminChannel = guild.channels.find("name", this.sharedSettings.server.guruChannel);
+        let adminChannel = guild.channels.cache.find(c => c.name == this.sharedSettings.server.guruChannel);
         if (!adminChannel) {
             if (this.sharedSettings.botty.isProduction) {
                 console.error(`Admin: Unable to find moderators channel!`);
                 return;
             }
             else {
-                adminChannel = await guild!.createChannel("moderators", "text");
+                adminChannel = await guild.channels.create(this.sharedSettings.server.guruChannel, { type: "text" });
             }
         }
 
@@ -97,12 +99,12 @@ export default class Admin {
             return;
         }
 
-        let muteRole: Discord.Role | null = null;
+        let muteRole: Discord.Role | undefined;
         if (this.sharedSettings.admin.muteRoleId)
-            muteRole = guild.roles.find("id", this.sharedSettings.admin.muteRoleId);
+            muteRole = guild.roles.cache.get(this.sharedSettings.admin.muteRoleId);
 
         if (!muteRole) {
-            muteRole = guild.roles.find("name", this.sharedSettings.admin.muteRoleName);
+            muteRole = guild.roles.cache.find((r) => r.name == this.sharedSettings.admin.muteRoleName);
             if (!muteRole) {
                 console.error(`Admin: Unable to find the muted role!`);
                 return;
@@ -129,23 +131,31 @@ export default class Admin {
         const reason = joinArguments(args, separators);
 
         const muteAddedFor = [];
-        for (const [id, cachedMember] of message.mentions.members) {
-            const member = await this.muteRole.guild.fetchMember(id);
-            if (this.sharedSettings.commands.adminRoles.some(x => member.roles.has(x)))
-                continue;
 
-            muteAddedFor.push(await this.mute(message, member, reason));
+        if (message.mentions.members) {
+            for (const [id, cachedMember] of message.mentions.members) {
+                const member = await this.muteRole.guild.members.fetch(id);
+                if (this.sharedSettings.commands.adminRoles.some(x => member.roles.cache.has(x)))
+                    continue;
+
+                muteAddedFor.push(await this.mute(message, member, reason));
+            }
         }
 
         if (muteAddedFor.length > 0) {
-            this.addTicket(message.mentions.members, null, `${message.author.username} muted ${muteAddedFor.join("/")} (message: ${reason})`);
+            const mentions = message.mentions.members || new Discord.Collection<string, Discord.GuildMember>();
+            this.addTicket(mentions, null, `${message.author.username} muted ${muteAddedFor.join("/")} (message: ${reason})`);
             this.replySecretMessage(message, `I have muted ${muteAddedFor.join("/")}.`);
         }
-        else
+        else {
             this.replySecretMessage(message, `No one you mentioned can be muted.`);
+        }
     }
 
     public async onUnmute(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+
+        if (message.mentions.members == null)
+            return;
 
         const unmutedUsers = [];
         for (const [id, member] of message.mentions.members) {
@@ -160,13 +170,15 @@ export default class Admin {
     public async onTicket(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
 
         let mentions = message.mentions.members;
+        if (mentions == null)
+            return;
 
         if (args[0] === "add") {
             this.addTicket(mentions, message, joinArguments(args, separators, 1));
             return;
         }
 
-        if (mentions.size === 0) {
+        if (mentions.size === 0 && message.member) {
             mentions = new Discord.Collection<string, Discord.GuildMember>();
             mentions.set(message.author.id, message.member);
         }
@@ -197,11 +209,11 @@ export default class Admin {
         if (!data)
             return;
 
-        const user = await this.bot.fetchUser(id);
+        const user = await this.bot.users.fetch(id);
         if (user) {
             const guildmember = this.adminChannel!.guild.member(user);
             if (guildmember) {
-                await guildmember.addRole(this.muteRole);
+                await guildmember.roles.add(this.muteRole);
             }
         }
         const diff = new Date(data.unmuteDateString).getTime() - new Date().getTime();
@@ -219,7 +231,7 @@ export default class Admin {
 
     private async mute(message: Discord.Message, member: Discord.GuildMember, reason: string): Promise<string> {
         this.data.muted[member.id] = new MuteData(message.author.id, reason, new Date((new Date()).getTime() + this.sharedSettings.admin.muteTimeout));
-        await member.addRole(this.muteRole);
+        await member.roles.add(this.muteRole);
 
         this.handleMuteData(member.id);
         return member.user.username;
@@ -231,18 +243,18 @@ export default class Admin {
         if (!data)
             return null;
 
-        const member = await this.bot.fetchUser(id);
+        const member = await this.bot.users.fetch(id);
 
         try {
-            const serverUser = await this.muteRole.guild.fetchMember(id);
-            await serverUser.removeRole(this.muteRole);
+            const serverUser = await this.muteRole.guild.members.fetch(id);
+            await serverUser.roles.remove(this.muteRole);
             console.log("Removed mute role from " + serverUser.user.username);
         } catch (e) {
             console.log(`${member.username} has left the server, so we are unable to remove their role`);
         }
 
         if (this.adminChannel) {
-            const muter = await this.muteRole.guild.fetchMember(data.muterId);
+            const muter = await this.muteRole.guild.members.fetch(data.muterId);
             this.adminChannel.send(`${muter}, I just unmuted ${member.username}.`);
         }
 

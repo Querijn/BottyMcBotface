@@ -23,14 +23,14 @@ export default class AutoReact {
         this.ignoreUsers = fileBackedObject(ignoreFile);
         console.log("Successfully loaded ignore reaction file.");
 
-        this.refreshThinkingEmojis();
-
         this.bot.on("ready", this.onConnect.bind(this));
         this.bot.on("message", this.onMessage.bind(this));
     }
 
     public onConnect() {
-        const emoji = this.bot.emojis.get(this.sharedSettings.autoReact.emoji);
+        this.refreshThinkingEmojis();
+        
+        const emoji = this.bot.emojis.cache.get(this.sharedSettings.autoReact.emoji);
         if (emoji instanceof Discord.Emoji) {
             this.greetingEmoji = emoji;
             this.bot.on("message", this.onGreeting.bind(this));
@@ -84,7 +84,7 @@ export default class AutoReact {
         }
 
         // Otherwise use our custom ones
-        const emoji = message.guild.emojis.filter((x: Discord.Emoji) => this.isThinkingEmojiName(x.name)).random();
+        const emoji = message.guild!.emojis.cache.filter((x: Discord.Emoji) => this.isThinkingEmojiName(x.name)).random();
         if (emoji) {
             message.react(emoji);
             return;
@@ -194,7 +194,7 @@ export default class AutoReact {
             return;
         }
 
-        message.react(this.greetingEmoji);
+        message.react(`${this.greetingEmoji.id}`);
     }
     
     private isThinkingEmojiName(emojiName: string) {
@@ -202,10 +202,6 @@ export default class AutoReact {
     }
 
     private refreshThinkingEmojis() {
-        const guilds = this.bot.guilds.array();
-        for (const guild of guilds) {
-            const emojiSet = guild.emojis.filter((x: Discord.Emoji) => this.isThinkingEmojiName(x.name));
-            this.thinkingEmojis = this.thinkingEmojis.concat(emojiSet.array());
-        }
+        this.thinkingEmojis = this.bot.emojis.cache.filter((x: Discord.Emoji) => this.isThinkingEmojiName(x.name)).array();
     }
 }

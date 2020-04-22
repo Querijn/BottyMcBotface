@@ -28,9 +28,6 @@ export default class Botty {
             .on("error", console.error)
             .on("warn", console.warn)
             // .on("debug", console.log)
-            .on("disconnect", () => console.log("Disconnected!"))
-            .on("reconnecting", () => console.log("Reconnecting..."))
-            .on("connect", () => console.log("Connected."))
             .on("ready", this.onConnect.bind(this));
 
         this.initListeners();
@@ -67,7 +64,7 @@ export default class Botty {
         this.client.on("messageDelete", (message: Discord.Message) => {
 
             if (message.author.bot) return; // Ignore bot in general
-            if (message.channel.type === "dm" || message.channel.type === "group") return; // Don't output DMs
+            if (message.channel.type === "dm") return; // Don't output DMs
 
             console.log(`${message.author.username}'s message in ${message.channel} was deleted. Contents: \n${message.cleanContent}\n`);
         });
@@ -76,7 +73,7 @@ export default class Botty {
 
             if (levenshteinDistance(oldMessage.content, newMessage.content) === 0) return; // To prevent page turning and embed loading to appear in changelog
             if (oldMessage.author.bot) return; // Ignore bot in general
-            if (oldMessage.channel.type === "dm" || oldMessage.channel.type === "group") return; // Don't output DMs
+            if (oldMessage.channel.type === "dm") return; // Don't output DMs
 
             console.log(`${oldMessage.author.username}'s message in ${oldMessage.channel} was changed from: \n${oldMessage.cleanContent}\n\nTo:\n${newMessage.cleanContent}`);
         });
@@ -101,11 +98,11 @@ export default class Botty {
     private onConnect() {
         console.log("Bot is logged in and ready.");
 
-        const guild = this.client.guilds.get(this.sharedSettings.server.guildId);
+        const guild = this.client.guilds.cache.get(this.sharedSettings.server.guildId);
         if (!guild) {
             console.error(`Botty: Incorrect setting for the server: ${this.sharedSettings.server}`);
 
-            const guilds = this.client.guilds.array().map(g => ` - ${g.name} (${g.id})\n`);
+            const guilds = this.client.guilds.cache.map(g => ` - ${g.name} (${g.id})\n`);
             console.error(`The available guilds are:\n${guilds}`);
             return;
         }

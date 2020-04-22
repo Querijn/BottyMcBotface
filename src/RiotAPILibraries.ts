@@ -198,7 +198,7 @@ export default class RiotAPILibraries {
             return;
         }
 
-        const embed = new Discord.RichEmbed({ title: `List of libraries for ${language}:` });
+        const embed = new Discord.MessageEmbed({ title: `List of libraries for ${language}:` });
         for (const desc of libraryDescriptions) {
             if (!desc.library) {
                 // https://github.com/Microsoft/TypeScript/issues/18562

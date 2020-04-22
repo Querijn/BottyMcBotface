@@ -25,20 +25,20 @@ export default class Techblog {
         this.bot.on("ready", async () => {
             if (!this.data.Last) this.data.Last = Date.now();
 
-            const guild = this.bot.guilds.get(this.sharedSettings.server.guildId);
+            const guild = this.bot.guilds.cache.get(this.sharedSettings.server.guildId);
             if (!guild) {
                 console.error(`TechBlog: Unable to find server with ID: ${this.sharedSettings.server}`);
                 return;
             }
 
-            this.channel = guild.channels.find("name", this.sharedSettings.techBlog.channel) as Discord.TextChannel;
+            this.channel = guild.channels.cache.find(c => c.name == this.sharedSettings.techBlog.channel) as Discord.TextChannel;
             if (!this.channel) {
                 if (this.sharedSettings.botty.isProduction) {
                     console.error(`TechBlog: Unable to find channel: ${this.sharedSettings.techBlog.channel}`);
                     return;
                 }
                 else {
-                    this.channel = await guild!.createChannel(this.sharedSettings.techBlog.channel, "text") as Discord.TextChannel;
+                    this.channel = await guild!.channels.create(this.sharedSettings.techBlog.channel, { type: "text" }) as Discord.TextChannel;
                 }
             }
 

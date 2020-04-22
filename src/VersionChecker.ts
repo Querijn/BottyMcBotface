@@ -29,20 +29,20 @@ export default class VersionChecker {
     }
 
     private async onBot() {
-        const guild = this.bot.guilds.get(this.sharedSettings.server.guildId);
+        const guild = this.bot.guilds.cache.get(this.sharedSettings.server.guildId);
         if (!guild) {
             console.error(`VersionChecker: Unable to find server with ID: ${this.sharedSettings.server}`);
             return;
         }
 
-        let channel = guild.channels.find("name", this.sharedSettings.forum.channel);
+        let channel = guild.channels.cache.find(c => c.name == this.sharedSettings.forum.channel);
         if (!channel || !(channel instanceof Discord.TextChannel)) {
             if (this.sharedSettings.botty.isProduction) {
                 console.error(`VersionChecker: Unable to find external activity channel!`);
                 return;
             }
             else {
-                channel = await guild!.createChannel(this.sharedSettings.forum.channel, "text");
+                channel = await guild!.channels.create(this.sharedSettings.forum.channel, { type: "text" });
             }
         }
 
@@ -74,7 +74,7 @@ export default class VersionChecker {
             this.data.latestDataDragonVersion = dataDragonVersion[0];
             const downloadLink = `http://ddragon.leagueoflegends.com/cdn/dragontail-${this.data.latestDataDragonVersion}.tgz`;
 
-            const embed = new Discord.RichEmbed()
+            const embed = new Discord.MessageEmbed()
                 .setColor(0x42f456)
                 .setTitle("New DDragon version!")
                 .setDescription(`Version ${this.data.latestDataDragonVersion} of DDragon has hit the CDN.\nYou can find the tool here:\nhttp://ddragon.leagueoflegends.com/tool\n\nAnd the download is available here:\n${downloadLink}`)
@@ -145,7 +145,7 @@ export default class VersionChecker {
 
             this.data.latestGameVersion = `${lastNewValidMajor.toString()}.${lastNewValidMinor.toString()}`;
 
-            const embed = new Discord.RichEmbed()
+            const embed = new Discord.MessageEmbed()
                 .setColor(0xf442e5)
                 .setTitle("New League of Legends version!")
                 .setDescription(`Version ${this.data.latestGameVersion} of League of Legends has posted its patch notes. You can expect the game to update soon.\n\nYou can find the notes here:\n${validPatchNotes}`)

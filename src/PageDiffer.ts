@@ -36,20 +36,20 @@ export default class PageDiffer {
     }
 
     public async onBot() {
-        const guild = this.bot.guilds.get(this.sharedSettings.server.guildId);
+        const guild = this.bot.guilds.cache.get(this.sharedSettings.server.guildId);
         if (!guild) {
             console.error(`PageDiffer: Unable to find server with ID: ${this.sharedSettings.server}`);
             return;
         }
 
-        let channel = guild.channels.find("name", this.sharedSettings.pageDiffer.channel);
+        let channel = guild.channels.cache.find(c => c.name == this.sharedSettings.pageDiffer.channel);
         if (!channel || !(channel instanceof Discord.TextChannel)) {
             if (this.sharedSettings.botty.isProduction) {
                 console.error(`PageDiffer: Unable to find channel: ${this.sharedSettings.pageDiffer.channel}`);
                 return;
             }
             else {
-                channel = await guild!.createChannel(this.sharedSettings.pageDiffer.channel, "text");
+                channel = await guild!.channels.create(this.sharedSettings.pageDiffer.channel, { type: "text" });
             }
         }
 
@@ -125,7 +125,7 @@ export default class PageDiffer {
             // Get to the posting part, if we have a difference
             if (!hasDiff) continue;
 
-            const embed = new Discord.RichEmbed()
+            const embed = new Discord.MessageEmbed()
                 .setColor(0xffca95)
                 .setTitle(`The ${page.type} "${page.name}" has changed`)
                 .setDescription(`Something has changed on "${page.name}".\n\nYou can see the current version here: ${pageLocation}\n\nYou can check out the difference here: ${this.sharedSettings.botty.webServer.relativeLiveLocation + folderName}`)

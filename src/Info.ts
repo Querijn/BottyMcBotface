@@ -61,7 +61,9 @@ export default class Info {
         botty.client.on("messageReactionAdd", this.onReaction.bind(this));
         botty.client.on("ready", () => {
 
-            this.userId = botty.client.user.id;
+            this.userId = botty.client.user!.id;
+            if (this.userId == null)
+                throw new Error("Unexpected error on bot.ready => User is null?");
 
             for (const category of file.categories) {
 
@@ -71,7 +73,7 @@ export default class Info {
                     continue;
                 }
 
-                const emoji = botty.client.emojis.get(category.icon);
+                const emoji = botty.client.emojis.cache.get(category.icon);
                 if (!emoji) {
                     console.warn(`Cannot find emoji ${category} for the info categories!`);
                     continue;
@@ -89,7 +91,7 @@ export default class Info {
 
         if (user.id === this.userId) return;
 
-        const listener = this.reactionListeners.find(l => l.message.id === messageReaction.message.id && messageReaction.users.has(user.id));
+        const listener = this.reactionListeners.find(l => l.message.id === messageReaction.message.id && messageReaction.users.cache.has(user.id));
         if (!listener) return;
 
         if (listener.user.id === user.id) {
@@ -98,7 +100,7 @@ export default class Info {
 
         // Remove reaction if we're on our server.
         if (messageReaction.message.guild && messageReaction.message.guild.id === this.sharedSettings.server.guildId) {
-            messageReaction.remove(user);
+            messageReaction.remove();
         }
     }
 
@@ -341,12 +343,12 @@ export default class Info {
             return;
         }
 
-        let firstPage: Discord.RichEmbed | null = null;
-        const pages: { [emoji: string]: Discord.RichEmbed } = {};
+        let firstPage: Discord.MessageEmbed | null = null;
+        const pages: { [emoji: string]: Discord.MessageEmbed } = {};
         for (const category of this.categories) {
             const categoryItems = this.infos.filter(i => i.categoryId === category.icon);
 
-            const page = new Discord.RichEmbed();
+            const page = new Discord.MessageEmbed();
             page.setTitle(category.explanation);
 
             for (const item of categoryItems) {

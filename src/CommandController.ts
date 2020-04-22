@@ -111,7 +111,7 @@ export default class CommandController {
         }
     }
 
-    public getHelp(isAdmin: boolean = false): Discord.RichEmbed[] {
+    public getHelp(isAdmin: boolean = false): Discord.MessageEmbed[] {
         const toString = (holder: CommandHolder) => {
 
             let title = "";
@@ -143,14 +143,14 @@ export default class CommandController {
             .map(holder => toString(holder))
             .sort((a, b) => a.title.localeCompare(b.title));
 
-        const data: Discord.RichEmbed[] = [];
+        const data: Discord.MessageEmbed[] = [];
         let pageIndex = 0;
-        let embed: Discord.RichEmbed;
+        let embed: Discord.MessageEmbed;
 
         for (let i = 0; i < mapped.length; i++) {
             // rich embeds have a 25 field limit
             if (i % 25 === 0) {
-                embed = new Discord.RichEmbed({ title: `Commands (page ${++pageIndex})` });
+                embed = new Discord.MessageEmbed({ title: `Commands (page ${++pageIndex})` });
                 data.push(embed);
             }
 
@@ -189,7 +189,7 @@ export default class CommandController {
 
         const prefix = parts[0][0];
         const command = parts[0].substr(1).toLowerCase();
-        const isAdmin = (message.member && this.sharedSettings.commands.adminRoles.some(x => message.member.roles.has(x)));
+        const isAdmin = !!(message.member && this.sharedSettings.commands.adminRoles.some(x => message.member!.roles.cache.has(x)));
 
         // Collect the separators
         const separators: string[] = [];

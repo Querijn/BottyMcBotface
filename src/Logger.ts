@@ -30,7 +30,7 @@ export default class Logger {
     }
 
     public async onBot() {
-        const guild = this.bot.guilds.get(this.sharedSettings.logger.server);
+        const guild = this.bot.guilds.cache.get(this.sharedSettings.logger.server);
         if (!guild) {
             console.error(`Logger: Unable to find server with ID: ${this.sharedSettings.logger.server}`);
             return;
@@ -55,21 +55,21 @@ export default class Logger {
             environment = this.sharedSettings.logger;
         }
 
-        const errorChannel = guild.channels.find("name", environment.errorChannel);
+        const errorChannel = guild.channels.cache.find(c => c.name == environment.errorChannel);
         if (!errorChannel || !(errorChannel instanceof Discord.TextChannel)) {
             console.error(`Logger: Incorrect setting for the error channel: ${environment.errorChannel}, isProduction: ${isProduction}`);
             return;
         }
         this.errorChannel = errorChannel as Discord.TextChannel;
 
-        let logChannel = guild.channels.find("name", environment.logChannel);
+        let logChannel = guild.channels.cache.find(c => c.name == environment.logChannel);
         if (!logChannel || !(logChannel instanceof Discord.TextChannel)) {
             if (this.sharedSettings.botty.isProduction) {
                 console.error(`Logger: Incorrect setting for the log channel: ${environment.logChannel}, isProduction: ${isProduction}`);
                 return;
             }
             else {
-                logChannel = await guild!.createChannel(environment.logChannel, "text") as Discord.TextChannel;
+                logChannel = await guild!.channels.create(environment.logChannel, { type: "text" }) as Discord.TextChannel;
             }
         }
         this.logChannel = logChannel as Discord.TextChannel;

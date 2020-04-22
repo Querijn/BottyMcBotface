@@ -38,8 +38,11 @@ export default class SpamKiller {
             if (sharedSettings.spam.allowedUrls.findIndex(u => u.endsWith(hostname)) !== -1)
                 return;
 
-            const member = message.member ? message.member : await message.guild.fetchMember(message.author.id);
-            const timeSinceJoin = ((new Date()).getTime() - member.joinedAt.getTime());
+            const member = message.member ? message.member : await message.guild.members.fetch(message.author.id);
+            if (!member)
+                throw new Error(`Unable to find member that wrote the message '${message.content}' (${message.author.username})`);
+
+            const timeSinceJoin = ((new Date()).getTime() - (member.joinedAt!.getTime() || 0));
 
             if (timeSinceJoin > 1000 * 60 * 60 * 24)
                 return;
@@ -77,11 +80,11 @@ export default class SpamKiller {
         if (deletedEntry.author.id !== user.id) {
 
             // Get the member of the thumbs up
-            const member = await messageReaction.message.guild.fetchMember(user.id);
+            const member = await messageReaction.message.guild?.members.fetch(user.id);
             if (!member) return;
 
             // Is it an admin?
-            if (!this.sharedSettings.commands.adminRoles.some(x => member.roles.has(x)))
+            if (!this.sharedSettings.commands.adminRoles.some(x => member.roles.cache.has(x)))
                 return;
         }
 

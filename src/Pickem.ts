@@ -119,14 +119,14 @@ export default class Pickem {
             setTimeout(async () => {
                 const channel = this.settings.esports.printChannel;
 
-                const guild = this.bot.guilds.get(this.settings.server.guildId);
-                this.esportsChannel = guild!.channels.find("name", channel);
+                const guild = this.bot.guilds.cache.get(this.settings.server.guildId);
+                this.esportsChannel = guild!.channels.cache.find(c => c.name == channel) || null;
                 if (this.esportsChannel == null) {
                     if (this.settings.botty.isProduction) {
                         console.error("Pickem ran into an error: We don't have an e-sports channel but we're on production!");
                     }
                     else {
-                        await guild!.createChannel(channel, "text");
+                        await guild!.channels.create(channel, { type: "text" });
                     }
                 }
             }, 1000);
@@ -192,7 +192,7 @@ export default class Pickem {
         const points = await this.getPickemPoints(this.settings.pickem.worldsId, ids);
         const sorted = points.sort((a, b) => b.totalPoints - a.totalPoints);
 
-        const embed = new Discord.RichEmbed();
+        const embed = new Discord.MessageEmbed();
         embed.setTitle("Top scores:");
 
         let list = "";
@@ -228,7 +228,7 @@ export default class Pickem {
     }
 
     public generateEmbedGroupPickem(match: PickemGroupPick) {
-        const embed = new Discord.RichEmbed();
+        const embed = new Discord.MessageEmbed();
         embed.setTitle(match.user.id >= 0 ? `${match.user.summonerName}'s pickem` : "Current standings");
         let formattingIndex = 0;
         for (const group of match.groups) {
@@ -241,7 +241,7 @@ export default class Pickem {
             embed.addField(`${group.name} ${pointsField}`, value, true);
 
             if (++formattingIndex % 2 === 0) {
-                embed.addBlankField();
+                embed.addField('\u200b', '\u200b')
             }
         }
 

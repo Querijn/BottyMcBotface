@@ -11,7 +11,7 @@ export default class JoinMessaging {
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
     private messageContents: string;
-    private commandContents: Discord.RichEmbed[];
+    private commandContents: Discord.MessageEmbed[];
     private commandController: CommandController;
 
     constructor(bot: Discord.Client, sharedSettings: SharedSettings, commandController: CommandController) {

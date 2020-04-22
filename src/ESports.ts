@@ -76,14 +76,14 @@ export default class ESportsAPI {
         bot.on("ready", async () => {
 
             const channel = this.settings.esports.printChannel;
-            const guild = this.bot.guilds.get(this.settings.server.guildId);
-            this.esportsChannel = guild!.channels.find("name", channel);
+            const guild = this.bot.guilds.cache.get(this.settings.server.guildId);
+            this.esportsChannel = guild!.channels.cache.find((c) => c.name == channel) || null;
             if (this.esportsChannel == null) {
                 if (this.settings.botty.isProduction) {
                     console.error("Esports API ran into an error: We don't have an esports channel but we're on production!");
                 }
                 else {
-                    this.esportsChannel = await guild!.createChannel(channel, "text");
+                    this.esportsChannel = await guild!.channels.create(channel, { type: "text" });
                 }
             }
 
@@ -198,7 +198,7 @@ export default class ESportsAPI {
             if (!isUpdateMessage) channel.send(`No games played on ${date}`);
             return;
         }
-        const embed = new Discord.RichEmbed();
+        const embed = new Discord.MessageEmbed();
         embed.title = `Games being played ${date}:`;
         if (!embed.fields) embed.fields = [];
         embed.color = 0x9b311a;
@@ -220,6 +220,7 @@ export default class ESportsAPI {
             embed.fields.push({
                 name: league,
                 value: output + `[More about ${league} here](${this.getUrlByLeague(games[0])})\n`,
+                inline: false
             });
         }
 

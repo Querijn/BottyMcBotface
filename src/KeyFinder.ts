@@ -27,19 +27,19 @@ export default class KeyFinder {
 
         this.bot.on("ready", async () => {
 
-            const guild = this.bot.guilds.get(this.sharedSettings.server.guildId);
+            const guild = this.bot.guilds.cache.get(this.sharedSettings.server.guildId);
             if (guild == null) {
                 console.error(`KeyFinder: Unable to find server with ID: ${this.sharedSettings.server}`);
                 return;
             }
 
-            const channel = guild.channels.find("name", this.sharedSettings.keyFinder.reportChannel) as Discord.TextChannel;
+            const channel = guild.channels.cache.find(c => c.name == this.sharedSettings.keyFinder.reportChannel) as Discord.TextChannel;
             if (channel == null) {
                 if (this.sharedSettings.botty.isProduction) {
                     console.error(`KeyFinder: Unable to find channel: ${this.sharedSettings.keyFinder.reportChannel}`);
                     return;
                 }
-                this.channel = await guild!.createChannel(this.sharedSettings.keyFinder.reportChannel, "text") as Discord.TextChannel;
+                this.channel = await guild!.channels.create(this.sharedSettings.keyFinder.reportChannel, { type: "text" }) as Discord.TextChannel;
             }
             else {
                 this.channel = channel;
@@ -52,7 +52,7 @@ export default class KeyFinder {
     }
 
     public onMessage(incomingMessage: Discord.Message) {
-        if (incomingMessage.author.id === this.bot.user.id || !incomingMessage.guild) return;
+        if (incomingMessage.author.id === this.bot.user!.id || !incomingMessage.guild) return;
 
         this.findKey(`<@${incomingMessage.author.id}>`, incomingMessage.content, `<#${incomingMessage.channel.id}>`, incomingMessage.createdTimestamp);
     }

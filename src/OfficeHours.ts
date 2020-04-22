@@ -4,6 +4,7 @@ import { SharedSettings } from "./SharedSettings";
 import Discord = require("discord.js");
 import fetch from "node-fetch";
 import joinArguments from "./JoinArguments";
+import Admin from "./Admin";
 
 interface QuestionData {
     uuid: number;
@@ -49,12 +50,14 @@ export default class OfficeHours {
     private bot: Discord.Client;
     private guild: Discord.Guild;
     private channel: Discord.TextChannel;
+    private admin: Admin;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, officeHoursData: string) {
+    constructor(bot: Discord.Client, admin: Admin, sharedSettings: SharedSettings, officeHoursData: string) {
         console.log("Requested OfficeHours extension..");
 
         this.bot = bot;
         this.sharedSettings = sharedSettings;
+        this.admin = admin;
 
         this.data = fileBackedObject(officeHoursData);
         console.log("Successfully question file.");
@@ -135,7 +138,7 @@ export default class OfficeHours {
             this.data.questions = this.data.questions.filter(q => q.uuid !== id);
             message.channel.send(this.sharedSettings.officehours.removedMessage);
 
-            const moderatorChannel = this.guild.channels.find("name", "moderators");
+            const moderatorChannel = this.admin.channel;
             if (moderatorChannel instanceof Discord.TextChannel) {
                 moderatorChannel.send(`${message.author.username} just removed question ${question.uuid} (by ${question.authorName}): \n>>> ${question.question}`);
             }
@@ -164,26 +167,36 @@ export default class OfficeHours {
 
     private async setupOpenState() {
 
-        this.guild = this.bot.guilds.get(this.sharedSettings.server.guildId)!;
+        this.guild = this.bot.guilds.cache.get(this.sharedSettings.server.guildId)!;
         if (!this.guild) {
             console.error(`Office-Hours: Unable to find server with ID: ${this.sharedSettings.server}`);
             return;
         }
 
-        this.channel = this.guild.channels.find("name", "office-hours") as Discord.TextChannel;
+        this.channel = this.guild.channels.cache.find(c => c.name == "office-hours") as Discord.TextChannel;
         if (!this.channel || !(this.channel instanceof Discord.TextChannel)) {
             if (this.sharedSettings.botty.isProduction) {
                 console.error(`Office-Hours: Unable to find channel: #office-hours`);
                 return;
             }
             else {
-                this.channel = await this.guild.createChannel("office-hours", "text") as Discord.TextChannel;
+                this.channel = await this.guild.channels.create("office-hours", { type: "text" }) as Discord.TextChannel;
             }
         }
 
-        const everyone = this.guild.roles.find("name", "@everyone");
-        const randomUser = this.guild.members.find(x => x.roles.has(everyone.id)); // && x.roles.size === 1);
-        this.data.isOpen = this.channel.permissionsFor(randomUser).has("SEND_MESSAGES");
+        const everyone = this.guild.roles.cache.find(c => c.name == "@everyone");
+        if (!everyone)
+            throw new Error("Could not set open state of Office Hours due to the fact we could not find the everything role!");
+
+        const randomUser = this.guild.members.cache.find(x => x.roles.cache.has(everyone.id) && x.roles.cache.size === 1);
+        if (!randomUser)
+            throw new Error("Could not set open state of Office Hours due to the fact we could not find a member with the everything role!");
+
+        const permissions = this.channel.permissionsFor(randomUser);
+        if (!permissions)
+            console.warn(`Assuming no permissions due to the fact the permissions object is not defined on ${randomUser.user.username}.`);
+
+        this.data.isOpen = permissions ? permissions.has("SEND_MESSAGES") : false;
         console.log(`OfficeHours extension loaded (${this.data.isOpen ? "open" : "closed"}).`);
     }
 
@@ -212,7 +225,7 @@ export default class OfficeHours {
         this.data.questions.push(questionData);
         message.channel.send(this.sharedSettings.officehours.addedMessage.replace(/{removeCommand}/, `\`!question remove ${questionData.uuid}\``));
 
-        const moderatorChannel = this.guild.channels.find("name", "moderators");
+        const moderatorChannel = this.admin.channel;
         if (moderatorChannel instanceof Discord.TextChannel) {
             const link = message.guild ? `https://discordapp.com/channels/${message.guild.id}/${message.channel.id}/${message.id}` : `This came from a direct message`; // Prepend with link if it's from the server
             moderatorChannel.send(`${author.username} just asked a question (remove with \`!question remove ${questionData.uuid}\`):\n${link}\n>>> ${question}`);
@@ -225,9 +238,19 @@ export default class OfficeHours {
             return;
         }
 
-        const everyone = newChannel.guild.roles.find("name", "@everyone");
-        const randomUser = newChannel.guild.members.find(x => x.roles.has(everyone.id) && x.roles.size === 1);
-        const canSendMessages = newChannel.permissionsFor(randomUser).has("SEND_MESSAGES");
+        const everyone = this.guild.roles.cache.find(c => c.name == "@everyone");
+        if (!everyone)
+            throw new Error("Could not update Office Hours channel due to the fact we could not find the everything role!");
+
+        const randomUser = this.guild.members.cache.find(x => x.roles.cache.has(everyone.id) && x.roles.cache.size === 1);
+        if (!randomUser)
+            throw new Error("Could not update Office Hours channel due to the fact we could not find a member with the everything role!");
+
+        const permissions = this.channel.permissionsFor(randomUser);
+        if (!permissions)
+            console.warn(`Assuming no permissions due to the fact the permissions object is not defined on ${randomUser.user.username}.`);
+
+        const canSendMessages = permissions ? permissions.has("SEND_MESSAGES") : false;
         if (canSendMessages && !this.data.isOpen) {
             this.open(newChannel);
         } else if (canSendMessages && this.data.isOpen) {
@@ -246,8 +269,11 @@ export default class OfficeHours {
         if (this.data.isOpen) return;
         this.data.isOpen = true;
 
-        const everyone = channel.guild.roles.find("name", "@everyone");
-        await channel.overwritePermissions(everyone, { SEND_MESSAGES: true });
+        const everyone = channel.guild.roles.cache.find(c => c.name == "@everyone");
+        if (everyone)
+            await channel.createOverwrite(everyone, { SEND_MESSAGES: true });
+        else
+            console.error("Office Hours isn't opened correctly due to the fact I can't assign the 'Send Messages' setting on everyone!");
 
         // Start with open message
         channel.send(this.sharedSettings.officehours.openMessage);
@@ -263,12 +289,12 @@ export default class OfficeHours {
         if (!this.data.lastCloseMessage) return;
 
         // Request last close message from Discord
-        const closeMessage = await channel.fetchMessage(this.data.lastCloseMessage);
+        const closeMessage = await channel.messages.fetch(this.data.lastCloseMessage);
 
         // Find all users that raised their hand
-        const reaction = closeMessage.reactions.get("✋");
+        const reaction = closeMessage.reactions.cache.get("✋");
         if (reaction) {
-            const reactionUsers = await reaction.fetchUsers();
+            const reactionUsers = await reaction.users.fetch();
             const usersToMention = reactionUsers.array().filter(user => !user.bot);
             if (usersToMention.length > 0) {
                 channel.send(usersToMention.join(", ") + "\n");
@@ -282,10 +308,13 @@ export default class OfficeHours {
         if (!this.data.isOpen) return;
         this.data.isOpen = false;
 
-        const everyone = channel.guild.roles.find("name", "@everyone");
-        await channel.overwritePermissions(everyone, { SEND_MESSAGES: false });
+        const everyone = channel.guild.roles.cache.find(c => c.name == "@everyone");
+        if (everyone)
+            await channel.createOverwrite(everyone, { SEND_MESSAGES: false });
+        else
+            console.error("Office Hours isn't closed correctly due to the fact I can't assign the 'Send Messages' setting on everyone!");
 
-        let message = await channel.send(this.sharedSettings.officehours.closeMessage.replace(/{botty}/g, this.bot.user.username));
+        let message = await channel.send(this.sharedSettings.officehours.closeMessage.replace(/{botty}/g, this.bot.user ? this.bot.user.username : "Botty"));
         if (Array.isArray(message)) {
             message = message[0];
         }

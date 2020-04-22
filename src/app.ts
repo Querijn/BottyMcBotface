@@ -41,7 +41,8 @@ const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.js
 const apiUrlInterpreter = new ApiUrlInterpreter(bot.client, sharedSettings, apiSchema);
 const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
 const notes = new Info(bot, sharedSettings, "data/info_data.json", versionChecker);
-const officeHours = new OfficeHours(bot.client, sharedSettings, "data/office_hours_data.json");
+const admin = new Admin(bot.client, sharedSettings, "data/admin_data.json");
+const officeHours = new OfficeHours(bot.client, admin, sharedSettings, "data/office_hours_data.json");
 const react = new AutoReact(bot.client, sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json");
 const uptime = new Uptime(sharedSettings, "data/uptime_data.json");
 const status = new ApiStatus(sharedSettings);
@@ -50,7 +51,6 @@ const esports = new ESportsAPI(bot.client, sharedSettings);
 const pickem = new Pickem(bot.client, sharedSettings);
 const endpoint = new Endpoint(sharedSettings, "data/endpoints.json");
 const pageDiffer = new PageDiffer(bot.client, sharedSettings, "data/page_differ.json");
-const admin = new Admin(bot.client, sharedSettings, "data/admin_data.json");
 const spamKiller = new SpamKiller(bot.client, sharedSettings);
 const gameData = new GameData(bot.client, sharedSettings);
 
