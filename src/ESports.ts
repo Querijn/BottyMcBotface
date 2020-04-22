@@ -266,7 +266,7 @@ export default class ESportsAPI {
             clearTimeout(this.loadDataTimeOut);
             this.loadDataTimeOut = null;
         }
-        this.loadDataTimeOut = setTimeout(this.loadData2020.bind(this), this.settings.esports.updateTimeout);
+        this.loadDataTimeOut = setTimeout(this.loadData.bind(this), this.settings.esports.updateTimeout);
     }
 
     private getUrlByLeague(leagueName: ESportsLeagueSchedule) {
