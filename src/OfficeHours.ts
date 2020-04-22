@@ -173,7 +173,7 @@ export default class OfficeHours {
             return;
         }
 
-        this.channel = this.guild.channels.cache.find(c => c.name == "office-hours") as Discord.TextChannel;
+        this.channel = this.guild.channels.cache.find(c => c.name === "office-hours") as Discord.TextChannel;
         if (!this.channel || !(this.channel instanceof Discord.TextChannel)) {
             if (this.sharedSettings.botty.isProduction) {
                 console.error(`Office-Hours: Unable to find channel: #office-hours`);
@@ -184,7 +184,7 @@ export default class OfficeHours {
             }
         }
 
-        const everyone = this.guild.roles.cache.find(c => c.name == "@everyone");
+        const everyone = this.guild.roles.cache.find(c => c.name === "@everyone");
         if (!everyone)
             throw new Error("Could not set open state of Office Hours due to the fact we could not find the everything role!");
 
@@ -238,7 +238,7 @@ export default class OfficeHours {
             return;
         }
 
-        const everyone = this.guild.roles.cache.find(c => c.name == "@everyone");
+        const everyone = this.guild.roles.cache.find(c => c.name === "@everyone");
         if (!everyone)
             throw new Error("Could not update Office Hours channel due to the fact we could not find the everything role!");
 
@@ -269,7 +269,7 @@ export default class OfficeHours {
         if (this.data.isOpen) return;
         this.data.isOpen = true;
 
-        const everyone = channel.guild.roles.cache.find(c => c.name == "@everyone");
+        const everyone = channel.guild.roles.cache.find(c => c.name === "@everyone");
         if (everyone)
             await channel.createOverwrite(everyone, { SEND_MESSAGES: true });
         else
@@ -308,7 +308,7 @@ export default class OfficeHours {
         if (!this.data.isOpen) return;
         this.data.isOpen = false;
 
-        const everyone = channel.guild.roles.cache.find(c => c.name == "@everyone");
+        const everyone = channel.guild.roles.cache.find(c => c.name === "@everyone");
         if (everyone)
             await channel.createOverwrite(everyone, { SEND_MESSAGES: false });
         else

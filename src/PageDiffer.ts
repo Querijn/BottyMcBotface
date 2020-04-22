@@ -42,7 +42,7 @@ export default class PageDiffer {
             return;
         }
 
-        let channel = guild.channels.cache.find(c => c.name == this.sharedSettings.pageDiffer.channel);
+        let channel = guild.channels.cache.find(c => c.name === this.sharedSettings.pageDiffer.channel);
         if (!channel || !(channel instanceof Discord.TextChannel)) {
             if (this.sharedSettings.botty.isProduction) {
                 console.error(`PageDiffer: Unable to find channel: ${this.sharedSettings.pageDiffer.channel}`);

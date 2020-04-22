@@ -29,7 +29,7 @@ export default class AutoReact {
 
     public onConnect() {
         this.refreshThinkingEmojis();
-        
+
         const emoji = this.bot.emojis.cache.get(this.sharedSettings.autoReact.emoji);
         if (emoji instanceof Discord.Emoji) {
             this.greetingEmoji = emoji;
@@ -196,7 +196,7 @@ export default class AutoReact {
 
         message.react(`${this.greetingEmoji.id}`);
     }
-    
+
     private isThinkingEmojiName(emojiName: string) {
         return emojiName.toLowerCase().includes("think") || emojiName.toLowerCase().includes("thonk");
     }

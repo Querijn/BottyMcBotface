@@ -55,14 +55,14 @@ export default class Logger {
             environment = this.sharedSettings.logger;
         }
 
-        const errorChannel = guild.channels.cache.find(c => c.name == environment.errorChannel);
+        const errorChannel = guild.channels.cache.find(c => c.name === environment.errorChannel);
         if (!errorChannel || !(errorChannel instanceof Discord.TextChannel)) {
             console.error(`Logger: Incorrect setting for the error channel: ${environment.errorChannel}, isProduction: ${isProduction}`);
             return;
         }
         this.errorChannel = errorChannel as Discord.TextChannel;
 
-        let logChannel = guild.channels.cache.find(c => c.name == environment.logChannel);
+        let logChannel = guild.channels.cache.find(c => c.name === environment.logChannel);
         if (!logChannel || !(logChannel instanceof Discord.TextChannel)) {
             if (this.sharedSettings.botty.isProduction) {
                 console.error(`Logger: Incorrect setting for the log channel: ${environment.logChannel}, isProduction: ${isProduction}`);

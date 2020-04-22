@@ -83,7 +83,7 @@ export default class Admin {
             return;
         }
 
-        let adminChannel = guild.channels.cache.find(c => c.name == this.sharedSettings.server.guruChannel);
+        let adminChannel = guild.channels.cache.find(c => c.name === this.sharedSettings.server.guruChannel);
         if (!adminChannel) {
             if (this.sharedSettings.botty.isProduction) {
                 console.error(`Admin: Unable to find moderators channel!`);
@@ -104,7 +104,7 @@ export default class Admin {
             muteRole = guild.roles.cache.get(this.sharedSettings.admin.muteRoleId);
 
         if (!muteRole) {
-            muteRole = guild.roles.cache.find((r) => r.name == this.sharedSettings.admin.muteRoleName);
+            muteRole = guild.roles.cache.find((r) => r.name === this.sharedSettings.admin.muteRoleName);
             if (!muteRole) {
                 console.error(`Admin: Unable to find the muted role!`);
                 return;

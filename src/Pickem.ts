@@ -120,7 +120,7 @@ export default class Pickem {
                 const channel = this.settings.esports.printChannel;
 
                 const guild = this.bot.guilds.cache.get(this.settings.server.guildId);
-                this.esportsChannel = guild!.channels.cache.find(c => c.name == channel) || null;
+                this.esportsChannel = guild!.channels.cache.find(c => c.name === channel) || null;
                 if (this.esportsChannel == null) {
                     if (this.settings.botty.isProduction) {
                         console.error("Pickem ran into an error: We don't have an e-sports channel but we're on production!");

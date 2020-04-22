@@ -33,7 +33,7 @@ export default class KeyFinder {
                 return;
             }
 
-            const channel = guild.channels.cache.find(c => c.name == this.sharedSettings.keyFinder.reportChannel) as Discord.TextChannel;
+            const channel = guild.channels.cache.find(c => c.name === this.sharedSettings.keyFinder.reportChannel) as Discord.TextChannel;
             if (channel == null) {
                 if (this.sharedSettings.botty.isProduction) {
                     console.error(`KeyFinder: Unable to find channel: ${this.sharedSettings.keyFinder.reportChannel}`);

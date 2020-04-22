@@ -77,7 +77,7 @@ export default class ESportsAPI {
 
             const channel = this.settings.esports.printChannel;
             const guild = this.bot.guilds.cache.get(this.settings.server.guildId);
-            this.esportsChannel = guild!.channels.cache.find((c) => c.name == channel) || null;
+            this.esportsChannel = guild!.channels.cache.find((c) => c.name === channel) || null;
             if (this.esportsChannel == null) {
                 if (this.settings.botty.isProduction) {
                     console.error("Esports API ran into an error: We don't have an esports channel but we're on production!");

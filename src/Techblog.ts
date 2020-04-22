@@ -31,7 +31,7 @@ export default class Techblog {
                 return;
             }
 
-            this.channel = guild.channels.cache.find(c => c.name == this.sharedSettings.techBlog.channel) as Discord.TextChannel;
+            this.channel = guild.channels.cache.find(c => c.name === this.sharedSettings.techBlog.channel) as Discord.TextChannel;
             if (!this.channel) {
                 if (this.sharedSettings.botty.isProduction) {
                     console.error(`TechBlog: Unable to find channel: ${this.sharedSettings.techBlog.channel}`);

@@ -35,7 +35,7 @@ export default class VersionChecker {
             return;
         }
 
-        let channel = guild.channels.cache.find(c => c.name == this.sharedSettings.forum.channel);
+        let channel = guild.channels.cache.find(c => c.name === this.sharedSettings.forum.channel);
         if (!channel || !(channel instanceof Discord.TextChannel)) {
             if (this.sharedSettings.botty.isProduction) {
                 console.error(`VersionChecker: Unable to find external activity channel!`);
