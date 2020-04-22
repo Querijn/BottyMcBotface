@@ -50,12 +50,6 @@ class AdminData {
     }
 }
 
-/**
- * Log handler.
- *
- * @export
- * @class Admin
- */
 export default class Admin {
     private bot: Discord.Client;
     private adminChannel: Discord.TextChannel | null = null;
