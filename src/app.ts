@@ -25,6 +25,7 @@ import { SharedSettings } from "./SharedSettings";
 import SpamKiller from "./SpamKiller";
 import Admin from "./Admin";
 import GameData from "./GameData";
+import UserIntroduction from "./UserIntroduction";
 
 // Load and initialise settings
 const sharedSettings = overrideFileBackedObject<SharedSettings>("settings/shared_settings.json", "private/shared_settings.json");
@@ -43,6 +44,7 @@ const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/vers
 const notes = new Info(bot, sharedSettings, "data/info_data.json", versionChecker);
 const admin = new Admin(bot.client, sharedSettings, "data/admin_data.json");
 const officeHours = new OfficeHours(bot.client, admin, sharedSettings, "data/office_hours_data.json");
+const userIntroduction = new UserIntroduction(bot.client, controller, sharedSettings, "data/intro_data.json");
 const react = new AutoReact(bot.client, sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json");
 const uptime = new Uptime(sharedSettings, "data/uptime_data.json");
 const status = new ApiStatus(sharedSettings);

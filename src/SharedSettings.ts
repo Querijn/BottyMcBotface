@@ -37,10 +37,17 @@ export interface PageDifferPage {
     type: PageType;
 }
 
+interface IntroLine {
+    id: string;
+    lineTranslation: {[lang: string]: string };
+    type: "rule" | "intro";
+}
+
 export interface SharedSettings {
     server: {
         guildId: string;
         guruChannel: string;
+        introChannel: string;
     };
 
     botty: PersonalSettings;
@@ -193,4 +200,12 @@ export interface SharedSettings {
     spam: {
         allowedUrls: string[];
     };
+
+    userIntro: {
+        role: {
+            id: string;
+            name: string;
+        };
+        lines: IntroLine[];
+    }
 }

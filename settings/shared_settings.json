@@ -1,7 +1,8 @@
 {
     "server": {
         "guildId": "342988445498474498",
-        "guruChannel": "gurus"
+        "guruChannel": "gurus",
+        "introChannel": "new-users"
     },
     "botty": {
         "discord": {
@@ -209,6 +210,63 @@
         "allowedUrls": [
             "riotgames.com",
             "leagueoflegends.com"
+        ]
+    },
+    "userIntro": {
+        "role": {
+            "id": "511998818288402441",
+            "name": "new"
+        },
+        "lines": [
+            {
+                "id": "IntroLine1",
+                "lineTranslation": {
+                    "default": "If you wish to have access to this Discord server, you must first agree to all of the rules below. You can agree with them by clicking the :white_check_mark: underneath each."
+                },
+                "type": "intro"
+            },
+            {
+                "id": "Rule5_1",
+                "lineTranslation": {
+                    "default": "I understand nobody here can help me with issues with any of Riot Games' games, reports, bans or installers. I understand this is not Riot Games' support, which is located at <https://support.riotgames.com/>. I know you can alternatively send an email to support@riotgames.com. This server is purely for interaction with the Riot API, Client API, or in-game/replay API."
+                },
+                "type": "rule"
+            },
+            {
+                "id": "Rule5_2",
+                "lineTranslation": {
+                    "default": "I will not send messages or mention the Rioters, unless explicitly given permission for, or when I already were in an active conversation with that Rioter."
+                },
+                "type": "rule"
+            },
+            {
+                "id": "Rule5_3",
+                "lineTranslation": {
+                    "default": "If I have an issue that only a Rioter can provide a solution for, I will type `!ask`, followed by my question (for instance, `!ask It seems my application is stuck whenever I request something (HTTP 512); it does not happen on my developer key. The message in the JSON told me to contact the administrator!`) These questions will be answered during Office Hours."
+                },
+                "type": "rule"
+            },
+            {
+                "id": "Rule1",
+                "lineTranslation": {
+                    "default": "I will be respectful. I won't spam, advertise or place NSFW (Not Safe For Work) content. My username, nickname and profile avatar are OK to use, and not offensive."
+                },
+                "type": "rule"
+            },
+            {
+                "id": "Rule3",
+                "lineTranslation": {
+                    "default": "If I run into an issue, I will find the appropriate channel, and search for my issue first. I will also check the pins in the Discord channel."
+                },
+                "type": "rule"
+            },
+            {
+                "id": "Final",
+                "lineTranslation": {
+                    "default": "If I ignore any of the rules above, I understand I might get kicked from the server."
+                },
+                "type": "rule"
+            }
         ]
     }
 }
