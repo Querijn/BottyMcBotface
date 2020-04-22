@@ -5,7 +5,6 @@ import ApiUrlInterpreter from "./ApiUrlInterpreter";
 import AutoReact from "./AutoReact";
 import CommandController from "./CommandController";
 import Info from "./Info";
-import JoinMessaging from "./JoinMessaging";
 import KeyFinder from "./KeyFinder";
 import Logger from "./Logger";
 import OfficeHours from "./OfficeHours";
@@ -35,7 +34,6 @@ const bot = new Botty(sharedSettings);
 // Load extensions
 const controller = new CommandController(bot.client, sharedSettings, "data/command_data.json");
 const apiSchema = new APISchema(sharedSettings);
-const joinMessaging = new JoinMessaging(bot.client, sharedSettings, controller);
 const logger = new Logger(bot.client, sharedSettings);
 const keyFinder = new KeyFinder(bot.client, sharedSettings, "data/riot_keys.json");
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
@@ -80,9 +78,6 @@ controller.registerCommand(commandList.apiSchema.updateSchema, apiSchema.onUpdat
 
 // Keyfinder commands
 controller.registerCommand(commandList.keyFinder, keyFinder.onKeyList.bind(keyFinder));
-
-// JoinMessager commands
-controller.registerCommand(commandList.welcome, joinMessaging.onWelcome.bind(joinMessaging));
 
 // Info commands
 controller.registerCommand(commandList.info.note, notes.onNote.bind(notes));
