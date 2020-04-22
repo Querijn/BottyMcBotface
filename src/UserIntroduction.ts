@@ -35,6 +35,7 @@ export default class UserIntroduction {
         user.send(this.messageContents)
         .then(() => this.commandContents.forEach(embed => user.send({ embed })))
         .catch((e) => console.log(`Error: Cannot send the welcome message to ${user.nickname} (${e})`));
+        console.log(`Welcomed ${user.displayName}.`);
     }
 
     onUser(user: Discord.GuildMember | Discord.PartialGuildMember) {
