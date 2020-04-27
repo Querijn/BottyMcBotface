@@ -23,6 +23,7 @@ export default class Botty {
         this.personalSettings = sharedSettings.botty;
         this.sharedSettings = sharedSettings;
         console.log("Successfully loaded bot settings.");
+        this.client.setMaxListeners(25);
 
         this.client
             .on("error", console.error)
