@@ -1,4 +1,3 @@
-
 import Discord = require("discord.js");
 
 import { should } from "chai";
@@ -10,10 +9,9 @@ import { SharedSettings } from "../src/SharedSettings";
 
 describe("GameData", () => {
     describe("#sortSearch(...)", () => {
-        const mockClient = TypeMoq.Mock.ofType(Discord.Client);
         const mockSettings = TypeMoq.Mock.ofType<SharedSettings>();
 
-        const data = new GameData(mockClient.object, mockSettings.object);
+        const data = new GameData(null, mockSettings.object);
 
         const sortSearchTestHelper: typeof data.sortSearch = (
             search, smaller, larger,
