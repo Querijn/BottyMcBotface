@@ -110,4 +110,5 @@ controller.registerCommand(commandList.endpointManager.endpoints, endpoint.onLis
 // start bot
 bot.start().catch((reason: any) => {
     console.error(`Unable to run botty: ${reason}.`);
+    process.exit(-1);
 });
