@@ -39,32 +39,51 @@ export default class UserIntroduction {
     }
 
     onUser(user: Discord.GuildMember | Discord.PartialGuildMember) {
-        user.roles.add(this.role);
+        if (this.channel) // Only add if the channel exists
+            user.roles.add(this.role);
     }
 
     async onReaction(messageReaction: Discord.MessageReaction, user: Discord.User) {
-        if (!this.ruleMessages.some(m => m.id === messageReaction.message.id) || !this.channel)
+        if (user.bot)
             return;
+
+        if (!this.channel) {
+            console.log("Got a reaction, but the channel does not exist.");
+            return;
+        }
+
+        if (!this.ruleMessages.some(m => m.id === messageReaction.message.id)){
+            console.log(`${user.username} reacted to ${messageReaction.message.id}, which is not part of one of our ${this.ruleMessages.length} rules. (It said: "${messageReaction.message.content}")`);
+            return;
+        }
 
         const member = await this.channel.members.find(u => u.id == user.id)?.fetch();
         const hasRole = member?.roles.cache.some(r => r.id == this.role.id);
-        if (!hasRole)
+        if (!hasRole) {
+            console.log(`${user.username} reacted to ${messageReaction.message.id} but he does not have the role. ${this.role.id} -> ${this.role.name}`);
             return;
+        }
 
+        const ruleIndex = this.ruleMessages.findIndex(m => m.id === messageReaction.message.id);
+        let count = 0;
         for (let message of this.ruleMessages) {
-            message = await message.fetch();
             const hasAcceptedArray = message.reactions.cache.map(async r => {
                 const users = await (await r.fetch()).users.fetch();
                 return users.some(u => u.id === user.id);
             });
             const hasAccepted = (await Promise.all(hasAcceptedArray)).some(b => b);
 
-            if (!hasAccepted)
-                return;
+            if (hasAccepted) {
+                count++;
+            }
         }
+        console.log(`${user.username} accepted ${count}/${this.ruleMessages.length} rules.`);
+        if (count != this.ruleMessages.length)
+            return;
 
         // If we're here, the user accepted all messages
         if (member) {
+            console.log(`${user.username} was accepted to our server`);
             member.roles.remove(this.role);
             this.sendWelcome(member);
         }
@@ -76,27 +95,34 @@ export default class UserIntroduction {
     private async writeAllRules(channel: Discord.TextChannel) {
         channel.bulkDelete(100);
 
+        const messages: {[id: string]: Discord.Message } = {};
         for (let line of this.sharedSettings.userIntro.lines) {
             const message = await channel.send(line.lineTranslation["default"]);
             this.data.messages[line.id] = message.id;
+            messages[line.id] = message;
 
             if (line.type == "rule")
                 await message.react('✅');
         }
+
+        return messages;
     }
 
     private async setupChannel(guild: Discord.Guild) {
-        const channel = await guild.channels.create(this.sharedSettings.server.introChannel, { type: "text" });
-
-        this.writeAllRules(channel);
-
-        const roles = guild.roles.cache.array().reverse();
-        for (let r of roles) {
-            const isGuruOrNew = r.id == this.role.id || this.sharedSettings.commands.adminRoles.some(roleId => r.id == roleId);
-            await channel.createOverwrite(r, { VIEW_CHANNEL: isGuruOrNew });
+        try {
+            const channel = await guild.channels.create(this.sharedSettings.server.introChannel, { type: "text" });
+    
+            const roles = guild.roles.cache.array().reverse();
+            for (let r of roles) {
+                const isGuruOrNew = r.id == this.role.id || this.sharedSettings.commands.adminRoles.some(roleId => r.id == roleId);
+                await channel.createOverwrite(r, { VIEW_CHANNEL: isGuruOrNew });
+            }
+    
+            return channel;
         }
-
-        return channel;
+        catch (e) {
+            console.error(`Error occurred during setup of new user channel: ${e}`);
+        }
     }
 
     public async onBot() {
@@ -131,11 +157,15 @@ export default class UserIntroduction {
         let channel = guild.channels.cache.find(c => c.name === this.sharedSettings.server.introChannel);
         if (!channel) {
             if (this.sharedSettings.botty.isProduction) {
-                console.error(`UserIntroduction: Unable to find moderators channel!`);
+                console.error(`UserIntroduction: Unable to find user intro channel!`);
                 return;
             }
             else {
                 channel = await this.setupChannel(guild);
+                if (this.sharedSettings.botty.isProduction) {
+                    console.error(`UserIntroduction: Unable to create user intro channel!`);
+                    return;
+                }
             }
         }
 
@@ -145,32 +175,31 @@ export default class UserIntroduction {
         }
         this.channel = channel as Discord.TextChannel;
 
-        // First check if all rules are present. If not, rewrite them. Then, link up our messages.
-        const ruleMessages: {[id: string]: Discord.Message } = {};
-        for (let i = 0; i < 2; i++) {
-            for (let line of this.sharedSettings.userIntro.lines) {
-                const messageId = this.data.messages[line.id];
-                if (!messageId) {
-                    if (i == 1)
-                        console.error("Unexpected issue: Noticed rules aren't writing up correctly (missing rules). Linked messages aren't working.");
-                    else
-                        await this.writeAllRules(this.channel);
-                    continue;
-                }
-
-                const message = ruleMessages[line.id] || await this.channel.messages.fetch(messageId);
-                if (!ruleMessages[line.id] && line.type == "rule") // Store rules
-                    ruleMessages[line.id] = message;
-                if (message.content != line.lineTranslation["default"])
-                    message.edit(line.lineTranslation["default"]);
+        // Link up our messages.
+        const ruleMessages = await this.writeAllRules(this.channel);
+        for (let line of this.sharedSettings.userIntro.lines) {
+            const messageId = this.data.messages[line.id];
+            if (!messageId) {
+                console.error("Unexpected issue: Noticed rules aren't writing up correctly (missing rules). Linked messages aren't working.");
+                this.channel = null;
+                return;
             }
 
-            break; // If we reach this point, everything's fine
+            let message = ruleMessages[line.id];
+
+            if (!message) {
+                console.error("Unexpected issue: Noticed rules aren't writing up correctly (missing rules). Linked messages aren't working.");
+                this.channel = null;
+                return;
+            }
+
+            if (line.type != "rule") // Just store rules rules
+                delete ruleMessages[line.id];
         }
 
         this.ruleMessages = Object.values(ruleMessages);
 
         this.bot.on("messageReactionAdd", (messageReaction: Discord.MessageReaction, user: Discord.User) => this.onReaction(messageReaction, user));
-        console.log("UserIntroduction extension loaded.");
+        console.log(`UserIntroduction extension loaded. ${this.ruleMessages.length} rule messages are added: (${this.ruleMessages.map(r => r.id).join(", ")})\n\n${this.ruleMessages.join("\n")}`);
     }
 }
