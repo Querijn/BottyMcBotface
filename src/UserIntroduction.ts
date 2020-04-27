@@ -1,6 +1,7 @@
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 import CommandController from "./CommandController";
+const { performance } = require('perf_hooks');
 
 import Discord = require("discord.js");
 import fs = require("fs");
@@ -19,6 +20,8 @@ export default class UserIntroduction {
     private data: UserIntroductionData;
     private role: Discord.Role;
     private ruleMessages: Discord.Message[] = [];
+    private firstRuleAccepted: {[userId: string]: number } = {};
+    private usersHandled: {[userId: string]: boolean } = {};
 
     constructor(bot: Discord.Client, commandController: CommandController, sharedSettings: SharedSettings, dataFile: string) {
         console.log("Requested UserIntroduction extension..");
@@ -77,15 +80,47 @@ export default class UserIntroduction {
                 count++;
             }
         }
+
+        if (!this.firstRuleAccepted[user.id])
+            this.firstRuleAccepted[user.id] = performance.now();
+
         console.log(`${user.username} accepted ${count}/${this.ruleMessages.length} rules.`);
         if (count != this.ruleMessages.length)
             return;
 
         // If we're here, the user accepted all messages
-        if (member) {
-            console.log(`${user.username} was accepted to our server`);
-            member.roles.remove(this.role);
-            this.sendWelcome(member);
+        if (member && !this.usersHandled[user.id]) {
+            this.usersHandled[user.id] = true;
+
+            const acceptUser = () => {
+                console.log(`${user.username} was accepted to our server`);
+                member.roles.remove(this.role);
+                this.sendWelcome(member);
+            }
+
+            const firstRuleAccepted = this.firstRuleAccepted[user.id];
+            if (firstRuleAccepted) {
+                const timeTaken = performance.now() - firstRuleAccepted;
+                delete this.firstRuleAccepted[user.id];
+
+                if (timeTaken > 30 * 1000) {
+                    console.log (`${user.username} took ${timeTaken / 1000} seconds to read all the rules.`);
+                    acceptUser();
+                }
+                else {
+                    const timePenalty = (30 * 1000 - timeTaken) * 2; // Basically, wait out the rest, but twice as long.
+                    console.log (`${user.username} was pretty fast on reading all the rules (${timeTaken / 1000} seconds), so we're accepting him into the server in ${timePenalty / 1000} seconds.`);
+                    const message = await this.channel?.send(`${user}, you were pretty fast with reading all those rules! I'll add you in a bit, make sure you read all the rules!`);
+                    setTimeout(() => {
+                        message.delete();
+                        acceptUser();
+                    }, timePenalty);
+                }
+            }
+            else {
+                console.log (`Could not see when ${user.username} started accepting the rules.. Just accepting it, I guess.`);
+                acceptUser();
+            }
         }
         else {
             console.error(`Unable to remove role from ${user.username}, because he seems to be unable to be fetched as a member?`);
