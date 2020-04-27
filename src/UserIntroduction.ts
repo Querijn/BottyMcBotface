@@ -89,7 +89,9 @@ export default class UserIntroduction {
             return;
 
         // If we're here, the user accepted all messages
-        if (member && !this.usersHandled[user.id]) {
+        if (member) {
+            if (this.usersHandled[user.id])
+                return;
             this.usersHandled[user.id] = true;
 
             const acceptUser = () => {
