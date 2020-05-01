@@ -103,6 +103,11 @@ export default class UserIntroduction {
         this.userSaveData[user.id].handled = true;
 
         const acceptUser = () => {
+            if (!member) { // Typescript claims this can happen but I disagree
+                console.error(`Member was undefined -> ${user.username}`);
+                return;
+            }
+
             console.log(`${user.username} was accepted to our server`);
             member.roles.remove(this.role);
             this.sendWelcome(member);
