@@ -65,9 +65,17 @@ export default class UserIntroduction {
         if (!rule)
             return;
 
+        this.channel = await this.channel.fetch();
+        let member = await this.channel.members.find(u => u.id == user.id);
+        if (!member) {
+            console.error(`Unable to evaluate ${user.username}, because he seems to be unable to be found in the channel?`);
+            return;
+        }
+
+        member = await member.fetch();
+
         // Did he have the role?
-        const member = await this.channel.members.find(u => u.id == user.id)?.fetch();
-        const hasRole = member?.roles.cache.some(r => r.id == this.role.id);
+        const hasRole = member.roles.cache.some(r => r.id == this.role.id);
         if (!hasRole) {
             console.log(`${user.username} reacted to ${messageReaction.message.id} but he does not have the role. ${this.role.id} -> ${this.role.name}`);
             return;
@@ -89,13 +97,9 @@ export default class UserIntroduction {
             return;
 
         // If we're here, the user accepted all messages
-        if (!member) {
-            console.error(`Unable to remove role from ${user.username}, because he seems to be unable to be fetched as a member?`);
-            return;
-        }
-
         if (this.userSaveData[user.id] && this.userSaveData[user.id].handled) // Check if we've handled the user
             return;
+
         this.userSaveData[user.id].handled = true;
 
         const acceptUser = () => {
@@ -113,9 +117,8 @@ export default class UserIntroduction {
             return;
         }
 
-        // Calculate time taken and free the memory.
+        // Calculate time taken
         const timeTaken = performance.now() - firstRuleAccepted;
-
         if (timeTaken > 30 * 1000) {
             console.log (`${user.username} took ${timeTaken / 1000} seconds to read all the rules, instantly accepting him.`);
             acceptUser();
