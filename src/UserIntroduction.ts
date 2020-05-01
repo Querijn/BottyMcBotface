@@ -10,6 +10,12 @@ class UserIntroductionData {
     messages: {[id: string]: string }
 };
 
+interface UserSaveData {
+    handled: boolean;
+    rulesAccepted: string[];
+    firstRuleAccepted: number;
+}
+
 export default class UserIntroduction {
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
@@ -20,8 +26,7 @@ export default class UserIntroduction {
     private data: UserIntroductionData;
     private role: Discord.Role;
     private ruleMessages: Discord.Message[] = [];
-    private firstRuleAccepted: {[userId: string]: number } = {};
-    private usersHandled: {[userId: string]: boolean } = {};
+    private userSaveData: {[userId: string]: UserSaveData } = {};
 
     constructor(bot: Discord.Client, commandController: CommandController, sharedSettings: SharedSettings, dataFile: string) {
         console.log("Requested UserIntroduction extension..");
@@ -55,11 +60,12 @@ export default class UserIntroduction {
             return;
         }
 
-        if (!this.ruleMessages.some(m => m.id === messageReaction.message.id)){
-            console.log(`${user.username} reacted to ${messageReaction.message.id}, which is not part of one of our ${this.ruleMessages.length} rules. (It said: "${messageReaction.message.content}")`);
+        // Check if it was a reaction to one of our rule messages
+        const rule = this.ruleMessages.find(m => m.id === messageReaction.message.id);
+        if (!rule)
             return;
-        }
 
+        // Did he have the role?
         const member = await this.channel.members.find(u => u.id == user.id)?.fetch();
         const hasRole = member?.roles.cache.some(r => r.id == this.role.id);
         if (!hasRole) {
@@ -67,22 +73,16 @@ export default class UserIntroduction {
             return;
         }
 
-        const ruleIndex = this.ruleMessages.findIndex(m => m.id === messageReaction.message.id);
-        let count = 0;
-        for (let message of this.ruleMessages) {
-            const hasAcceptedArray = message.reactions.cache.map(async r => {
-                const users = await (await r.fetch()).users.fetch();
-                return users.some(u => u.id === user.id);
-            });
-            const hasAccepted = (await Promise.all(hasAcceptedArray)).some(b => b);
-
-            if (hasAccepted) {
-                count++;
-            }
+        // Initialise save data
+        if (!this.userSaveData[user.id]) {
+            this.userSaveData[user.id] = {
+                handled: false,
+                rulesAccepted: [],
+                firstRuleAccepted: performance.now()
+            };
         }
-
-        if (!this.firstRuleAccepted[user.id])
-            this.firstRuleAccepted[user.id] = performance.now();
+        this.userSaveData[user.id].rulesAccepted.push(rule.id);
+        const count = this.userSaveData[user.id].rulesAccepted.length;
 
         console.log(`${user.username} accepted ${count}/${this.ruleMessages.length} rules.`);
         if (count != this.ruleMessages.length)
@@ -94,18 +94,19 @@ export default class UserIntroduction {
             return;
         }
 
-        if (this.usersHandled[user.id]) // Check if we've handled the user
+        if (this.userSaveData[user.id] && this.userSaveData[user.id].handled) // Check if we've handled the user
             return;
-        this.usersHandled[user.id] = true;
+        this.userSaveData[user.id].handled = true;
 
         const acceptUser = () => {
             console.log(`${user.username} was accepted to our server`);
             member.roles.remove(this.role);
             this.sendWelcome(member);
+            delete this.userSaveData[user.id];
         }
 
         // See if we can fetch the time they accepted the first rule.
-        const firstRuleAccepted = this.firstRuleAccepted[user.id];
+        const firstRuleAccepted = this.userSaveData[user.id].firstRuleAccepted;
         if (!firstRuleAccepted) {
             console.log (`Could not see when ${user.username} started accepting the rules.. Just accepting it, I guess.`);
             acceptUser();
@@ -114,10 +115,9 @@ export default class UserIntroduction {
 
         // Calculate time taken and free the memory.
         const timeTaken = performance.now() - firstRuleAccepted;
-        delete this.firstRuleAccepted[user.id];
 
         if (timeTaken > 30 * 1000) {
-            console.log (`${user.username} took ${timeTaken / 1000} seconds to read all the rules.`);
+            console.log (`${user.username} took ${timeTaken / 1000} seconds to read all the rules, instantly accepting him.`);
             acceptUser();
             return;
         }
