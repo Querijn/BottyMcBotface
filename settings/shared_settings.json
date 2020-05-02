@@ -215,6 +215,12 @@
         ]
     },
     "userIntro": {
+        "icon": {
+            "default": "🇬🇧",
+            "fr": "🇫🇷",
+            "es": "🇪🇸",
+            "de": "🇩🇪"
+        },
         "role": {
             "id": "511998818288402441",
             "name": "new"
@@ -223,49 +229,70 @@
             {
                 "id": "IntroLine1",
                 "lineTranslation": {
-                    "default": "If you wish to have access to this Discord server, you must first agree to all of the rules below. You can agree with them by clicking the :white_check_mark: underneath each."
+                    "default": "If you wish to have access to this Discord server, you must first agree to all of the rules below. You can agree with them by clicking the :white_check_mark: underneath each.",
+                    "fr": "Pour accéder au serveur Discord, vous devez d'abord accepter les règles ci-dessous. Pour accepter, cliquez sur le :white_check_mark: sous chaque règle.",
+                    "es": "Si deseas tener acceso a este servidor de Discord, primero debes aceptar todas las reglas escritas abajo. Puedes aceptarlas haciendo click al :white_check_mark: debajo de cada una.",
+                    "de": "Um Zugang zu diesem Discord-Server zu erhalten, musst du zunächst den Regeln zustimmen. Klicke dazu auf das :white_check_mark: unterhalb der Nachricht."
                 },
                 "type": "intro"
             },
             {
                 "id": "Rule5_1",
                 "lineTranslation": {
-                    "default": "I understand nobody here can help me with issues with any of Riot Games' games, reports, bans or installers. I understand this is not Riot Games' support, which is located at <https://support.riotgames.com/>. I know you can alternatively send an email to support@riotgames.com. This server is purely for interaction with the Riot API, Client API, or in-game/replay API."
+                    "default": "I understand nobody here can help me with issues with any of Riot Games' games, reports, bans or installers. I understand this is not Riot Games' support, which is located at <https://support.riotgames.com/>. I know you can alternatively send an email to support@riotgames.com. This server is purely for interaction with the Riot API, Client API, or in-game/replay API.",
+                    "fr": "Je comprends que personne sur ce serveur ne peut m'aider pour des problèmes avec un des jeu Riot Games, des signalements, bannissements ou installateurs. Je comprends que ce n'est pas le support de Riot Games, qui est ici : <https://support.riotgames.com/>. Je sais qu'à la place, je peux envoyer un mail à support@riotgames.com. Ce serveur est réservé aux échanges sur la Riot API, la Client API et les in-game/replay API.",
+                    "es": "Entiendo que nadie de aqui puede ayudarme con problemas relacionados con reportes, baneos o instalaciones de los juegos de Riot Games. Entiendo que esto no es el soporte de Riot Games, el cual esta localizado en <https://support.riotgames.com/>. Reconozco que alternativamente puedo enviar un correo a support@riotgames.com. Este servidor es para pura interacción con el API de Riot, API del Cliente de LoL, o el API de in-game/replay.",
+                    "de": "Ich verstehe, dass dieser Discord Server nicht bei Problemen rund um den Client, Bans, Reports oder die Installation von Riot Games Spielen helfen kann.  Den offiziellen Riot Support finde ich unter <https://support.riotgames.com> oder über E-Mail unter support@riotgames.com. Dieser Server ist ausschließlich für Interaktionen Zwecks der Riot-API, der Client-API und der Ingame-/Replay-API gedacht."
                 },
                 "type": "rule"
             },
             {
                 "id": "Rule5_2",
                 "lineTranslation": {
-                    "default": "I will not send messages or mention the Rioters, unless explicitly given permission for, or when I already were in an active conversation with that Rioter."
+                    "default": "I will not send messages or mention the Rioters, unless explicitly given permission for, or when I already were in an active conversation with that Rioter.",
+                    "fr": "Je ne vais pas envoyer de message aux Rioters ou les mentionner, sauf autorisation explicite, ou si je suis déjà en conversation avec le Rioter concerné.",
+                    "es": "No mandare mensajes o mencionare a los Rioters, a menos que me hayan dado permiso explícitamente para hacerlo, o cuando ya hubiera estado en una conversación activa con ese Rioter.",
+                    "de": "Ich werde keine Riot-Mitarbeiter direkt anschreiben oder in meinen Nachrichten taggen, solange ich nicht explizit die Erlaubnis dazu erhalten habe oder ich nicht auf eine aktive Unterhaltung antworte."
                 },
                 "type": "rule"
             },
             {
                 "id": "Rule5_3",
                 "lineTranslation": {
-                    "default": "If I have an issue that only a Rioter can provide a solution for, I will type `!ask`, followed by my question (for instance, `!ask It seems my application is stuck whenever I request something (HTTP 512); it does not happen on my developer key. The message in the JSON told me to contact the administrator!`) These questions will be answered during Office Hours."
+                    "default": "If I have an issue that only a Rioter can provide a solution for, I will type `!ask`, followed by my question (for instance, `!ask It seems my application is stuck whenever I request something (HTTP 512); it does not happen on my developer key. The message in the JSON told me to contact the administrator!`) These questions will be answered during Office Hours.",
+                    "fr": "Si j'ai un problème que seul un Rioter peut résoudre, je vais taper `!ask` suivi de ma question en anglais (par exemple, `!ask It seems my application is stuck whenever I request something (HTTP 512); it does not happen on my developer key. The message in the JSON told me to contact the administrator!`). Pour de m'aider à traduire, je peux mentionner `@Translator - French`. Les Rioters répondront à ces questions pendant les \"Office Hours\".",
+                    "es": "Si tengo un problema en el que solo un Rioter pueda encontrar la solución, escribiré el comando `!ask`, seguido de mi pregunta (por ejemplo, `!ask Parece que mi aplicación esta atorada cuando hago una request (HTTP 512); esto no pasa con mi llave de desarrollo. El mensaje en el JSON me dijo que contactara al administrador!) Estas preguntas serán respondidas durante Office Hours.`",
+                    "de": "Wenn ich eine Frage habe die nur ein Rioter beantworten kann, werde ich stattdessen die `!ask` Funktion verwenden (z.B. `!ask Meine Anwendung hat Probleme Anfragen an die API zu verarbeiten (HTTP 512); Die Serverantwort hat mich auf Kontakt mit einem Admin verwiesen`) Diese Fragen werden üblicherweise während der Office Hours beantwortet."
                 },
                 "type": "rule"
             },
             {
                 "id": "Rule1",
                 "lineTranslation": {
-                    "default": "I will be respectful. I won't spam, advertise or place NSFW (Not Safe For Work) content. My username, nickname and profile avatar are OK to use, and not offensive."
+                    "default": "I will be respectful. I won't spam, advertise or place NSFW (Not Safe For Work) content. My username, nickname and profile avatar are OK to use, and not offensive.",
+                    "fr": "Je serai courtois et respectueux. Je ne vais pas spammer, faire de la pub ou poster du contenu inapproprié ou NSFW (Not Safe For Work). Mon nom d'utilisateur, pseudo et image de profil ne sont ni inappropriés, ni offensants.",
+                    "es": "Seré respetuoso. No haré Spam, publicitaré o pondré contenido NSFW (No seguro para el trabajo). Mi usuario, alias y avatar están en ese lineamiento, y no son ofensivos.",
+                    "de": "Ich werde mich respektvoll verhalten. Ich werde weder spammen, werben noch Inhalte posten die als NSFW (Nicht jugendfrei/ unpassend fürs Arbeitsumfeld) klassifiziert werden könnten. Mein Benutzername, Spitzname und Profilbild sind entsprechend auch weder anstößig noch disrespektvoll."
                 },
                 "type": "rule"
             },
             {
                 "id": "Rule3",
                 "lineTranslation": {
-                    "default": "If I run into an issue, I will find the appropriate channel, and search for my issue first. I will also check the pins in the Discord channel."
+                    "default": "If I run into an issue, I will find the appropriate channel, and search for my issue first. I will also check the pins in the Discord channel.",
+                    "fr": "Si je rencontre un problème, je vais d'abord me rendre dans le canal concerné et y chercher mon problème. Je vais aussi vérifier les messages épinglés du canal Discord.",
+                    "es": "Si corro con algún problema, primero encontrare el canal apropiado donde buscar mi problema. También checare los mensajes fijados en el canal de Discord.",
+                    "de": "Falls ich ein Problem habe werde ich im entsprechenden Channel erst nach dem Problem suchen und dabei auch besonders auf die angehefteten Nachrichten achten."
                 },
                 "type": "rule"
             },
             {
                 "id": "Final",
                 "lineTranslation": {
-                    "default": "If I ignore any of the rules above, I understand I might get kicked from the server."
+                    "default": "If I ignore any of the rules above, I understand I might get kicked from the server.",
+                    "fr": "Je comprends que je pourrai être exclu du serveur si je ne respecte l'une de ces règles.",
+                    "es": "Si ignoro cualquiera de las reglas escritas arriba, entiendo que podré ser echado del servidor.",
+                    "de": "Ich verstehe, dass das Ignorieren der Regeln zu meinem Ausschluss vom Server führen kann."
                 },
                 "type": "rule"
             }

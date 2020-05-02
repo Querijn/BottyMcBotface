@@ -7,14 +7,14 @@ import Discord = require("discord.js");
 import fs = require("fs");
 
 class UserIntroductionData {
-    messages: {[id: string]: string }
+    messages: { [id: string]: string }
 };
 
 interface UserSaveData {
     handled: boolean;
-    rulesAccepted: string[];
+    rulesAccepted: { [lang: string]: string[] };
     firstRuleAccepted: number;
-}
+};
 
 export default class UserIntroduction {
     private bot: Discord.Client;
@@ -22,11 +22,12 @@ export default class UserIntroduction {
     private messageContents: string;
     private commandContents: Discord.MessageEmbed[];
     private commandController: CommandController;
-    private channel: Discord.TextChannel | null = null;
+    private channels: { [lang: string]: Discord.TextChannel | null } = {};
     private data: UserIntroductionData;
     private role: Discord.Role;
-    private ruleMessages: Discord.Message[] = [];
-    private userSaveData: {[userId: string]: UserSaveData } = {};
+    private ruleMessages: { [lang: string]: Discord.Message[] } = {};
+    private userSaveData: { [userId: string]: UserSaveData } = {};
+    private languages: string[] = [];
 
     constructor(bot: Discord.Client, commandController: CommandController, sharedSettings: SharedSettings, dataFile: string) {
         console.log("Requested UserIntroduction extension..");
@@ -41,32 +42,41 @@ export default class UserIntroduction {
 
     sendWelcome(user: Discord.GuildMember | Discord.PartialGuildMember) {
         user.send(this.messageContents)
-        .then(() => this.commandContents.forEach(embed => user.send({ embed })))
-        .catch((e) => console.log(`Error: Cannot send the welcome message to ${user.nickname} (${e})`));
+            .then(() => this.commandContents.forEach(embed => user.send({ embed })))
+            .catch((e) => console.log(`Error: Cannot send the welcome message to ${user.nickname} (${e})`));
         console.log(`Welcomed ${user.displayName}.`);
     }
 
     onUser(user: Discord.GuildMember | Discord.PartialGuildMember) {
-        if (this.channel) // Only add if the channel exists
-            user.roles.add(this.role);
+        user.roles.add(this.role);
     }
 
     async onReaction(messageReaction: Discord.MessageReaction, user: Discord.User) {
         if (user.bot)
             return;
 
-        if (!this.channel) {
+        const channel = Object.values(this.channels).find(c => c && c.id === messageReaction.message.channel.id);
+        if (!channel) {
             console.log("Got a reaction, but the channel does not exist.");
             return;
         }
 
-        // Check if it was a reaction to one of our rule messages
-        const rule = this.ruleMessages.find(m => m.id === messageReaction.message.id);
-        if (!rule)
-            return;
+        // Get language
+        let channelNameParts = channel.name.split("-");
+        let channelLanguage = channelNameParts[channelNameParts.length - 1];
 
-        this.channel = await this.channel.fetch();
-        let member = await this.channel.members.find(u => u.id == user.id);
+        let origNameParts = this.sharedSettings.server.introChannel.split("-"); // "new-users" -> "users" + "new-users-fr" -> "fr"
+        channelLanguage = channelLanguage !== origNameParts[origNameParts.length - 1] ? channelLanguage : "default";
+
+        // Check if it was a reaction to one of our rule messages
+        const rule = this.ruleMessages[channelLanguage].find(m => m.id === messageReaction.message.id);
+        if (!rule) {
+            console.log(`Got a reaction and the channel, but could not find the rule belonging to the message "${messageReaction.message.content}".`);
+            return;
+        }
+
+        this.channels[channelLanguage] = await channel.fetch();
+        let member = await channel.members.find(u => u.id == user.id);
         if (!member) {
             console.error(`Unable to evaluate ${user.username}, because he seems to be unable to be found in the channel?`);
             return;
@@ -85,15 +95,17 @@ export default class UserIntroduction {
         if (!this.userSaveData[user.id]) {
             this.userSaveData[user.id] = {
                 handled: false,
-                rulesAccepted: [],
+                rulesAccepted: {},
                 firstRuleAccepted: performance.now()
             };
         }
-        this.userSaveData[user.id].rulesAccepted.push(rule.id);
-        const count = this.userSaveData[user.id].rulesAccepted.length;
+        if (!this.userSaveData[user.id].rulesAccepted[channelLanguage])
+            this.userSaveData[user.id].rulesAccepted[channelLanguage] = [];
+        this.userSaveData[user.id].rulesAccepted[channelLanguage].push(rule.id);
+        const count = this.userSaveData[user.id].rulesAccepted[channelLanguage].length;
 
-        console.log(`${user.username} accepted ${count}/${this.ruleMessages.length} rules.`);
-        if (count != this.ruleMessages.length)
+        console.log(`${user.username} accepted ${count}/${this.ruleMessages[channelLanguage].length} ${channelLanguage} rules.`);
+        if (count != this.ruleMessages[channelLanguage].length)
             return;
 
         // If we're here, the user accepted all messages
@@ -117,7 +129,7 @@ export default class UserIntroduction {
         // See if we can fetch the time they accepted the first rule.
         const firstRuleAccepted = this.userSaveData[user.id].firstRuleAccepted;
         if (!firstRuleAccepted) {
-            console.log (`Could not see when ${user.username} started accepting the rules.. Just accepting it, I guess.`);
+            console.log(`Could not see when ${user.username} started accepting the rules.. Just accepting it, I guess.`);
             acceptUser();
             return;
         }
@@ -125,27 +137,39 @@ export default class UserIntroduction {
         // Calculate time taken
         const timeTaken = performance.now() - firstRuleAccepted;
         if (timeTaken > 30 * 1000) {
-            console.log (`${user.username} took ${timeTaken / 1000} seconds to read all the rules, instantly accepting him.`);
+            console.log(`${user.username} took ${timeTaken / 1000} seconds to read all the rules, instantly accepting him.`);
             acceptUser();
             return;
         }
 
         // If they took less than 30 seconds, impose a penalty twice the duration of what they had left to wait.
         const timePenalty = (30 * 1000 - timeTaken) * 2; // Basically, wait out the rest, but twice as long.
-        console.log (`${user.username} was pretty fast on reading all the rules (${timeTaken / 1000} seconds), so we're accepting him into the server in ${timePenalty / 1000} seconds.`);
-        const message = await this.channel?.send(`${user}, you were pretty fast with reading all those rules! I'll add you in a bit, make sure you read all the rules!`);
+        console.log(`${user.username} was pretty fast on reading all the rules (${timeTaken / 1000} seconds), so we're accepting him into the server in ${timePenalty / 1000} seconds.`);
+        const message = await channel.send(`${user}, you were pretty fast with reading all those rules! I'll add you in a bit, make sure you read all the rules!`);
         setTimeout(() => {
             message.delete();
             acceptUser();
         }, timePenalty);
     }
 
-    private async writeAllRules(channel: Discord.TextChannel) {
-        channel.bulkDelete(100);
+    private async writeAllRules(language: string, channel: Discord.TextChannel) {
+        try {
+            await channel.bulkDelete(100);
+        }
+        catch (e) {
+            console.error(`Unable to delete all messages in ${channel.name}`);
+        }
 
-        const messages: {[id: string]: Discord.Message } = {};
+        // First link all the channels
+        let firstMessage = "";
+        for (let otherLanguage of this.languages)
+            if (otherLanguage != language)
+               firstMessage += `${this.sharedSettings.userIntro.icon[otherLanguage]} => ${this.channels[otherLanguage]}\n`;
+        await channel.send(firstMessage);
+
+        const messages: { [id: string]: Discord.Message } = {};
         for (let line of this.sharedSettings.userIntro.lines) {
-            const message = await channel.send(line.lineTranslation["default"]);
+            const message = await channel.send(line.lineTranslation[language]);
             this.data.messages[line.id] = message.id;
             messages[line.id] = message;
 
@@ -154,23 +178,6 @@ export default class UserIntroduction {
         }
 
         return messages;
-    }
-
-    private async setupChannel(guild: Discord.Guild) {
-        try {
-            const channel = await guild.channels.create(this.sharedSettings.server.introChannel, { type: "text" });
-    
-            const roles = guild.roles.cache.array().reverse();
-            for (let r of roles) {
-                const isGuruOrNew = r.id == this.role.id || this.sharedSettings.commands.adminRoles.some(roleId => r.id == roleId);
-                await channel.createOverwrite(r, { VIEW_CHANNEL: isGuruOrNew });
-            }
-    
-            return channel;
-        }
-        catch (e) {
-            console.error(`Error occurred during setup of new user channel: ${e}`);
-        }
     }
 
     public async onBot() {
@@ -186,7 +193,7 @@ export default class UserIntroduction {
             console.error(`UserIntroduction: Unable to find server with ID: ${this.sharedSettings.server}`);
             return;
         }
-        
+
         let role: Discord.Role | undefined;
         if (this.sharedSettings.userIntro.role.id)
             role = guild.roles.cache.get(this.sharedSettings.userIntro.role.id);
@@ -202,52 +209,80 @@ export default class UserIntroduction {
         }
         this.role = role;
 
-        let channel = guild.channels.cache.find(c => c.name === this.sharedSettings.server.introChannel);
-        if (!channel) {
-            if (this.sharedSettings.botty.isProduction) {
-                console.error(`UserIntroduction: Unable to find user intro channel!`);
-                return;
-            }
-            else {
-                channel = await this.setupChannel(guild);
-                if (this.sharedSettings.botty.isProduction) {
-                    console.error(`UserIntroduction: Unable to create user intro channel!`);
-                    return;
-                }
+        // Count all translated lines.
+        const languages: { [lang: string]: number } = {};
+        for (let line of this.sharedSettings.userIntro.lines) {
+            for (let language of Object.keys(line.lineTranslation)) {
+                if (!languages[language])
+                    languages[language] = 1;
+                else
+                    languages[language]++;
             }
         }
-
-        if (!(channel instanceof Discord.TextChannel)) {
-            console.error(`UserIntroduction: channel is not a text channel!`);
+        if (!Object.values(languages).every(e => e == this.sharedSettings.userIntro.lines.length)) {
+            let message = "";
+            for (let [key, value] of Object.entries(languages))
+                message += `${key}: ${value}`;
+            console.error(`UserIntroduction: Missing some translations! Counts => ${message}`);
             return;
         }
-        this.channel = channel as Discord.TextChannel;
+        this.languages = Object.keys(languages);
 
-        // Link up our messages.
-        const ruleMessages = await this.writeAllRules(this.channel);
-        for (let line of this.sharedSettings.userIntro.lines) {
-            const messageId = this.data.messages[line.id];
-            if (!messageId) {
-                console.error("Unexpected issue: Noticed rules aren't writing up correctly (missing rules). Linked messages aren't working.");
-                this.channel = null;
+        for (let language in languages) {
+            let channelName = this.sharedSettings.server.introChannel;
+            if (language != "default")
+                channelName += "-" + language;
+
+            let channel = guild.channels.cache.find(c => c.name === channelName);
+            if (!channel) {
+                console.error(`UserIntroduction: Unable to find user intro channel ${channelName}!`);
                 return;
             }
 
-            let message = ruleMessages[line.id];
-
-            if (!message) {
-                console.error("Unexpected issue: Noticed rules aren't writing up correctly (missing rules). Linked messages aren't working.");
-                this.channel = null;
+            if (!(channel instanceof Discord.TextChannel)) {
+                console.error(`UserIntroduction: channel is not a text channel!`);
                 return;
             }
-
-            if (line.type != "rule") // Just store rules rules
-                delete ruleMessages[line.id];
+            this.channels[language] = channel as Discord.TextChannel;
         }
 
-        this.ruleMessages = Object.values(ruleMessages);
+        for (let language in languages) {
+            let channelName = this.sharedSettings.server.introChannel;
+            if (language != "default")
+                channelName += "-" + language;
+
+            const channel = this.channels[language];
+            if (!channel) {
+                console.error(`UserIntroduction: Unable to find user intro channel ${channelName} after fetching them!`);
+                return;
+            }
+
+            // Link up our messages.
+            const ruleMessages = await this.writeAllRules(language, channel);
+            for (let line of this.sharedSettings.userIntro.lines) {
+                const messageId = this.data.messages[line.id];
+                if (!messageId) {
+                    console.error("Unexpected issue: Noticed rules aren't writing up correctly (missing rules). Linked messages aren't working.");
+                    this.channels[language] = null;
+                    return;
+                }
+
+                let message = ruleMessages[line.id];
+
+                if (!message) {
+                    console.error("Unexpected issue: Noticed rules aren't writing up correctly (missing rules). Linked messages aren't working.");
+                    this.channels[language] = null;
+                    return;
+                }
+
+                if (line.type != "rule") // Just store rules rules
+                    delete ruleMessages[line.id];
+            }
+
+            this.ruleMessages[language] = Object.values(ruleMessages);
+        }
 
         this.bot.on("messageReactionAdd", (messageReaction: Discord.MessageReaction, user: Discord.User) => this.onReaction(messageReaction, user));
-        console.log(`UserIntroduction extension loaded. ${this.ruleMessages.length} rule messages are added: (${this.ruleMessages.map(r => r.id).join(", ")})\n\n${this.ruleMessages.join("\n")}`);
+        console.log(`UserIntroduction extension loaded. ${this.ruleMessages.length} rule messages are added: (${this.ruleMessages["default"].map(r => r.id).join(", ")})\n\n${this.ruleMessages["default"].join("\n")}`);
     }
 }

@@ -206,6 +206,7 @@ export interface SharedSettings {
             id: string;
             name: string;
         };
+        icon: { [lang: string]: string };
         lines: IntroLine[];
     }
 }
