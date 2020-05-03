@@ -57,6 +57,16 @@ interface SearchObjectContainer {
     score: number;
 }
 
+interface SummonerSpellDataContainer {
+    id: number;
+    name: string;
+    summonerLevel: number;
+    cooldown: number;
+    description: string;
+    iconPath: string;
+}
+
+
 interface ChampionData {
     id: number;
     name: string;
@@ -85,12 +95,23 @@ interface ItemData {
     iconPath: string;
 }
 
-type EmbeddableDatum = ChampionData | PerkData | ItemData;
+interface SummonerSpellData {
+    id: number;
+    name: string;
+    summonerLevel: number;
+    cooldown: number;
+    description: string;
+    type: "SummonerSpellData";
+    iconPath: string;
+}
+
+type EmbeddableDatum = ChampionData | PerkData | ItemData | SummonerSpellData;
 
 export default class GameData {
     private champData: ChampionDataContainer[];
     private perkData: PerkDataContainer[];
     private itemData: ItemDataContainer[];
+    private summonerSpellData: SummonerSpellDataContainer[];
 
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
@@ -112,6 +133,7 @@ export default class GameData {
         this.champData = await this.loadChampionData();
         this.perkData = await this.loadPerkData();
         this.itemData = await this.loadItemData();
+        this.summonerSpellData = await this.loadSummonerSpellData();
         console.log("Game data loaded!");
     }
 
@@ -155,8 +177,12 @@ export default class GameData {
         return items;
     }
 
+    public async loadSummonerSpellData(): Promise<SummonerSpellDataContainer[]> {
+        return Object.values(await fetch(this.sharedSettings.lookup.summonerSpellUrl).then(x => x.json())) as SummonerSpellDataContainer[];
+    }
+
     public onLookup(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
-        const supportedTypes = ["item", "perk", "rune", "champion", "champ"];
+        const supportedTypes = ["item", "perk", "rune", "champion", "champ", "summonerspell", "summ", "spell"];
 
         if (args.length === 0) {
             let response = "";
@@ -195,6 +221,12 @@ export default class GameData {
                 result = this.findChampion(searchTerm);
                 break;
             }
+            case "summonerspell": //fall through
+            case "summ": //fall through
+            case "spell": {
+                result = this.findSummonerSpell(searchTerm);
+                break;
+            }
         }
 
         if (typeof result === "string") {
@@ -230,6 +262,14 @@ export default class GameData {
                 embed.setThumbnail(imageString);
                 embed.setURL(this.sharedSettings.lookup.perkUrl);
                 break;
+            }
+            case "SummonerSpellData": {
+                const imageString = `https://raw.communitydragon.org/latest/plugins${(rawData as SummonerSpellData).iconPath}`
+                    .replace("lol-game-data", "rcp-be-lol-game-data/global/default")
+                    .replace("/assets", "")
+                    .toLowerCase();
+                embed.setThumbnail(imageString);
+                embed.setURL(this.sharedSettings.lookup.summonerSpellUrl)
             }
         }
         delete rawData.type;
@@ -404,5 +444,34 @@ export default class GameData {
                 skins: x.skins.map(s => s.name).filter(s => s !== x.name),
                 type: "ChampionData",
             }))[0] as ChampionData;
+    }
+
+    public findSummonerSpell(search: string): string | SummonerSpellData {
+        if (!search) {
+            return `There are currently ${this.summonerSpellData.length} champions in my lookup data!`;
+        }
+
+        const searchResult: SearchObjectContainer[] = this.summonerSpellData.map(i => ({
+            item: i,
+            score: search.match(/^\d+$/) ? levenshteinDistance(search, i.id.toString()) : Math.min(
+                levenshteinDistance(search, i.name.toLowerCase()),
+            ),
+        }))
+            .sort((a, b) => this.sortSearch(search, a, b))
+            .slice(0, this.sharedSettings.lookup.maxGuessCount);
+
+        // no exact match, so give alternatives
+        if (searchResult[0].score > this.sharedSettings.lookup.confidence) {
+            let response = "Too many results returned for that search, did you mean one of the options below?\n```";
+            response += searchResult.map(x => `${x.item.name} (Alternate terms: ${x.item.id} / ${x.item.key})`).join("\n");
+            response += "```";
+            return response;
+        }
+
+        return searchResult.map(x => x.item as SummonerSpellData)
+            .map(x => ({
+                ...x,
+                type: "SummonerSpellData",
+            }))[0] as SummonerSpellData;
     }
 }
