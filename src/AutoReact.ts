@@ -157,7 +157,7 @@ export default class AutoReact {
             "shubho oporanno", "shubho shondha",
             // Japanese
             "おはよう　ございます", "こんにちは",
-            "ohayou gozaimasu",
+            "ohayou gozaimasu", "konichiwa",
             "ohayō gozaimasu", "konnichiwa",
             "こんばんは", "おやすみ　なさい",
             "konbanwa", "oyasumi nasai",
@@ -172,6 +172,8 @@ export default class AutoReact {
             "dobro jutro", "jutro",
             "dobro veče", "laku noć",
             "dobar dan", "dobar dan",
+            //indonesian
+            "selamat pagi",
         ];
 
         const endChars = [

@@ -95,17 +95,14 @@ export default class GameData {
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
 
-    public constructor(bot: Discord.Client | null, settings: SharedSettings) {
+    public constructor(bot: Discord.Client, settings: SharedSettings) {
+        this.bot = bot;
+        this.sharedSettings = settings;
 
-        if (bot) {
-            this.bot = bot;
-            this.sharedSettings = settings;
-
-            bot.on("ready", () => {
-                this.reloadData();
-                setInterval(this.reloadData.bind(this), this.sharedSettings.lookup.refreshTimeout);
-            });
-        }
+        bot.on("ready", () => {
+            this.reloadData();
+            setInterval(this.reloadData.bind(this), this.sharedSettings.lookup.refreshTimeout);
+        });
     }
 
     public async reloadData() {

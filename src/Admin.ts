@@ -100,13 +100,28 @@ export default class Admin {
         if (!muteRole) {
             muteRole = guild.roles.cache.find((r) => r.name === this.sharedSettings.admin.muteRoleName);
             if (!muteRole) {
-                console.error(`Admin: Unable to find the muted role!`);
-                return;
+                console.error(`Admin: Unable to find the muted role, creating it!`);
+                muteRole = await guild.createRole({name: this.sharedSettings.admin.muteRoleName}, "Missing role used to handle spammers");
             }
 
+            this.sharedSettings.admin.muteRoleId = muteRole.id;
             console.log("Mute role id = " + muteRole.id);
         }
+
         this.muteRole = muteRole;
+        console.log("Updating muted role status for channels");
+        guild.channels.forEach(ch => {
+            ch.overwritePermissions(muteRole!, {
+                ADD_REACTIONS: false,
+                SEND_MESSAGES: false,
+                SEND_TTS_MESSAGES: false,
+                EMBED_LINKS: false,
+                ATTACH_FILES: false,
+                EXTERNAL_EMOJIS: false,
+                CONNECT: false,
+                SPEAK: false,
+            });
+        });
 
         this.adminChannel = adminChannel as Discord.TextChannel;
         console.log("Admin extension loaded.");
