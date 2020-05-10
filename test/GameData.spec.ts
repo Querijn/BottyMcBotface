@@ -9,9 +9,13 @@ import { SharedSettings } from "../src/SharedSettings";
 
 describe("GameData", () => {
     describe("#sortSearch(...)", () => {
+        const mockClient = TypeMoq.Mock.ofType(Discord.Client);
+        mockClient.callBase = true;
+        mockClient.setup(c => c.on(TypeMoq.It.isAny(), TypeMoq.It.isAny()));
+
         const mockSettings = TypeMoq.Mock.ofType<SharedSettings>();
 
-        const data = new GameData(null, mockSettings.object);
+        const data = new GameData(mockClient.object, mockSettings.object);
 
         const sortSearchTestHelper: typeof data.sortSearch = (
             search, smaller, larger,
@@ -147,5 +151,7 @@ describe("GameData", () => {
 
             sortSearchTestHelper("hello", smaller, larger);
         });
+
+        mockClient.object.destroy();
     });
 });
