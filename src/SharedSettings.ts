@@ -58,6 +58,7 @@ export interface SharedSettings {
         skinUrl: string;
         perkUrl: string;
         itemUrl: string;
+        summonerSpellUrl: string;
         confidence: number;
         maxGuessCount: number;
     };

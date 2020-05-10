@@ -18,7 +18,10 @@
                 "perk", 
                 "rune", 
                 "champion", 
-                "champ"
+                "champ",
+                "summonerspell",
+                "summ",
+                "spell"
             ],
             "description": "Search for information on that content in the game"
         }
