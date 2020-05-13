@@ -72,13 +72,12 @@ export default class VersionChecker {
             // new version
             // TODO: Maybe check for higher version, denote type of update? (patch/etc)
             this.data.latestDataDragonVersion = dataDragonVersion[0];
-            const downloadLink = `http://ddragon.leagueoflegends.com/cdn/dragontail-${this.data.latestDataDragonVersion}.tgz`;
+            const downloadLink = `http://ddragon.leagueoflegends.com/cdn/dragontail-${this.data.latestDataDragonVersion}.zip`;
 
             const embed = new Discord.MessageEmbed()
                 .setColor(0x42f456)
                 .setTitle("New DDragon version!")
-                .setDescription(`Version ${this.data.latestDataDragonVersion} of DDragon has hit the CDN.\nYou can find the tool here:\nhttp://ddragon.leagueoflegends.com/tool\n\nAnd the download is available here:\n${downloadLink}`)
-                .setURL("http://ddragon.leagueoflegends.com/tool")
+                .setDescription(`Version ${this.data.latestDataDragonVersion} of DDragon has hit the CDN.\nThe download is available here:\n${downloadLink}`)
                 .setThumbnail(this.sharedSettings.versionChecker.dataDragonThumbnail);
 
             this.channel.send({ embed });
