@@ -172,7 +172,7 @@
         },
         {
             "command": "dragontail",
-            "message": "https://ddragon.leagueoflegends.com/cdn/dragontail-{ddragonVersion}.tgz",
+            "message": "https://ddragon.leagueoflegends.com/cdn/dragontail-{ddragonVersion}.zip",
             "counter": 51,
             "categoryId": "%F0%9F%94%97"
         },
