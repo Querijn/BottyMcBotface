@@ -67,7 +67,21 @@ export default class Botty {
             if (message.author.bot) return; // Ignore bot in general
             if (message.channel.type === "dm") return; // Don't output DMs
 
-            console.log(`${message.author.username}'s message in ${message.channel} was deleted. Contents: \n${message.cleanContent}\n`);
+            console.log(`${message.author.username}'s (${message.author.id}) message in ${message.channel} was deleted. Contents: \n${message.cleanContent}\n`);
+        });
+
+        this.client.on('voiceStateUpdate', (oldMember, newMember) => {
+            let newUserChannel = newMember.channel;
+            let oldUserChannel = oldMember.channel;
+
+            let member = newMember.member || oldMember.member;
+
+            if (newUserChannel) {
+                console.log(`${member?.user}'s (${oldMember.id}) joined voice channel ${newUserChannel}\n`);
+            }
+            if (oldUserChannel) {
+                console.log(`${member?.user}'s (${oldMember.id}) left voice channel ${oldUserChannel}\n`);
+            }
         });
 
         this.client.on("messageUpdate", (oldMessage: Discord.Message, newMessage: Discord.Message) => {
