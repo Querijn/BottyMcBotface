@@ -77,10 +77,10 @@ export default class Botty {
             let member = newMember.member || oldMember.member;
 
             if (newUserChannel) {
-                console.log(`${member?.user}'s (${oldMember.id}) joined voice channel ${newUserChannel}\n`);
+                console.log(`${member?.user.username}'s (${oldMember.id}) joined voice channel ${newUserChannel}\n`);
             }
             if (oldUserChannel) {
-                console.log(`${member?.user}'s (${oldMember.id}) left voice channel ${oldUserChannel}\n`);
+                console.log(`${member?.user.username}'s (${oldMember.id}) left voice channel ${oldUserChannel}\n`);
             }
         });
 
