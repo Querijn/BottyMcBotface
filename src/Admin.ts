@@ -217,14 +217,19 @@ export default class Admin {
         }
 
         console.log(`${id} will be unmuted ${prettyMs(diff, { verbose: true })} from now.`);
+
+        const maxTimeout = 1000 * 60 * 60 * 24 * 24; // 24 days
         this.muteTimers[id] = setTimeout(() => {
             delete this.muteTimers[id];
-            this.unmute(id);
-        }, diff);
+            this.handleMuteData(id);
+        }, diff > maxTimeout ? maxTimeout : diff);
     }
 
     private async mute(message: Discord.Message, member: Discord.GuildMember, reason: string): Promise<string> {
-        this.data.muted[member.id] = new MuteData(message.author.id, reason, new Date((new Date()).getTime() + this.sharedSettings.admin.muteTimeout));
+        const ticketCount = this.data.tickets[member.id] ? this.data.tickets[member.id].length : 1;
+        const muteTimeout = this.sharedSettings.admin.muteTimeout * (ticketCount * ticketCount);
+
+        this.data.muted[member.id] = new MuteData(message.author.id, reason, new Date((new Date()).getTime() + muteTimeout));
         await member.roles.add(this.muteRole);
 
         this.handleMuteData(member.id);
