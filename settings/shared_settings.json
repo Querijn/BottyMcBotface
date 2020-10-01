@@ -199,10 +199,10 @@
         }
     },
     "pickem": {
-        "leaderboardUrl": "https://pickem.euw.lolesports.com/api/get_vs_list_rankings/{listId}",
-        "groupPickUrl": "https://pickem.euw.lolesports.com/api/get_group_picks/series/{series}/user/{user}",
-        "bracketsUrl": "https://pickem.euw.lolesports.com/api/get_bracket_picks/series/{series}/user/{user}",
-        "pointsUrl": "https://pickem.euw.lolesports.com/api/get_points/series/{series}?user=",
+        "leaderboardUrl": "https://pickem.lolesports.com/api/get_vs_list_rankings/{listId}",
+        "groupPickUrl": "https://pickem.lolesports.com/api/get_group_picks/series/{series}/user/{user}",
+        "bracketsUrl": "https://pickem.lolesports.com/api/get_bracket_picks/series/{series}/user/{user}",
+        "pointsUrl": "https://pickem.lolesports.com/api/get_points/series/{series}?user=",
         "worldsId": 7,
         "blankId": 1743991,
         "listId": [918098],
