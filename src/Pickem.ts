@@ -12,7 +12,8 @@ interface PickemLeaderboardEntry {
     id: number;
     rank: number;
     points: number;
-    summonerName: string;
+    gameName: string;
+    tagLine: string;
 }
 
 interface PickemLeaderboard {
@@ -44,12 +45,14 @@ interface PickemGroup {
 }
 
 interface PickemUser {
-    summonerName: string;
+    gameName: string;
+    tagLine: string;
     id: number;
 }
 
 interface PickemUserPoints {
-    summonerName: string;
+    gameName: string;
+    tagLine: string;
     id: number;
     groupPoints: number;
     bracketPoints: number;
@@ -143,7 +146,7 @@ export default class Pickem {
         const anyBracket = await this.getBracketPicks(this.settings.pickem.worldsId, this.settings.pickem.blankId);
         anyBracket.points = Number.POSITIVE_INFINITY;
 
-        const best: PickemGroupPick = { user: { summonerName: "The Correct Choice", id: -1 }, groups: [] };
+        const best: PickemGroupPick = { user: { gameName: "The Correct Choice", tagLine: "CORRECT",  id: -1 }, groups: [] };
         for (const group of anyGroup.groups) {
             best.groups.push({ name: group.name, teams: group.teams.sort(this.pickemTeamCompareFunction), userPoints: Number.POSITIVE_INFINITY });
         }
@@ -176,7 +179,7 @@ export default class Pickem {
         const leaderboard: PickemLeaderboard = await data.json();
 
         for (const entry of leaderboard.stageToRankings["both"]) {
-            const newItem = { summonerName: entry.summonerName, id: entry.id };
+            const newItem = { gameName: entry.gameName, tagLine: entry.tagLine, id: entry.id };
             if (this.currentMemberList.indexOf(newItem) === -1) {
                 this.currentMemberList.push(newItem);
             }
@@ -204,7 +207,7 @@ export default class Pickem {
                 }
             }
 
-            list += `${place}. ${sorted[i].summonerName} : ${sorted[i].totalPoints}\n`;
+            list += `${place}. ${sorted[i].gameName}: ${sorted[i].totalPoints}\n`;
         }
 
         embed.addField("Leaderboard", list);
@@ -229,7 +232,7 @@ export default class Pickem {
 
     public generateEmbedGroupPickem(match: PickemGroupPick) {
         const embed = new Discord.MessageEmbed();
-        embed.setTitle(match.user.id >= 0 ? `${match.user.summonerName}'s pickem` : "Current standings");
+        embed.setTitle(match.user.id >= 0 ? `${match.user.gameName}'s pickem` : "Current standings");
         let formattingIndex = 0;
         for (const group of match.groups) {
             let value = "";
@@ -337,7 +340,7 @@ export default class Pickem {
             return;
         }
 
-        const match = this.currentMemberList.filter(a => a.summonerName.replace(/\s/g, "").toLowerCase() === args[0].replace(/\s/g, "").toLowerCase())[0];
+        const match = this.currentMemberList.filter(a => a.gameName.replace(/\s/g, "").toLowerCase() === args[0].replace(/\s/g, "").toLowerCase())[0];
         if (match) {
             const group = await this.getGroupPicks(this.settings.pickem.worldsId, match.id);
             const bracket = await this.getBracketPicks(this.settings.pickem.worldsId, match.id);
