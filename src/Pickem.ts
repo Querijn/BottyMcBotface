@@ -257,6 +257,9 @@ export default class Pickem {
     }
 
     public generateBracket(pick: PickemBracketPick) {
+        if (pick.rounds.length !== 3 || pick.rounds[0].matches.length !== 4)
+            return null;
+
         const firstMatch = pick.rounds[0].matches[0];
         const secondMatch = pick.rounds[0].matches[1];
         const thirdMatch = pick.rounds[0].matches[2];
@@ -345,20 +348,10 @@ export default class Pickem {
     }
 
     public doPrint(channel: Discord.TextChannel, group: PickemGroupPick, bracket: PickemBracketPick) {
-        switch (this.settings.pickem.printMode) {
-            case PickemPrintMode.BOTH: {
-                channel.send({ embed: this.generateEmbedGroupPickem(group) });
-                channel.send(this.generateBracket(bracket));
-                break;
-            }
-            case PickemPrintMode.GROUP: {
-                channel.send({ embed: this.generateEmbedGroupPickem(group) });
-                break;
-            }
-            case PickemPrintMode.BRACKET: {
-                channel.send(this.generateBracket(bracket));
-                break;
-            }
-        }
+        const bracketOutput = this.generateBracket(bracket);
+        if (bracketOutput === null)
+            channel.send({ embed: this.generateEmbedGroupPickem(group) });
+        else
+            channel.send(bracketOutput);
     }
 }
