@@ -177,13 +177,7 @@ export default class Pickem {
         const url = this.settings.pickem.leaderboardUrl.replace("{listId}", listId);
         const data = await fetch(url);
         const leaderboard: PickemLeaderboard = await data.json();
-
-        for (const entry of leaderboard.stageToRankings["both"]) {
-            const newItem = { gameName: entry.gameName, tagLine: entry.tagLine, id: entry.id };
-            if (this.currentMemberList.indexOf(newItem) === -1) {
-                this.currentMemberList.push(newItem);
-            }
-        }
+        this.currentMemberList = leaderboard.stageToRankings["both"];
 
         setTimeout(this.updateUserList.bind(this, listId), this.settings.pickem.updateTimeout);
     }
