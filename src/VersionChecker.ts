@@ -72,7 +72,7 @@ export default class VersionChecker {
             // new version
             // TODO: Maybe check for higher version, denote type of update? (patch/etc)
             this.data.latestDataDragonVersion = dataDragonVersion[0];
-            const downloadLink = `http://ddragon.leagueoflegends.com/cdn/dragontail-${this.data.latestDataDragonVersion}.zip`;
+            const downloadLink = `http://ddragon.leagueoflegends.com/cdn/dragontail-${this.data.latestDataDragonVersion}.tgz`;
 
             const embed = new Discord.MessageEmbed()
                 .setColor(0x42f456)
