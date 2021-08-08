@@ -1,5 +1,3 @@
-I'm planning to no longer contribute to BottyMcBotface. If you wish to continue working on it, please fork the project. If you wish to host it, let me know. It's currently paid for until November 2021.
-
 # BottyMcBotface
 
 [![Build Status](https://travis-ci.org/Querijn/BottyMcBotface.svg?branch=master)](https://travis-ci.org/Querijn/BottyMcBotface)
