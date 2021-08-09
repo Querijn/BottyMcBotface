@@ -7,7 +7,6 @@ import CommandController from "./CommandController";
 import Info from "./Info";
 import KeyFinder from "./KeyFinder";
 import Logger from "./Logger";
-import OfficeHours from "./OfficeHours";
 import RiotAPILibraries from "./RiotAPILibraries";
 import Techblog from "./Techblog";
 import Uptime from "./Uptime";
@@ -41,8 +40,6 @@ const apiUrlInterpreter = new ApiUrlInterpreter(bot.client, sharedSettings, apiS
 const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
 const notes = new Info(bot, sharedSettings, "data/info_data.json", versionChecker);
 const admin = new Admin(bot.client, sharedSettings, "data/admin_data.json");
-const officeHours = new OfficeHours(bot.client, admin, sharedSettings, "data/office_hours_data.json");
-const userIntroduction = new UserIntroduction(bot.client, controller, sharedSettings, "data/intro_data.json");
 const react = new AutoReact(bot.client, sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json");
 const uptime = new Uptime(sharedSettings, "data/uptime_data.json");
 const status = new ApiStatus(sharedSettings);
@@ -82,12 +79,6 @@ controller.registerCommand(commandList.keyFinder, keyFinder.onKeyList.bind(keyFi
 // Info commands
 controller.registerCommand(commandList.info.note, notes.onNote.bind(notes));
 controller.registerCommand(commandList.info.all, notes.onAll.bind(notes));
-
-// Office hours commands
-controller.registerCommand(commandList.officeHours.ask, officeHours.onAsk.bind(officeHours));
-controller.registerCommand(commandList.officeHours.ask_for, officeHours.onAskFor.bind(officeHours));
-controller.registerCommand(commandList.officeHours.open, officeHours.onOpen.bind(officeHours));
-controller.registerCommand(commandList.officeHours.close, officeHours.onClose.bind(officeHours));
 
 // Auto react commands
 controller.registerCommand(commandList.autoReact.toggle_default_thinking, react.onToggleDefault.bind(react));
