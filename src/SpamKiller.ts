@@ -84,6 +84,7 @@ export default class SpamKiller {
             violator.violations++;
             if (violator.violations > 2 && violator.response) { // Just delete the response message when they spam it constantly
                 await violator.response.delete();
+                await member.kick();
                 violator.response = null;
             }
             return;
