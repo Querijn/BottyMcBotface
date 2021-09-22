@@ -103,14 +103,14 @@ export default class VersionChecker {
 
             do {
                 nextMinor++;
-                patchNotes = `https://na.leagueoflegends.com/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
+                patchNotes = `https://www.leagueoflegends.com/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
                 tries++;
 
-                let response = await fetch(`https://lolstatic-a.akamaihd.net/frontpage/apps/prod/harbinger-l10-website/en-us/production/en-us/page-data/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/page-data.json`, {
+                let response = await fetch(`https://www.leagueoflegends.com/page-data/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/page-data.json`, {
                     method: "GET",
                 });
 
-                if (response.ok) {
+                if (response.ok && response.headers.get("Content-Type") === "application/json") {
                     lastNewValidMajor = nextMajor;
                     lastNewValidMinor = nextMinor;
                     validPatchNotes = patchNotes;
@@ -120,14 +120,14 @@ export default class VersionChecker {
                     nextMajor++;
                     nextMinor = 1;
 
-                    patchNotes = `https://na.leagueoflegends.com/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
+                    patchNotes = `https://www.leagueoflegends.com/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
                     tries++;
 
-                    response = await fetch(`https://lolstatic-a.akamaihd.net/frontpage/apps/prod/harbinger-l10-website/en-us/production/en-us/page-data/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/page-data.json`, {
+                    response = await fetch(`https://www.leagueoflegends.com/page-data/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/page-data.json`, {
                         method: "GET",
                     });
 
-                    if (response.ok) {
+                    if (response.ok && response.headers.get("Content-Type") === "application/json") {
                         lastNewValidMajor = nextMajor;
                         lastNewValidMinor = nextMinor;
                         validPatchNotes = patchNotes;
