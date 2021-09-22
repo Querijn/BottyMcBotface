@@ -82,8 +82,15 @@ export default class SpamKiller {
         const violator = this.violators.find(v => message.author.id === v.authorId);
         if (violator) {
             violator.violations++;
-            if (violator.violations > 2 && violator.response) { // Just delete the response message when they spam it constantly
-                await violator.response.delete();
+            if (message.mentions.everyone || violator.violations > 2) { // Just delete the response message when they spam it constantly
+                if (violator.response)
+                    violator.response.delete();
+
+                try {
+                    await member.send("Hey there! You've been kicked from the Riot Games Third Party Developer Discord because you triggered our spam filter. There's a good chance your account has been compromised, please change your password.");
+                }
+                catch {}
+
                 await member.kick();
                 violator.response = null;
             }
