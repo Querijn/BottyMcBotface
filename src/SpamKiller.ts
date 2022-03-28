@@ -65,7 +65,11 @@ export default class SpamKiller {
         if (this.sharedSettings.spam.allowedUrls.findIndex(u => u.endsWith(hostname)) !== -1)
             return;
 
-        const member = message.member ? message.member : await message.guild.members.fetch(message.author.id);
+        const guild = <Discord.Guild>message.guild; // Got to explicitly cast away null because Typescript doesn't detect
+        if (!guild && !message.guild)
+            throw new Error(`Unable to find the guild where this message was found: '${message.content}' (${message.author.username})`);
+
+        const member = message.member ? message.member : await guild.members.fetch(message.author.id);
         if (!member)
             throw new Error(`Unable to find member that wrote the message '${message.content}' (${message.author.username})`);
 
