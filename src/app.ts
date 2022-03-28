@@ -9,10 +9,8 @@ import KeyFinder from "./KeyFinder";
 import Logger from "./Logger";
 import RiotAPILibraries from "./RiotAPILibraries";
 import Techblog from "./Techblog";
-import Uptime from "./Uptime";
 import VersionChecker from "./VersionChecker";
 import ESportsAPI from "./ESports";
-import Pickem from "./Pickem";
 import Endpoint from "./Endpoint";
 import PageDiffer from "./PageDiffer";
 
@@ -41,11 +39,9 @@ const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/vers
 const notes = new Info(bot, sharedSettings, "data/info_data.json", versionChecker);
 const admin = new Admin(bot.client, sharedSettings, "data/admin_data.json");
 const react = new AutoReact(bot.client, sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json");
-const uptime = new Uptime(sharedSettings, "data/uptime_data.json");
 const status = new ApiStatus(sharedSettings);
 const libraries = new RiotAPILibraries(sharedSettings);
 const esports = new ESportsAPI(bot.client, sharedSettings);
-const pickem = new Pickem(bot.client, sharedSettings);
 const endpoint = new Endpoint(sharedSettings, "data/endpoints.json");
 const pageDiffer = new PageDiffer(bot.client, sharedSettings, "data/page_differ.json");
 const spamKiller = new SpamKiller(bot.client, sharedSettings);
@@ -68,7 +64,6 @@ controller.registerCommand(commandList.admin.ticket, admin.onTicket.bind(admin))
 
 // Esport commands
 controller.registerCommand(commandList.esports.date, esports.onCheckNext.bind(esports));
-controller.registerCommand(commandList.esports.pickem, pickem.onPickem.bind(pickem));
 
 // API schema commands
 controller.registerCommand(commandList.apiSchema.updateSchema, apiSchema.onUpdateSchemaRequest.bind(apiSchema));
@@ -84,9 +79,6 @@ controller.registerCommand(commandList.info.all, notes.onAll.bind(notes));
 controller.registerCommand(commandList.autoReact.toggle_default_thinking, react.onToggleDefault.bind(react));
 controller.registerCommand(commandList.autoReact.refresh_thinking, react.onRefreshThinking.bind(react));
 controller.registerCommand(commandList.autoReact.toggle_react, react.onToggleReact.bind(react));
-
-// Uptime commands
-controller.registerCommand(commandList.uptime, uptime.onUptime.bind(uptime));
 
 // API status commands
 controller.registerCommand(commandList.apiStatus, status.onStatus.bind(status));
