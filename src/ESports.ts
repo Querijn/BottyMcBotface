@@ -207,11 +207,8 @@ export default class ESportsAPI {
 
             let output = "";
             for (const game of games) {
-
-                const moment = momentjs(game.time, "YYYY MM DD HH:mm");
-                if (moment.isBefore(new Date())) continue;
-
-                output += `${game.teamA} vs ${game.teamB}, ${moment.fromNow()}\n`;
+                const date = new Date(game.time);
+                output += `${game.teamA} vs ${game.teamB}, <t:${date.getTime()/1000}:R> (${game.time})\n`;
             }
 
             if (output.trim().length === 0)

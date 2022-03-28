@@ -72,7 +72,7 @@ interface ChampionData {
     name: string;
     key: string;
     skins: string[];
-    type: "ChampionData";
+    type?: "ChampionData";
 }
 
 interface PerkData {
@@ -80,8 +80,8 @@ interface PerkData {
     name: string;
     shortDesc: string;
     endOfGameStatDescs: string[];
-    type: "PerkData";
-    iconPath: string;
+    type?: "PerkData";
+    iconPath?: string;
 }
 
 interface ItemData {
@@ -91,8 +91,8 @@ interface ItemData {
     cost: number;
     from: string[];
     to: string[];
-    type: "ItemData";
-    iconPath: string;
+    type?: "ItemData";
+    iconPath?: string;
 }
 
 interface SummonerSpellData {
@@ -102,7 +102,7 @@ interface SummonerSpellData {
     cooldown: number;
     description: string;
     type: "SummonerSpellData";
-    iconPath: string;
+    iconPath?: string;
 }
 
 type EmbeddableDatum = ChampionData | PerkData | ItemData | SummonerSpellData;

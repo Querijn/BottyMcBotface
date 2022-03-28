@@ -360,8 +360,11 @@ export default class Info {
             pages[category.icon] = page;
         }
 
-        let reply = await message.channel.send({ embed: firstPage });
-        if (Array.isArray(reply)) reply = reply[0];
+        if (!firstPage)
+            return;
+
+        let replies = await message.channel.send({ embed: firstPage });
+        let reply: Discord.Message = Array.isArray(replies) ? replies[0] : replies;
 
         this.categorisedMessages[reply.id] = new CategorisedMessage(pages);
 

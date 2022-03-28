@@ -178,8 +178,7 @@ export default class Admin {
         }
 
         const tickets: string[] = [];
-
-        const dateOptions = { year: "numeric", month: "long", day: "numeric" };
+ 
         for (const [id, member] of mentions) {
 
             if (!this.data.tickets[id])
@@ -187,7 +186,7 @@ export default class Admin {
             const ticketData = this.data.tickets[id];
 
             for (const ticket of ticketData)
-                tickets.push(`\`${new Date(ticket.dateString).toLocaleDateString("en-US", dateOptions)}\`: ${ticket.reason}`);
+                tickets.push(`\`${new Date(ticket.dateString).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}\`: ${ticket.reason}`);
         }
 
         const ticketMessage = tickets.length > 0 ?
