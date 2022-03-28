@@ -2,7 +2,7 @@
  * Counts the substitutions needed to transform a into b
  * source adapted from: https://en.wikipedia.org/wiki/Levenshtein_distance#Iterative_with_two_matrix_rows
  * @param a first string
- * @param b seconds string
+ * @param b second string
  */
 export function levenshteinDistance(a: string, b: string): number {
     if (a === b) {

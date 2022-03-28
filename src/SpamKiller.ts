@@ -2,6 +2,7 @@ import Discord = require("discord.js");
 import prettyMs = require("pretty-ms");
 import { SharedSettings } from "./SharedSettings";
 import url = require("url");
+import { levenshteinDistance } from "./LevenshteinDistance";
 
 class Violator {
     public response: Discord.Message | null;
@@ -48,6 +49,56 @@ export default class SpamKiller {
         if (!message.guild || message.author.bot)
             return;
 
+        this.checkForLinks(message);
+        this.checkForGunbuddy(message);
+    }
+
+    async checkForGunbuddy(message: Discord.Message) {
+        const splitWords = (message.content+" ").match(/\b(\w+\W+)/g) || [];
+        const words = splitWords.map(w => w.toLowerCase().replace(/[,-\.\/\?]/g, "").trim());
+
+        // Check for "gunbuddy" or alike
+        const gunbuddyLikenesses = words.map(w => levenshteinDistance(w, "gunbuddy"));
+        let hasGunbuddyMessage = gunbuddyLikenesses.findIndex(l => l <= 2) >= 0; // if you're 2 characters off, add a violating message
+
+        // Check for "gunbuddies" or alike
+        if (!hasGunbuddyMessage) {
+            const gunbuddiesLikenesses = words.map(w => levenshteinDistance(w, "gunbuddies"));
+            hasGunbuddyMessage = gunbuddiesLikenesses.findIndex(l => l <= 2) >= 0; // if you're 2 characters off, add a violating message
+        }
+
+        // Check for "riotbuddy" or alike
+        if (!hasGunbuddyMessage) {
+            const riotBuddyLikeness = words.map(w => levenshteinDistance(w, "riotbuddy"));
+            hasGunbuddyMessage = riotBuddyLikeness.findIndex(l => l <= 3) >= 0; // if you're 2 characters off, add a violating message
+        }
+
+        // Check for "riotbuddies" or alike
+        if (!hasGunbuddyMessage) {
+            const riotBuddyLikeness = words.map(w => levenshteinDistance(w, "riotbuddies"));
+            hasGunbuddyMessage = riotBuddyLikeness.findIndex(l => l <= 3) >= 0; // if you're 2 characters off, add a violating message
+        }
+
+        // Check for "gun" and "buddy" or alike
+        if (!hasGunbuddyMessage) {
+            let gunWordIndices =        words.map((w, i) => levenshteinDistance(w, "gun")       <= 1 ? i : -1).filter(w => w >= 0);
+            let riotWordIndices =       words.map((w, i) => levenshteinDistance(w, "riot")      <= 1 ? i : -1).filter(w => w >= 0)
+            const buddyWordIndices =    words.map((w, i) => levenshteinDistance(w, "buddy")     <= 2 ? i : -1).filter(w => w >= 0);
+            const buddiesWordIndices =  words.map((w, i) => levenshteinDistance(w, "buddies")   <= 2 ? i : -1).filter(w => w >= 0);
+            gunWordIndices = gunWordIndices.concat(riotWordIndices);
+
+            const hasBuddyWord = buddyWordIndices.findIndex(b =>     gunWordIndices.indexOf(b - 1) >= 0) >= 0;
+            const hasBuddiesWord = buddiesWordIndices.findIndex(b => gunWordIndices.indexOf(b - 1) >= 0) >= 0;
+            hasGunbuddyMessage = hasBuddyWord || hasBuddiesWord;
+        }
+
+        if (hasGunbuddyMessage) {
+            message.channel.send(`Yup, '${message.content}' triggers it`);
+            // this.addViolatingMessage(message, `Hey, ${message.author}, you triggered our spam detector. this is not a Riot Games server. There are no Rioters here, and no one can give you a gunbuddy. See #game-support for more information.`, false);
+        }
+    }
+
+    async checkForLinks(message: Discord.Message) {
         const httpOffset = message.content.indexOf("http://");
         const httpsOffset = message.content.indexOf("https://");
 
@@ -65,7 +116,12 @@ export default class SpamKiller {
         if (this.sharedSettings.spam.allowedUrls.findIndex(u => u.endsWith(hostname)) !== -1)
             return;
 
-        const guild = <Discord.Guild>message.guild; // Got to explicitly cast away null because Typescript doesn't detect
+        this.addViolatingMessage(message, `Hey, ${message.author}, we require users to verify that they are human before they are allowed to post a link. If you are a human, react with :+1: to this message to gain link privileges. If you are a bot, please go spam somewhere else. 👍`);
+    }
+
+    async addViolatingMessage(message: Discord.Message, warningMessage: string, allowThrough: boolean = true) {
+
+        const guild = <Discord.Guild>message.guild; // Got to explicitly cast away null because Typescript doesn't detect this
         if (!guild && !message.guild)
             throw new Error(`Unable to find the guild where this message was found: '${message.content}' (${message.author.username})`);
 
@@ -76,7 +132,7 @@ export default class SpamKiller {
         if (member.roles.cache.size > 1) // Only act on people without roles
             return;
 
-        console.log(`SpamKiller: ${message.author.username} posted: '${message.content}', deleting the message..`);
+        console.log(`SpamKiller: ${message.author} posted: '${message.content}', deleting the message..`);
         const author = message.author;
         const messageContent = message.cleanContent;
         if (message.deletable)
@@ -101,13 +157,14 @@ export default class SpamKiller {
             return;
         }
 
-        let response = await message.channel.send(`Hey, ${message.author}, we require users to verify that they are human before they are allowed to post a link. If you are a human, react with :+1: to this message to gain link privileges. If you are a bot, please go spam somewhere else. 👍`);
+        let response = await message.channel.send(warningMessage);
 
         if (Array.isArray(response))
             response = response[0];
         this.violators.push({ messageContent, response, authorId: author.id, authorUsername: author.username, violations: 1 });
 
-        await response.react("👍");
+        if (allowThrough) // Technically not the right way to do it, but whatever
+            await response.react("👍");
     }
 
     async onReaction(messageReaction: Discord.MessageReaction, user: Discord.User) {
