@@ -75,7 +75,7 @@ export default class UserIntroduction {
             return;
         }
 
-        this.channels[channelLanguage] = await channel.fetch();
+        this.channels[channelLanguage] = <Discord.TextChannel>(await channel.fetch());
         let member = await channel.members.find(u => u.id == user.id);
         if (!member) {
             console.error(`Unable to evaluate ${user.username}, because he seems to be unable to be found in the channel?`);
