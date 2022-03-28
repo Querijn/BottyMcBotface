@@ -119,10 +119,13 @@ export default class Logger {
         this.oldWarning(message, ...optionalParams);
 
         try {
-            this.errorChannel.send(`[${(new Date()).toUTCString()}] Warning: ${message.toString()}`, { split: true });
+            let error = `[${(new Date()).toUTCString()}] Warning: ${message.toString()}\n`;
             for (let i = 0; i < optionalParams.length; i++) {
-                this.errorChannel.send(`[${(new Date()).toUTCString()}] Warning param ${(i + 1)}: ${optionalParams.toString()}`, { split: true });
+                error += `[${(new Date()).toUTCString()}] Warning param ${(i + 1)}: ${optionalParams.toString()}\n`;
             }
+
+            error += new Error().stack;
+            this.errorChannel.send(error, { split: true });
         } catch (e) {
             this.oldError(`Error trying to send a warning message: ${e.toString()}`);
         }
@@ -132,10 +135,13 @@ export default class Logger {
         this.oldError(message, ...optionalParams);
 
         try {
-            this.errorChannel.send(`[${(new Date()).toUTCString()}] Error: ${message.toString()}`, { split: true });
+            let error = `[${(new Date()).toUTCString()}] Error: ${message.toString()}\n`;
             for (let i = 0; i < optionalParams.length; i++) {
-                this.errorChannel.send(`[${(new Date()).toUTCString()}] Error param ${(i + 1)}: ${optionalParams.toString()}`, { split: true });
+                error += `[${(new Date()).toUTCString()}] Error param ${(i + 1)}: ${optionalParams.toString()}\n`;
             }
+
+            error += new Error("").stack;
+            this.errorChannel.send(error, { split: true });
         } catch (e) {
             this.oldError(`Error trying to send an error message: ${e.toString()}`);
         }
