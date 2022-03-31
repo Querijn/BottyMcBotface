@@ -54,8 +54,11 @@ export default class SpamKiller {
     }
 
     async checkForGunbuddy(message: Discord.Message) {
-        const splitWords = (message.content+" ").match(/\b(\w+\W+)/g) || [];
-        const words = splitWords.map(w => w.toLowerCase().replace(/[,-\.\/\?]/g, "").trim());
+        const splitWords = (message.cleanContent+" ").match(/\b(\w+\W+)/g) || [];
+        const words = splitWords.map(w => w.toLowerCase()
+            .replace(/[,-\.\/\?]/g, "") // No garbage
+            .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g,'') // No emoji
+            .trim());
 
         // Check for "gunbuddy" or alike
         const gunbuddyLikenesses = words.map(w => levenshteinDistance(w, "gunbuddy"));
@@ -128,8 +131,10 @@ export default class SpamKiller {
         if (!member)
             throw new Error(`Unable to find member that wrote the message '${message.content}' (${message.author.username})`);
 
-        if (member.roles.cache.size > 1) // Only act on people without roles
+        if (member.roles.cache.size > 1) { // Only act on people without roles
+            console.log(`SpamKiller: ${message.author.username}#${message.author.discriminator}'s message triggered our spam detector, but they've got ${member.roles.cache.size} roles. (https://discordapp.com/channels/${message.guild?.id}/${message.channel.id}/${message.id})`);
             return;
+        }
 
         console.log(`SpamKiller: ${message.author} posted: '${message.content}', deleting the message..`);
         const author = message.author;
