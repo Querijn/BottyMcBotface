@@ -1,8 +1,8 @@
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
-
+import fetch from "node-fetch";
 import Discord = require("discord.js");
-import feedReader = require("feed-read");
+import { parseXmlString } from "./TechBlog/xml_parser";
 
 export interface TechblogData {
     Last: number;
@@ -44,26 +44,36 @@ export default class Techblog {
 
             console.log("TechblogReader extension loaded.");
 
+            this.checkFeed();
             setInterval(() => {
                 this.checkFeed();
             }, this.sharedSettings.techBlog.checkInterval);
         });
     }
 
-    private checkFeed() {
-        feedReader(this.sharedSettings.techBlog.url, (error, articles) => {
-            if (error) {
-                console.error("Error reading tech blog RSS feed:", error);
+    private async checkFeed() {
+        try {
+            let response = await fetch(this.sharedSettings.techBlog.url, { "headers": { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0" }, });
+            if (response.ok == false) {
+                console.warn(`Unable to fetch TechBlog from '${this.sharedSettings.techBlog.url}': ${response.statusText}`);
                 return;
             }
 
-            for (const article of articles.reverse()) {
-                const timestamp = +article.published;
+            const xmlText = await response.text();
+            const asJson = parseXmlString(xmlText);
+            const results = asJson.rss.channel;
+
+            for (const article of results.item.reverse()) { // Old to new
+                const timestamp = new Date(article.pubDate).getTime();
                 if (timestamp > this.data.Last) {
-                    this.channel.send(`A new article has been posted on the Riot Games Tech Blog: \`${article.title}\`\n${article.link}`);
+                    this.channel.send(article.link);
                     this.data.Last = timestamp;
                 }
             }
-        });
+        }
+        catch (error) {
+            
+            console.error("Error reading tech blog RSS feed:", error);
+        }
     }
 }
