@@ -198,7 +198,12 @@ export default class RiotAPILibraries {
             if(message.channel.type == 'GUILD_TEXT') { // if this is the server text channel
                 requiredTags = this.settings.riotApiLibraries.requiredTagContextMap[message.channel.name]; //get the reqiured tags from settings.
                 if (requiredTags == undefined) {
-                    message.channel.send(this.settings.riotApiLibraries.wrongChannel.replace('{channel}', message.channel.name));
+                    message.channel.send(this.settings.riotApiLibraries.wrongChannel
+                                         .replace('{channel}', message.channel.name)
+                                         .replace('{valid-channels}', 
+                                                  Array.from(this.settings.riotApiLibraries.requiredTagContextMap.keys())
+                                                 .map(e => '#' + e)
+                                                 .join(", "));
                     return;
             } else {
                 requiredTags = this.allTagOptions; //in a dm report all libs
