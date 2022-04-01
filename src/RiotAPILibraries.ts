@@ -122,23 +122,38 @@ export default class RiotAPILibraries {
     }
 
     private async initList() {
+        try {
+            const response = await fetch(this.settings.riotApiLibraries.baseURL, this.fetchSettings);
+            if (response.status !== 200) {
+                console.error(this.settings.riotApiLibraries.githubErrorList + response.status);
+                return;
+            }
 
-        const response = await fetch(this.settings.riotApiLibraries.baseURL, this.fetchSettings);
-        if (response.status !== 200) {
-            console.error(this.settings.riotApiLibraries.githubErrorList + response.status);
-            return;
-        }
+            const languageNames = (await response.json() as GithubAPIStruct[]).map(x => x.name);
 
-        const languageNames = (await response.json() as GithubAPIStruct[]).map(x => x.name);
+            this.languageList = [];
+            for (const language of languageNames) {
+                try {
+                    const libraries = await this.getLibrariesForLanguage(language);
+                    if (libraries.length === 0) continue;
+                    this.languageList.push(language);
+                }
+                catch (e) {
+                    console.warn(`Unable to fetch library data for language ${language}: ${e}`);
+                }
+            }
 
         this.languageList = [];
         for (const language of languageNames) {
             const libraries = await this.getLibrariesForLanguage(language, ["lcu", "v4"]); //when finding library languages, search all useful tags
             if (libraries.length === 0) continue;
             this.languageList.push(language);
+            console.log("Riot API library languages updated: " + this.languageList.join(", "));
+        }
+        catch (e) {
+            console.warn(`Unable to fetch all library data: ${e}`);
         }
 
-        console.log("Riot API library languages updated: " + this.languageList.join(", "));
         if (this.timeOut) {
             clearTimeout(this.timeOut);
             this.timeOut = null;

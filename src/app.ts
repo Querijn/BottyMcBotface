@@ -13,7 +13,6 @@ import VersionChecker from "./VersionChecker";
 import ESportsAPI from "./ESports";
 import Endpoint from "./Endpoint";
 import PageDiffer from "./PageDiffer";
-
 import { APISchema } from "./ApiSchema";
 import { CommandList } from "./CommandController";
 import { overrideFileBackedObject, fileBackedObject } from "./FileBackedObject";
@@ -21,7 +20,6 @@ import { SharedSettings } from "./SharedSettings";
 import SpamKiller from "./SpamKiller";
 import Admin from "./Admin";
 import GameData from "./GameData";
-import UserIntroduction from "./UserIntroduction";
 
 // Load and initialise settings
 const sharedSettings = overrideFileBackedObject<SharedSettings>("settings/shared_settings.json", "private/shared_settings.json");
@@ -93,5 +91,4 @@ controller.registerCommand(commandList.endpointManager.endpoints, endpoint.onLis
 // start bot
 bot.start().catch((reason: any) => {
     console.error(`Unable to run botty: ${reason}.`);
-    process.exit(-1);
 });

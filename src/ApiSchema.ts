@@ -52,6 +52,8 @@ export class Path {
             map = this.pathParameters;
         } else if (type === "query") {
             map = this.queryParameters;
+        } else if (type === "header") {
+            return; // TODO
         } else {
             console.warn(`Unknown parameter location "${type}"`);
             return;
@@ -169,7 +171,8 @@ export class APISchema {
                 return;
             }
 
-            const schema = await response.json();
+            // TODO: schema type
+            const schema = <any>(await response.json());
 
             this.platforms = schema.servers[0].variables.platform.enum;
             this.paths = [];
