@@ -91,12 +91,12 @@ export default class RiotAPILibraries {
         return this.getListForLanguage(message, param);
     }
 
-    private async describeAPILibrary(json: GithubAPIStruct): Promise<LibraryDescription> {
+    private async describeAPILibrary(json: GithubAPIStruct, importantTags: string[]): Promise<LibraryDescription> {
 
         const libraryResponse = await fetch(json.download_url);
         const libraryInfo: APILibraryStruct = await libraryResponse.json();
 
-        if (!libraryInfo.tags || libraryInfo.tags.indexOf("v4") === -1) {
+        if (!libraryInfo.tags || !libraryInfo.tags.some(e => importantTags.includes(e))) {
             return { stars: 0, valid: false, library: null, links: [] };
         }
 
@@ -133,7 +133,7 @@ export default class RiotAPILibraries {
 
         this.languageList = [];
         for (const language of languageNames) {
-            const libraries = await this.getLibrariesForLanguage(language);
+            const libraries = await this.getLibrariesForLanguage(language, ["lcu", "v4"]); //when finding library languages, search all useful tags
             if (libraries.length === 0) continue;
             this.languageList.push(language);
         }
@@ -151,7 +151,7 @@ export default class RiotAPILibraries {
         message.channel.send(reply);
     }
 
-    private async getLibrariesForLanguage(language: string): Promise<LibraryDescription[]> {
+    private async getLibrariesForLanguage(language: string, importantTags: string[]): Promise<LibraryDescription[]> {
         const response = await fetch(this.settings.riotApiLibraries.baseURL + language);
         switch (response.status) {
             case 200: {
@@ -170,7 +170,7 @@ export default class RiotAPILibraries {
         if (!Array.isArray(libraryList) || libraryList.length === 0 || !libraryList[0].sha) {
             throw new Error(this.settings.riotApiLibraries.noLanguage + language);
         }
-        const promises = libraryList.map(lib => this.describeAPILibrary(lib));
+        const promises = libraryList.map(lib => this.describeAPILibrary(lib, importantTags));
         const libraryDescriptions = (await Promise.all(promises))
             .filter(l => l.valid && l.library); // Only valid ones
 
@@ -190,7 +190,17 @@ export default class RiotAPILibraries {
 
         let libraryDescriptions: LibraryDescription[] = [];
         try {
-            libraryDescriptions = (await this.getLibrariesForLanguage(language))
+            let importantTags = [];
+            if(message.channel.type == GUILD_TEXT) { // if this is the server text channel
+                if(message.channel.name == "lcu-api") { //if in lcu-api return only lcu libs
+                    importantTags = ["lcu"]
+                } else { //otherwise report lol api libs everywhere else
+                    importantTags = ["v4"]
+                }
+            } else {
+                importantTags = ["v4", "lcu"] //in a dm report all libs
+            }
+            libraryDescriptions = (await this.getLibrariesForLanguage(language, importantTags))
                 .sort((a, b) => b.stars - a.stars); // Sort by stars
         }
         catch (e) {
