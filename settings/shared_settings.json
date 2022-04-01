@@ -121,7 +121,7 @@
     "riotApiLibraries": {
         "noLanguage": "No libraries found for language: ",
         "languageList": "I have libraries for one of the following languages: {languages}\nChoose one you like and reply with `!libs <your language>`.",
-        "wrongChannel": "There are no libraries which support #{channel}.\nTry using !libs in one of these channels: <valid channels>",
+        "wrongChannel": "There are no libraries which support #{channel}.\nTry using !libs in one of these channels: {valid-channels}",
         "requiredTagContextMap": {
             "lol-dev": [
                 "v4",
