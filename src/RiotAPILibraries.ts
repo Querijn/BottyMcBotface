@@ -68,6 +68,7 @@ export default class RiotAPILibraries {
                 "Content-Type": "application/json",
             },
         };
+        this.allTagOptions = Array.from(this.settings.riotApiLibraries.requiredTagContextMap.values()).flat();
 
         this.initList();
     }
@@ -91,12 +92,12 @@ export default class RiotAPILibraries {
         return this.getListForLanguage(message, param);
     }
 
-    private async describeAPILibrary(json: GithubAPIStruct, importantTags: string[]): Promise<LibraryDescription> {
+    private async describeAPILibrary(json: GithubAPIStruct, requiredTags: string[]): Promise<LibraryDescription> {
 
         const libraryResponse = await fetch(json.download_url);
         const libraryInfo: APILibraryStruct = await libraryResponse.json();
 
-        if (!libraryInfo.tags || !libraryInfo.tags.some(e => importantTags.includes(e))) {
+        if (!libraryInfo.tags || !libraryInfo.tags.some(e => requiredTags.includes(e))) {
             return { stars: 0, valid: false, library: null, links: [] };
         }
 
@@ -143,14 +144,14 @@ export default class RiotAPILibraries {
                 }
             }
 
-        this.languageList = [];
-        for (const language of languageNames) {
-            const libraries = await this.getLibrariesForLanguage(language, ["lcu", "v4"]); //when finding library languages, search all useful tags
-            if (libraries.length === 0) continue;
-            this.languageList.push(language);
-            console.log("Riot API library languages updated: " + this.languageList.join(", "));
-        }
-        catch (e) {
+            this.languageList = [];
+            for (const language of languageNames) {
+                const libraries = await this.getLibrariesForLanguage(language, this.allTagOptions); //when finding library languages, search all useful tags
+                if (libraries.length === 0) continue;
+                this.languageList.push(language);
+                console.log("Riot API library languages updated: " + this.languageList.join(", "));
+            }
+        } catch (e) {
             console.warn(`Unable to fetch all library data: ${e}`);
         }
 
@@ -166,7 +167,7 @@ export default class RiotAPILibraries {
         message.channel.send(reply);
     }
 
-    private async getLibrariesForLanguage(language: string, importantTags: string[]): Promise<LibraryDescription[]> {
+    private async getLibrariesForLanguage(language: string, requiredTags: string[]): Promise<LibraryDescription[]> {
         const response = await fetch(this.settings.riotApiLibraries.baseURL + language);
         switch (response.status) {
             case 200: {
@@ -185,7 +186,7 @@ export default class RiotAPILibraries {
         if (!Array.isArray(libraryList) || libraryList.length === 0 || !libraryList[0].sha) {
             throw new Error(this.settings.riotApiLibraries.noLanguage + language);
         }
-        const promises = libraryList.map(lib => this.describeAPILibrary(lib, importantTags));
+        const promises = libraryList.map(lib => this.describeAPILibrary(lib, requiredTags));
         const libraryDescriptions = (await Promise.all(promises))
             .filter(l => l.valid && l.library); // Only valid ones
 
@@ -205,17 +206,13 @@ export default class RiotAPILibraries {
 
         let libraryDescriptions: LibraryDescription[] = [];
         try {
-            let importantTags = [];
-            if(message.channel.type == GUILD_TEXT) { // if this is the server text channel
-                if(message.channel.name == "lcu-api") { //if in lcu-api return only lcu libs
-                    importantTags = ["lcu"]
-                } else { //otherwise report lol api libs everywhere else
-                    importantTags = ["v4"]
-                }
+            let requiredTags;
+            if(message.channel.type == 'GUILD_TEXT') { // if this is the server text channel
+               requiredTags = this.settings.riotApiLibraries.requiredTagContextMap[message.channel.name] || []; //get the reqiured tags from settings.
             } else {
-                importantTags = ["v4", "lcu"] //in a dm report all libs
+                requiredTags = this.allTagOptions; //in a dm report all libs
             }
-            libraryDescriptions = (await this.getLibrariesForLanguage(language, importantTags))
+            libraryDescriptions = (await this.getLibrariesForLanguage(language, requiredTags))
                 .sort((a, b) => b.stars - a.stars); // Sort by stars
         }
         catch (e) {
