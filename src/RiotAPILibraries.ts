@@ -134,18 +134,6 @@ export default class RiotAPILibraries {
 
             this.languageList = [];
             for (const language of languageNames) {
-                try {
-                    const libraries = await this.getLibrariesForLanguage(language);
-                    if (libraries.length === 0) continue;
-                    this.languageList.push(language);
-                }
-                catch (e) {
-                    console.warn(`Unable to fetch library data for language ${language}: ${e}`);
-                }
-            }
-
-            this.languageList = [];
-            for (const language of languageNames) {
                 const libraries = await this.getLibrariesForLanguage(language, this.allTagOptions); //when finding library languages, search all useful tags
                 if (libraries.length === 0) continue;
                 this.languageList.push(language);
