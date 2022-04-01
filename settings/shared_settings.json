@@ -121,6 +121,21 @@
     "riotApiLibraries": {
         "noLanguage": "No libraries found for language: ",
         "languageList": "I have libraries for one of the following languages: {languages}\nChoose one you like and reply with `!libs <your language>`.",
+        "requiredTagContextMap": {
+            "lol-dev": [
+                "v4",
+                "lol-api"
+            ],
+            "lcu-api": [
+                "lcu",
+                "lcu-api"
+            ],
+            "ingame-api": [
+                "ingame"
+                "live-events",
+                "ingame-api",
+            ]
+        }
         "githubErrorList": "I tried to get the languages from Github, but Github replied with status code ",
         "githubErrorLanguage": "I tried to get the language from Github, but Github replied with status code ",
         "baseURL": "https://api.github.com/repos/WxWatch/riot-api-libraries/contents/libraries/",
