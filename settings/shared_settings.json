@@ -135,6 +135,18 @@
                 "ingame"
                 "live-events",
                 "ingame-api",
+            ],
+            "tft-dev": [
+                "tft"
+                "tft-dev"
+            ],
+            "lor-dev": [
+                "lor"
+                "lor-dev"
+            ],
+            "val-dev": [
+                "val"
+                "val-dev"
             ]
         }
         "githubErrorList": "I tried to get the languages from Github, but Github replied with status code ",
