@@ -202,8 +202,10 @@ export default class RiotAPILibraries {
                                          .replace('{channel}', message.channel.name)
                                          .replace('{valid-channels}', 
                                                   Array.from(this.settings.riotApiLibraries.requiredTagContextMap.keys())
-                                                 .map(e => '#' + e)
-                                                 .join(", "));
+                                                  .map(e => '#' + e)
+                                                  .join(", ")
+                                                 )
+                                        );
                     return;
             } else {
                 requiredTags = this.allTagOptions; //in a dm report all libs
