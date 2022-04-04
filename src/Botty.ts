@@ -55,12 +55,11 @@ export default class Botty {
     }
 
     private initListeners() {
-        this.client.on("guildMemberAdd", user => console.log(`${user.displayName} joined the server.`));
+        this.client.on("guildMemberAdd", member => console.log(`${member.displayName}#${member.user?.discriminator} (${member.id}) joined the server.`));
+        this.client.on("guildMemberRemove", member => console.log(`${member.displayName}#${member.user?.discriminator} (${member.id}) left (or was removed) from the server.`));
 
-        this.client.on("guildMemberRemove", user => console.log(`${user.displayName} left (or was removed) from the server.`));
-
-        this.client.on("guildBanAdd", (guild: Discord.Guild, user: Discord.User) => console.log(`${user.username} (${user.id}) has been banned from ${guild.name}.`));
-        this.client.on("guildBanRemove", (guild: Discord.Guild, user: Discord.User) => console.log(`${user.username} (${user.id}) has been unbanned from ${guild.name}.`));
+        this.client.on("guildBanAdd", (guild: Discord.Guild, user: Discord.User) => console.log(`${user.username}#${user.discriminator} (${user.id}) has been banned from ${guild.name}.`));
+        this.client.on("guildBanRemove", (guild: Discord.Guild, user: Discord.User) => console.log(`${user.username}#${user.discriminator} (${user.id}) has been unbanned from ${guild.name}.`));
 
         this.client.on("messageDelete", (message: Discord.Message) => {
 
