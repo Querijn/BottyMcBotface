@@ -96,7 +96,7 @@ export default class SpamKiller {
         }
 
         if (hasGunbuddyMessage) {
-            this.addViolatingMessage(message, `Hey, ${message.author}, you triggered our spam detector. this is not a Riot Games server. There are no Rioters here, and no one can give you a gunbuddy. See #game-support for more information.`, false);
+            this.addViolatingMessage(message, `Hey, ${message.author}, you triggered our spam detector. this is not a Riot Games server. There are no Rioters here, and no one can give you a gunbuddy. See <#914594958202241045> for more information.`, false);
         }
     }
 
