@@ -151,8 +151,32 @@ export default class RiotAPILibraries {
     }
 
     private async getList(message: Discord.Message) {
-        const reply = this.settings.riotApiLibraries.languageList.replace("{languages}", "`" + this.languageList.join(", ") + "`");
-        message.channel.send(reply);
+        if(message.channel.type == 'GUILD_TEXT') { // if this is the server text channel
+            let requiredTags = this.settings.riotApiLibraries.requiredTagContextMap[message.channel.name]; //get the reqiured tags from settings.
+            if (requiredTags == undefined) { //if there are no applicable tags for this channel send the wrong channel message.
+                message.channel.send(this.settings.riotApiLibraries.wrongChannel
+                                     .replace('{channel}', message.channel.name)
+                                     .replace('{valid-channels}', 
+                                              Array.from(this.settings.riotApiLibraries.requiredTagContextMap.keys())
+                                              .map(e => '#' + e)
+                                              .join(", ")
+                                             )
+                                    );
+            } else {
+                let applicableLangs = [];
+                const languageNames = (await response.json() as GithubAPIStruct[]).map(x => x.name);
+
+                for (const language of languageNames) {
+                    const libraries = await this.getLibrariesForLanguage(language, requiredTags); //when finding library languages, search all useful tags
+                    if (libraries.length === 0) continue;
+                    else applicableLangs.push(language);
+                }
+                message.channel.send(this.settings.riotApiLibraries.languageList.replace("{languages}", "`" + applicableLangs.join(", ") + "`"));
+            }
+        } else {
+            message.channel.send(this.settings.riotApiLibraries.languageList.replace("{languages}", "`" + this.languageList.join(", ") + "`"));
+ //in a dm report all libs
+        }
     }
 
     private async getLibrariesForLanguage(language: string, requiredTags: string[]): Promise<LibraryDescription[]> {
