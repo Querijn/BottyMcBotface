@@ -353,16 +353,32 @@ export default class GameData {
             return `There are currently ${this.itemData.length} items in my lookup data!`;
         }
 
-        const searchResult: SearchObjectContainer[] = this.itemData.map(i => ({
-            item: i,
-            score: levenshteinDistance(search, search.match(/^\d+$/) ? i.id.toString() : i.name.toLowerCase()),
-        }))
-            .sort((a, b) => this.sortSearch(search, a, b))
-            .slice(0, this.sharedSettings.lookup.maxGuessCount);
+        let searchResult: SearchObjectContainer[] = [];
+        const isNumeric = !!search.match(/^\d+$/);
+        if (isNumeric) {
+            const asNumber = parseInt(search);
+            const numericSearch = this.itemData.find(i => i.id == asNumber);
+            if (numericSearch) {
+                searchResult.push({ item: numericSearch, score: 0 });
+            }
+        }
+
+        if (searchResult.length === 0) {
+            searchResult = this.itemData.map(i => ({
+                item: i,
+                score: levenshteinDistance(search, isNumeric ? i.id.toString() : i.name.toLowerCase()),
+            }))
+                .sort((a, b) => this.sortSearch(search, a, b))
+                .slice(0, this.sharedSettings.lookup.maxGuessCount);
+        }
 
         // no exact match, so give alternatives
-        if (searchResult[0].score > this.sharedSettings.lookup.confidence) {
-            let response = "Too many results returned for that search, did you mean one of the options below?\n```";
+        const notConfident = !isNumeric && searchResult[0].score > this.sharedSettings.lookup.confidence;
+        const noExactNumericMatch = isNumeric && searchResult.length !== 1;
+        if (noExactNumericMatch || notConfident) {
+            let response = isNumeric ? 
+                `Could not find the exact ID '${search}', did you mean one of these?\n\`\`\`` :
+                "Too many results returned for that search, did you mean one of the options below?\n```";
             response += searchResult.map(x => `${x.item.name} (Alternate terms: ${x.item.id})`).join("\n");
             response += "```";
             return response;
@@ -386,16 +402,32 @@ export default class GameData {
             return `There are currently ${this.perkData.length} perks in my lookup data!`;
         }
 
-        const searchResult: SearchObjectContainer[] = this.perkData.map(i => ({
-            item: i,
-            score: levenshteinDistance(search, search.match(/^\d+$/) ? i.id.toString() : i.name.toLowerCase()),
-        }))
-            .sort((a, b) => this.sortSearch(search, a, b))
-            .slice(0, this.sharedSettings.lookup.maxGuessCount);
+        let searchResult: SearchObjectContainer[] = [];
+        const isNumeric = !!search.match(/^\d+$/);
+        if (isNumeric) {
+            const asNumber = parseInt(search);
+            const numericSearch = this.perkData.find(i => i.id == asNumber);
+            if (numericSearch) {
+                return numericSearch
+            }
+        }
+
+        if (searchResult.length === 0) {
+            searchResult = this.perkData.map(i => ({
+                item: i,
+                score: levenshteinDistance(search, isNumeric ? i.id.toString() : i.name.toLowerCase()),
+            }))
+                .sort((a, b) => this.sortSearch(search, a, b))
+                .slice(0, this.sharedSettings.lookup.maxGuessCount);
+        }
 
         // no exact match, so give alternatives
-        if (searchResult[0].score > this.sharedSettings.lookup.confidence) {
-            let response = "Too many results returned for that search, did you mean one of the options below?\n```";
+        const notConfident = !isNumeric && searchResult[0].score > this.sharedSettings.lookup.confidence;
+        const noExactNumericMatch = isNumeric && searchResult.length !== 1;
+        if (noExactNumericMatch || notConfident) {
+            let response = isNumeric ? 
+                `Could not find the exact ID '${search}', did you mean one of these?\n\`\`\`` :
+                "Too many results returned for that search, did you mean one of the options below?\n```";
             response += searchResult.map(x => `${x.item.name} (Alternate terms: ${x.item.id})`).join("\n");
             response += "```";
             return response;
@@ -417,19 +449,35 @@ export default class GameData {
             return `There are currently ${this.champData.length} champions in my lookup data!`;
         }
 
-        const searchResult: SearchObjectContainer[] = this.champData.map(i => ({
-            item: i,
-            score: search.match(/^\d+$/) ? levenshteinDistance(search, i.id.toString()) : Math.min(
-                levenshteinDistance(search, i.name.toLowerCase()),
-                levenshteinDistance(search, i.key.toLowerCase()),
-            ),
-        }))
-            .sort((a, b) => this.sortSearch(search, a, b))
-            .slice(0, this.sharedSettings.lookup.maxGuessCount);
+        let searchResult: SearchObjectContainer[] = [];
+        const isNumeric = !!search.match(/^\d+$/);
+        if (isNumeric) {
+            const asNumber = parseInt(search);
+            const numericSearch = this.champData.find(i => i.id == asNumber);
+            if (numericSearch) {
+                searchResult.push({ item: numericSearch, score: 0 });
+            }
+        }
+
+        if (searchResult.length === 0) {
+            searchResult = this.champData.map(i => ({
+                item: i,
+                score: isNumeric ? levenshteinDistance(search, i.id.toString()) : Math.min(
+                    levenshteinDistance(search, i.name.toLowerCase()),
+                    levenshteinDistance(search, i.key.toLowerCase()),
+                ),
+            }))
+                .sort((a, b) => this.sortSearch(search, a, b))
+                .slice(0, this.sharedSettings.lookup.maxGuessCount);
+        }
 
         // no exact match, so give alternatives
-        if (searchResult[0].score > this.sharedSettings.lookup.confidence) {
-            let response = "Too many results returned for that search, did you mean one of the options below?\n```";
+        const notConfident = !isNumeric && searchResult[0].score > this.sharedSettings.lookup.confidence;
+        const noExactNumericMatch = isNumeric && searchResult.length !== 1;
+        if (noExactNumericMatch || notConfident) {
+            let response = isNumeric ? 
+                `Could not find the exact ID '${search}', did you mean one of these?\n\`\`\`` :
+                "Too many results returned for that search, did you mean one of the options below?\n```";
             response += searchResult.map(x => `${x.item.name} (Alternate terms: ${x.item.id} / ${x.item.key})`).join("\n");
             response += "```";
             return response;
@@ -448,18 +496,34 @@ export default class GameData {
             return `There are currently ${this.summonerSpellData.length} champions in my lookup data!`;
         }
 
-        const searchResult: SearchObjectContainer[] = this.summonerSpellData.map(i => ({
-            item: i,
-            score: search.match(/^\d+$/) ? levenshteinDistance(search, i.id.toString()) : Math.min(
-                levenshteinDistance(search, i.name.toLowerCase()),
-            ),
-        }))
-            .sort((a, b) => this.sortSearch(search, a, b))
-            .slice(0, this.sharedSettings.lookup.maxGuessCount);
+        let searchResult: SearchObjectContainer[] = [];
+        const isNumeric = !!search.match(/^\d+$/);
+        if (isNumeric) {
+            const asNumber = parseInt(search);
+            const numericSearch = this.summonerSpellData.find(i => i.id == asNumber);
+            if (numericSearch) {
+                searchResult.push({ item: numericSearch, score: 0 });
+            }
+        }
+
+        if (searchResult.length === 0) {
+            searchResult = this.summonerSpellData.map(i => ({
+                item: i,
+                score: search.match(/^\d+$/) ? levenshteinDistance(search, i.id.toString()) : Math.min(
+                    levenshteinDistance(search, i.name.toLowerCase()),
+                ),
+            }))
+                .sort((a, b) => this.sortSearch(search, a, b))
+                .slice(0, this.sharedSettings.lookup.maxGuessCount);
+        }
 
         // no exact match, so give alternatives
-        if (searchResult[0].score > this.sharedSettings.lookup.confidence) {
-            let response = "Too many results returned for that search, did you mean one of the options below?\n```";
+        const notConfident = !isNumeric && searchResult[0].score > this.sharedSettings.lookup.confidence;
+        const noExactNumericMatch = isNumeric && searchResult.length !== 1;
+        if (noExactNumericMatch || notConfident) {
+            let response = isNumeric ? 
+                `Could not find the exact ID '${search}', did you mean one of these?\n\`\`\`` :
+                "Too many results returned for that search, did you mean one of the options below?\n```";
             response += searchResult.map(x => `${x.item.name} (Alternate terms: ${x.item.id} / ${x.item.key})`).join("\n");
             response += "```";
             return response;
