@@ -68,6 +68,7 @@ export default class RiotAPILibraries {
                 "Content-Type": "application/json",
             },
         };
+        this.allTagOptions = Array.from(this.settings.riotApiLibraries.requiredTagContextMap.values()).flat();
 
         this.initList();
     }
@@ -91,12 +92,12 @@ export default class RiotAPILibraries {
         return this.getListForLanguage(message, param);
     }
 
-    private async describeAPILibrary(json: GithubAPIStruct): Promise<LibraryDescription> {
+    private async describeAPILibrary(json: GithubAPIStruct, requiredTags: string[]): Promise<LibraryDescription> {
 
         const libraryResponse = await fetch(json.download_url);
         const libraryInfo: APILibraryStruct = await libraryResponse.json();
 
-        if (!libraryInfo.tags || libraryInfo.tags.indexOf("v4") === -1) {
+        if (!libraryInfo.tags || !libraryInfo.tags.some(e => requiredTags.includes(e))) {
             return { stars: 0, valid: false, library: null, links: [] };
         }
 
@@ -133,19 +134,12 @@ export default class RiotAPILibraries {
 
             this.languageList = [];
             for (const language of languageNames) {
-                try {
-                    const libraries = await this.getLibrariesForLanguage(language);
-                    if (libraries.length === 0) continue;
-                    this.languageList.push(language);
-                }
-                catch (e) {
-                    console.warn(`Unable to fetch library data for language ${language}: ${e}`);
-                }
+                const libraries = await this.getLibrariesForLanguage(language, this.allTagOptions); //when finding library languages, search all useful tags
+                if (libraries.length === 0) continue;
+                this.languageList.push(language);
+                console.log("Riot API library languages updated: " + this.languageList.join(", "));
             }
-
-            console.log("Riot API library languages updated: " + this.languageList.join(", "));
-        }
-        catch (e) {
+        } catch (e) {
             console.warn(`Unable to fetch all library data: ${e}`);
         }
 
@@ -157,11 +151,35 @@ export default class RiotAPILibraries {
     }
 
     private async getList(message: Discord.Message) {
-        const reply = this.settings.riotApiLibraries.languageList.replace("{languages}", "`" + this.languageList.join(", ") + "`");
-        message.channel.send(reply);
+        if(message.channel.type == 'GUILD_TEXT') { // if this is the server text channel
+            let requiredTags = this.settings.riotApiLibraries.requiredTagContextMap[message.channel.name]; //get the reqiured tags from settings.
+            if (requiredTags == undefined) { //if there are no applicable tags for this channel send the wrong channel message.
+                message.channel.send(this.settings.riotApiLibraries.wrongChannel
+                                     .replace('{channel}', message.channel.name)
+                                     .replace('{valid-channels}', 
+                                              Array.from(this.settings.riotApiLibraries.requiredTagContextMap.keys())
+                                              .map(e => '#' + e)
+                                              .join(", ")
+                                             )
+                                    );
+            } else {
+                let applicableLangs = [];
+                const languageNames = (await response.json() as GithubAPIStruct[]).map(x => x.name);
+
+                for (const language of languageNames) {
+                    const libraries = await this.getLibrariesForLanguage(language, requiredTags); //when finding library languages, search all useful tags
+                    if (libraries.length === 0) continue;
+                    else applicableLangs.push(language);
+                }
+                message.channel.send(this.settings.riotApiLibraries.languageList.replace("{languages}", "`" + applicableLangs.join(", ") + "`"));
+            }
+        } else {
+            message.channel.send(this.settings.riotApiLibraries.languageList.replace("{languages}", "`" + this.languageList.join(", ") + "`"));
+ //in a dm report all libs
+        }
     }
 
-    private async getLibrariesForLanguage(language: string): Promise<LibraryDescription[]> {
+    private async getLibrariesForLanguage(language: string, requiredTags: string[]): Promise<LibraryDescription[]> {
         const response = await fetch(this.settings.riotApiLibraries.baseURL + language);
         switch (response.status) {
             case 200: {
@@ -180,7 +198,7 @@ export default class RiotAPILibraries {
         if (!Array.isArray(libraryList) || libraryList.length === 0 || !libraryList[0].sha) {
             throw new Error(this.settings.riotApiLibraries.noLanguage + language);
         }
-        const promises = libraryList.map(lib => this.describeAPILibrary(lib));
+        const promises = libraryList.map(lib => this.describeAPILibrary(lib, requiredTags));
         const libraryDescriptions = (await Promise.all(promises))
             .filter(l => l.valid && l.library); // Only valid ones
 
@@ -200,7 +218,23 @@ export default class RiotAPILibraries {
 
         let libraryDescriptions: LibraryDescription[] = [];
         try {
-            libraryDescriptions = (await this.getLibrariesForLanguage(language))
+            let requiredTags;
+            if(message.channel.type == 'GUILD_TEXT') { // if this is the server text channel
+                requiredTags = this.settings.riotApiLibraries.requiredTagContextMap[message.channel.name]; //get the reqiured tags from settings.
+                if (requiredTags == undefined) {
+                    message.channel.send(this.settings.riotApiLibraries.wrongChannel
+                                         .replace('{channel}', message.channel.name)
+                                         .replace('{valid-channels}', 
+                                                  Array.from(this.settings.riotApiLibraries.requiredTagContextMap.keys())
+                                                  .map(e => '#' + e)
+                                                  .join(", ")
+                                                 )
+                                        );
+                    return;
+            } else {
+                requiredTags = this.allTagOptions; //in a dm report all libs
+            }
+            libraryDescriptions = (await this.getLibrariesForLanguage(language, requiredTags))
                 .sort((a, b) => b.stars - a.stars); // Sort by stars
         }
         catch (e) {
