@@ -130,7 +130,6 @@ export interface SharedSettings {
     riotApiLibraries: {
         noLanguage: string,
         languageList: string,
-        requiredTagContextMap: Map<string, string[]>,
         githubErrorList: string,
         githubErrorLanguage: string,
         baseURL: string,

@@ -121,34 +121,6 @@
     "riotApiLibraries": {
         "noLanguage": "No libraries found for language: ",
         "languageList": "I have libraries for one of the following languages: {languages}\nChoose one you like and reply with `!libs <your language>`.",
-        "wrongChannel": "There are no libraries which support #{channel}.\nTry using !libs in one of these channels: {valid-channels}",
-        "requiredTagContextMap": {
-            "lol-dev": [
-                "v4",
-                "lol-api"
-            ],
-            "lcu-api": [
-                "lcu",
-                "lcu-api"
-            ],
-            "ingame-api": [
-                "ingame"
-                "live-events",
-                "ingame-api",
-            ],
-            "tft-dev": [
-                "tft"
-                "tft-dev"
-            ],
-            "lor-dev": [
-                "lor"
-                "lor-dev"
-            ],
-            "val-dev": [
-                "val"
-                "val-dev"
-            ]
-        }
         "githubErrorList": "I tried to get the languages from Github, but Github replied with status code ",
         "githubErrorLanguage": "I tried to get the language from Github, but Github replied with status code ",
         "baseURL": "https://api.github.com/repos/WxWatch/riot-api-libraries/contents/libraries/",
