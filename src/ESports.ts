@@ -269,6 +269,6 @@ export default class ESportsAPI {
 
     private getUrlByLeague(leagueName: ESportsLeagueSchedule) {
 
-        return "https://watch.lolesports.com/schedule?leagues=" + leagueName.url;
+        return "https://lolesports.com/schedule?leagues=" + leagueName.url;
     }
 }
