@@ -136,6 +136,7 @@ export default class ESportsAPI {
             return;
         }
 
+        date = date.split(" ").map(part => part.padStart(2, "0")).join(" ");
         const jsDate = new Date(date);
         const now = new Date();
         now.setHours(0, 0, 0, 0);
