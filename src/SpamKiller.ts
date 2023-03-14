@@ -51,6 +51,27 @@ export default class SpamKiller {
 
         this.checkForLinks(message);
         this.checkForGunbuddy(message);
+        this.checkForPlayerSupport(message);
+    }
+
+    async checkForPlayerSupport(message: Discord.Message) {
+        const wordList1 = ['ban', 'banned', 'hacked', 'stolen'];
+        const wordList2 = ['dev', 'ticket', 'support', 'admin']
+
+        const memberJoinDateTime = message.guild!.member(message.author)!.joinedAt!.getTime()
+        const currentDateTime = new Date().getTime()
+        const splitWords = (message.cleanContent+" ").match(/\b(\w+\W+)/g) || [];
+        const words = splitWords.map(w => w.toLowerCase()
+            .replace(/[,-\.\/\?]/g, "") // No garbage
+            .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g,'') // No emoji
+            .trim());
+
+        let mentionsBanOrHack = wordList1.some(wl => words.indexOf(wl) !== -1)
+        let mentionsSupport = wordList2.some(wl => words.indexOf(wl) !== -1)
+
+        if (mentionsBanOrHack && mentionsSupport && (currentDateTime-memberJoinDateTime) > 15*60*1000) {
+            this.addViolatingMessage(message, `Hey, ${message.author}, This Discord server is for the Riot Games API, a tool which provides data to sites like op.gg. No one here will be able to help you with support or gameplay issues. If you're having account related issues or technical problems, contact Riot Games support: <https://support.riotgames.com/hc/en-us>. If you have a game-related suggestion or feedback, post on the relevant discord server (League: <https://discord.gg/lol>, Valorant: <https://discord.gg/valorant>)`, false)
+        }
     }
 
     async checkForGunbuddy(message: Discord.Message) {
