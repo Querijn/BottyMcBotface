@@ -200,6 +200,7 @@ export interface SharedSettings {
 
     spam: {
         allowedUrls: string[];
+        ignoredRoles: string[];
     };
 
     userIntro: {
