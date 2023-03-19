@@ -207,7 +207,7 @@ export default class ESportsAPI {
         for (const [league, games] of data) {
 
             let output = "";
-            for (const game of games) {
+            for (const game of games.slice(0, 10)) {
                 const date = new Date(game.time);
                 output += `${game.teamA} vs ${game.teamB}, <t:${date.getTime()/1000}:R> (${game.time})\n`;
             }
@@ -222,7 +222,7 @@ export default class ESportsAPI {
             });
         }
 
-        channel.send({ embed });
+        channel.send({ embed }).catch(console.error);
     }
 
     private async loadData() {
