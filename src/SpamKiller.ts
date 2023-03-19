@@ -150,7 +150,7 @@ export default class SpamKiller {
         if (!member)
             throw new Error(`Unable to find member that wrote the message '${message.content}' (${message.author.username})`);
 
-        if (member.roles.cache.filter(r => r.id != "711261336285347939").size > 1) { // Only act on people without roles
+        if (member.roles.cache.filter(r => !this.sharedSettings.spam.ignoredRoles.includes(r.id)).size > 1) { // Only act on people without roles
             console.log(`SpamKiller: ${message.author.username}#${message.author.discriminator}'s message triggered our spam detector, but they've got ${member.roles.cache.size} roles. (https://discordapp.com/channels/${message.guild?.id}/${message.channel.id}/${message.id})`);
             return;
         }
