@@ -213,6 +213,9 @@
         "allowedUrls": [
             "riotgames.com",
             "leagueoflegends.com"
+        ],
+        "ignoredRoles": [
+            "711261336285347939"
         ]
     },
     "userIntro": {
