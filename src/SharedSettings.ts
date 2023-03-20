@@ -131,7 +131,6 @@ export interface SharedSettings {
         noLanguage: string,
         languageList: string,
         requiredTagContextMap: Map<string, string[]>,
-        wrongChannel: string,
         githubErrorList: string,
         githubErrorLanguage: string,
         baseURL: string,
@@ -202,6 +201,7 @@ export interface SharedSettings {
 
     spam: {
         allowedUrls: string[];
+        ignoredRoles: string[];
     };
 
     userIntro: {

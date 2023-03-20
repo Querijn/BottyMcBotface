@@ -51,6 +51,25 @@ export default class SpamKiller {
 
         this.checkForLinks(message);
         this.checkForGunbuddy(message);
+        this.checkForPlayerSupport(message);
+    }
+
+    async checkForPlayerSupport(message: Discord.Message) {
+        const wordList1 = ['ban', 'banned', 'hacked', 'stolen'];
+        const wordList2 = ['dev', 'ticket', 'support', 'admin']
+
+        const splitWords = (message.cleanContent+" ").match(/\b(\w+\W+)/g) || [];
+        const words = splitWords.map(w => w.toLowerCase()
+            .replace(/[,-\.\/\?]/g, "") // No garbage
+            .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g,'') // No emoji
+            .trim());
+
+        let mentionsBanOrHack = wordList1.some(wl => words.indexOf(wl) !== -1)
+        let mentionsSupport = wordList2.some(wl => words.indexOf(wl) !== -1)
+
+        if (mentionsBanOrHack && mentionsSupport) {
+            this.addViolatingMessage(message, `Hey, ${message.author}, This Discord server is for the Riot Games API, a tool which provides data to sites like op.gg. No one here will be able to help you with support or gameplay issues. If you're having account related issues or technical problems, contact Riot Games support: <https://support.riotgames.com/hc/en-us>. If you have a game-related suggestion or feedback, post on the relevant discord server (League: <https://discord.gg/lol>, Valorant: <https://discord.gg/valorant>)`, false)
+        }
     }
 
     async checkForGunbuddy(message: Discord.Message) {
@@ -131,7 +150,7 @@ export default class SpamKiller {
         if (!member)
             throw new Error(`Unable to find member that wrote the message '${message.content}' (${message.author.username})`);
 
-        if (member.roles.cache.size > 1) { // Only act on people without roles
+        if (member.roles.cache.filter(r => !this.sharedSettings.spam.ignoredRoles.includes(r.id)).size > 1) { // Only act on people without roles
             console.log(`SpamKiller: ${message.author.username}#${message.author.discriminator}'s message triggered our spam detector, but they've got ${member.roles.cache.size} roles. (https://discordapp.com/channels/${message.guild?.id}/${message.channel.id}/${message.id})`);
             return;
         }

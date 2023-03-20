@@ -94,12 +94,12 @@ export default class RiotAPILibraries {
         return this.getListForLanguage(message, param);
     }
 
-    private async describeAPILibrary(json: GithubAPIStruct, requiredTags: string[]): Promise<LibraryDescription> {
+    private async describeAPILibrary(json: GithubAPIStruct): Promise<LibraryDescription> {
 
         const libraryResponse = await fetch(json.download_url);
         const libraryInfo: APILibraryStruct = await libraryResponse.json();
 
-        if (!libraryInfo.tags || !libraryInfo.tags.some(e => requiredTags.includes(e))) {
+        if (!libraryInfo.tags || libraryInfo.tags.indexOf("v4") === -1) {
             return { stars: 0, valid: false, library: null, links: [] };
         }
 
@@ -135,12 +135,13 @@ export default class RiotAPILibraries {
             const languageNames = (await response.json() as GithubAPIStruct[]).map(x => x.name);
 
             for (const language of languageNames) {
-                const libraries = await this.getLibrariesForLanguage(language, this.allTagOptions); //when finding library languages, search all useful tags
+                const libraries = await this.getLibrariesForLanguage(language); //when finding library languages, search all useful tags
                 if (libraries.length === 0) continue;
                 this.languageMap.set(language, libraries);
-                console.log("Riot API library languages updated: " + Array.from(this.languageMap.keys()).join(", "));
             }
-        } catch (e) {
+            console.log("Riot API library languages updated: " + Array.from(this.languageMap.keys()).join(", "));
+        }
+        catch (e) {
             console.warn(`Unable to fetch all library data: ${e}`);
         }
 
@@ -173,7 +174,7 @@ export default class RiotAPILibraries {
         message.channel.send(reply);
     }
 
-    private async getLibrariesForLanguage(language: string, requiredTags: string[]): Promise<LibraryDescription[]> {
+    private async getLibrariesForLanguage(language: string): Promise<LibraryDescription[]> {
         const response = await fetch(this.settings.riotApiLibraries.baseURL + language);
         switch (response.status) {
             case 200: {
@@ -192,7 +193,7 @@ export default class RiotAPILibraries {
         if (!Array.isArray(libraryList) || libraryList.length === 0 || !libraryList[0].sha) {
             throw new Error(this.settings.riotApiLibraries.noLanguage + language);
         }
-        const promises = libraryList.map(lib => this.describeAPILibrary(lib, requiredTags));
+        const promises = libraryList.map(lib => this.describeAPILibrary(lib));
         const libraryDescriptions = (await Promise.all(promises))
             .filter(l => l.valid && l.library); // Only valid ones
 
@@ -212,7 +213,6 @@ export default class RiotAPILibraries {
 
         let libraryDescriptions: LibraryDescription[] = [];
         let requiredTags = this.allTagOptions;
-        
         if(message.channel.type == 'GUILD_TEXT') { // if this is the server text channel
             requiredTags = this.settings.riotApiLibraries.requiredTagContextMap.get(message.channel.name) || []; //get the required tags from settings.
             requiredTags.push("v4");
