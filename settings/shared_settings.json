@@ -124,7 +124,6 @@
         "wrongChannel": "There are no libraries which support #{channel}.\nTry using !libs in one of these channels: {valid-channels}",
         "requiredTagContextMap": {
             "lol-dev": [
-                "v4",
                 "lol-api"
             ],
             "lcu-api": [
@@ -132,23 +131,23 @@
                 "lcu-api"
             ],
             "ingame-api": [
-                "ingame"
+                "ingame",
                 "live-events",
-                "ingame-api",
+                "ingame-api"
             ],
             "tft-dev": [
-                "tft"
+                "tft",
                 "tft-dev"
             ],
             "lor-dev": [
-                "lor"
+                "lor",
                 "lor-dev"
             ],
             "val-dev": [
-                "val"
+                "val",
                 "val-dev"
             ]
-        }
+        },
         "githubErrorList": "I tried to get the languages from Github, but Github replied with status code ",
         "githubErrorLanguage": "I tried to get the language from Github, but Github replied with status code ",
         "baseURL": "https://api.github.com/repos/WxWatch/riot-api-libraries/contents/libraries/",

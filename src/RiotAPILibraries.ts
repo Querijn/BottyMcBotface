@@ -55,8 +55,9 @@ export default class RiotAPILibraries {
     private lastCall: number;
 
     private fetchSettings: object;
-    private languageList: string[] = [];
+    private languageMap: Map<string, LibraryDescription[]> = new Map();
     private timeOut: NodeJS.Timer | null;
+    allTagOptions: string[];
 
     constructor(settings: SharedSettings) {
         const personalSettings = settings.botty;
@@ -68,7 +69,8 @@ export default class RiotAPILibraries {
                 "Content-Type": "application/json",
             },
         };
-        this.allTagOptions = Array.from(this.settings.riotApiLibraries.requiredTagContextMap.values()).flat();
+        this.allTagOptions =([] as string[]).concat(...this.settings.riotApiLibraries.requiredTagContextMap.values());
+        this.allTagOptions.push("v4");
 
         this.initList();
     }
@@ -132,12 +134,11 @@ export default class RiotAPILibraries {
 
             const languageNames = (await response.json() as GithubAPIStruct[]).map(x => x.name);
 
-            this.languageList = [];
             for (const language of languageNames) {
                 const libraries = await this.getLibrariesForLanguage(language, this.allTagOptions); //when finding library languages, search all useful tags
                 if (libraries.length === 0) continue;
-                this.languageList.push(language);
-                console.log("Riot API library languages updated: " + this.languageList.join(", "));
+                this.languageMap.set(language, libraries);
+                console.log("Riot API library languages updated: " + Array.from(this.languageMap.keys()).join(", "));
             }
         } catch (e) {
             console.warn(`Unable to fetch all library data: ${e}`);
@@ -151,32 +152,25 @@ export default class RiotAPILibraries {
     }
 
     private async getList(message: Discord.Message) {
-        if(message.channel.type == 'GUILD_TEXT') { // if this is the server text channel
-            let requiredTags = this.settings.riotApiLibraries.requiredTagContextMap[message.channel.name]; //get the reqiured tags from settings.
-            if (requiredTags == undefined) { //if there are no applicable tags for this channel send the wrong channel message.
-                message.channel.send(this.settings.riotApiLibraries.wrongChannel
-                                     .replace('{channel}', message.channel.name)
-                                     .replace('{valid-channels}', 
-                                              Array.from(this.settings.riotApiLibraries.requiredTagContextMap.keys())
-                                              .map(e => '#' + e)
-                                              .join(", ")
-                                             )
-                                    );
-            } else {
-                let applicableLangs = [];
-                const languageNames = (await response.json() as GithubAPIStruct[]).map(x => x.name);
+        let applicableLangs = Array.from(this.languageMap.keys());
 
-                for (const language of languageNames) {
-                    const libraries = await this.getLibrariesForLanguage(language, requiredTags); //when finding library languages, search all useful tags
-                    if (libraries.length === 0) continue;
-                    else applicableLangs.push(language);
+        if(message.channel.type == 'GUILD_TEXT') { // if this is the server text channel
+            let requiredTags = this.settings.riotApiLibraries.requiredTagContextMap.get(message.channel.name) || []; //get the reqiured tags from settings.
+            requiredTags.push("v4");
+
+            applicableLangs = [] as string[];
+
+            for (let [lang, libs] of this.languageMap) {
+                for (let lib of libs) {
+                    if (lib.library && lib.library.tags.some(tag => requiredTags.includes(tag))) {
+                        applicableLangs.push(lang)
+                    }
                 }
-                message.channel.send(this.settings.riotApiLibraries.languageList.replace("{languages}", "`" + applicableLangs.join(", ") + "`"));
             }
-        } else {
-            message.channel.send(this.settings.riotApiLibraries.languageList.replace("{languages}", "`" + this.languageList.join(", ") + "`"));
- //in a dm report all libs
         }
+
+        let reply = this.settings.riotApiLibraries.languageList.replace("{languages}", "`" + applicableLangs.join(", ") + "`");
+        message.channel.send(reply);
     }
 
     private async getLibrariesForLanguage(language: string, requiredTags: string[]): Promise<LibraryDescription[]> {
@@ -217,34 +211,19 @@ export default class RiotAPILibraries {
         const editMessagePromise = message.channel.send(`Fetching the list of libraries for ${language}, this post will be edited with the result.`);
 
         let libraryDescriptions: LibraryDescription[] = [];
-        try {
-            let requiredTags;
-            if(message.channel.type == 'GUILD_TEXT') { // if this is the server text channel
-                requiredTags = this.settings.riotApiLibraries.requiredTagContextMap[message.channel.name]; //get the reqiured tags from settings.
-                if (requiredTags == undefined) {
-                    message.channel.send(this.settings.riotApiLibraries.wrongChannel
-                                         .replace('{channel}', message.channel.name)
-                                         .replace('{valid-channels}', 
-                                                  Array.from(this.settings.riotApiLibraries.requiredTagContextMap.keys())
-                                                  .map(e => '#' + e)
-                                                  .join(", ")
-                                                 )
-                                        );
-                    return;
-            } else {
-                requiredTags = this.allTagOptions; //in a dm report all libs
-            }
-            libraryDescriptions = (await this.getLibrariesForLanguage(language, requiredTags))
-                .sort((a, b) => b.stars - a.stars); // Sort by stars
+        let requiredTags = this.allTagOptions;
+        
+        if(message.channel.type == 'GUILD_TEXT') { // if this is the server text channel
+            requiredTags = this.settings.riotApiLibraries.requiredTagContextMap.get(message.channel.name) || []; //get the required tags from settings.
+            requiredTags.push("v4");
         }
-        catch (e) {
-            message.channel.send(e.message);
-            return;
-        }
+        libraryDescriptions = (this.languageMap.get(language) || [])
+            .sort((a, b) => b.stars - a.stars); // Sort by stars
+
 
         const embed = new Discord.MessageEmbed({ title: `List of libraries for ${language}:` });
         for (const desc of libraryDescriptions) {
-            if (!desc.library) {
+            if (!desc.library || desc.library.tags.some(tag => requiredTags.includes(tag))) {
                 // https://github.com/Microsoft/TypeScript/issues/18562
                 continue;
             }
