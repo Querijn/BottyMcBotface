@@ -223,7 +223,7 @@ export default class RiotAPILibraries {
 
         const embed = new Discord.MessageEmbed({ title: `List of libraries for ${language}:` });
         for (const desc of libraryDescriptions) {
-            if (!desc.library || desc.library.tags.some(tag => requiredTags.includes(tag))) {
+            if (!desc.library || !desc.library.tags.some(tag => requiredTags.includes(tag))) {
                 // https://github.com/Microsoft/TypeScript/issues/18562
                 continue;
             }
