@@ -99,7 +99,7 @@ export default class RiotAPILibraries {
         const libraryResponse = await fetch(json.download_url);
         const libraryInfo: APILibraryStruct = await libraryResponse.json();
 
-        if (!libraryInfo.tags.some(tag => self.allTagOptions.includes(tag))) {
+        if (!libraryInfo.tags.some(tag => this.allTagOptions.includes(tag))) {
             return { stars: 0, valid: false, library: null, links: [] };
         }
 
@@ -160,7 +160,7 @@ export default class RiotAPILibraries {
         let applicableLangs = Array.from(this.languageMap.keys());
 
         if(message.channel.type == 'text') { // if this is the server text channel
-            requiredTags = this.settings.riotApiLibraries.requiredTagContextMap[message.channel.name] || [];
+            let requiredTags = this.settings.riotApiLibraries.requiredTagContextMap[message.channel.name] || [];
             requiredTags.push("v4");
 
             applicableLangs = [] as string[];
