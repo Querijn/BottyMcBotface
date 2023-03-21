@@ -69,7 +69,7 @@ export default class RiotAPILibraries {
                 "Content-Type": "application/json",
             },
         };
-        this.allTagOptions =([] as string[]).concat(...this.settings.riotApiLibraries.requiredTagContextMap.values());
+        this.allTagOptions = ([] as string[]).concat(...Object.values(this.settings.riotApiLibraries.requiredTagContextMap));
         this.allTagOptions.push("v4");
 
         this.initList();
@@ -99,7 +99,7 @@ export default class RiotAPILibraries {
         const libraryResponse = await fetch(json.download_url);
         const libraryInfo: APILibraryStruct = await libraryResponse.json();
 
-        if (!libraryInfo.tags || libraryInfo.tags.indexOf("v4") === -1) {
+        if (!libraryInfo.tags.some(tag => self.allTagOptions.includes(tag))) {
             return { stars: 0, valid: false, library: null, links: [] };
         }
 
@@ -160,7 +160,7 @@ export default class RiotAPILibraries {
         let applicableLangs = Array.from(this.languageMap.keys());
 
         if(message.channel.type == 'text') { // if this is the server text channel
-            let requiredTags = this.settings.riotApiLibraries.requiredTagContextMap.get(message.channel.name) || [];
+            requiredTags = this.settings.riotApiLibraries.requiredTagContextMap[message.channel.name] || [];
             requiredTags.push("v4");
 
             applicableLangs = [] as string[];
@@ -217,10 +217,12 @@ export default class RiotAPILibraries {
 
         let libraryDescriptions: LibraryDescription[] = [];
         let requiredTags = this.allTagOptions;
-        if(message.channel.type == 'text') { // if this is the server text channel
-            requiredTags = this.settings.riotApiLibraries.requiredTagContextMap.get(message.channel.name) || []; //get the required tags from settings.
+        if(message.channel.type == 'text') { // if this is the server text channel)
+            requiredTags = this.settings.riotApiLibraries.requiredTagContextMap[message.channel.name] || [];
             requiredTags.push("v4");
         }
+
+        //technically this could become a do-once in the init function but...
         libraryDescriptions = (this.languageMap.get(language) || [])
             .sort((a, b) => b.stars - a.stars); // Sort by stars
 
