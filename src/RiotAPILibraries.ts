@@ -135,9 +135,13 @@ export default class RiotAPILibraries {
             const languageNames = (await response.json() as GithubAPIStruct[]).map(x => x.name);
 
             for (const language of languageNames) {
-                const libraries = await this.getLibrariesForLanguage(language); //when finding library languages, search all useful tags
-                if (libraries.length === 0) continue;
-                this.languageMap.set(language, libraries);
+                try {
+                    const libraries = await this.getLibrariesForLanguage(language); //when finding library languages, search all useful tags
+                    if (libraries.length === 0) continue;
+                    this.languageMap.set(language, libraries);
+                } catch (e) {
+                    console.warn(`Unable to fetch library data for language ${language}: ${e}`);
+                }
             }
             console.log("Riot API library languages updated: " + Array.from(this.languageMap.keys()).join(", "));
         }
