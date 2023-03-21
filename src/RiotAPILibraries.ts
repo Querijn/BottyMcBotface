@@ -159,8 +159,8 @@ export default class RiotAPILibraries {
     private async getList(message: Discord.Message) {
         let applicableLangs = Array.from(this.languageMap.keys());
 
-        if(message.channel.type == 'GUILD_TEXT') { // if this is the server text channel
-            let requiredTags = this.settings.riotApiLibraries.requiredTagContextMap.get(message.channel.name) || []; //get the reqiured tags from settings.
+        if(message.channel.type == 'text') { // if this is the server text channel
+            let requiredTags = this.settings.riotApiLibraries.requiredTagContextMap.get(message.channel.name) || [];
             requiredTags.push("v4");
 
             applicableLangs = [] as string[];
@@ -217,7 +217,7 @@ export default class RiotAPILibraries {
 
         let libraryDescriptions: LibraryDescription[] = [];
         let requiredTags = this.allTagOptions;
-        if(message.channel.type == 'GUILD_TEXT') { // if this is the server text channel
+        if(message.channel.type == 'text') { // if this is the server text channel
             requiredTags = this.settings.riotApiLibraries.requiredTagContextMap.get(message.channel.name) || []; //get the required tags from settings.
             requiredTags.push("v4");
         }
