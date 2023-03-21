@@ -134,9 +134,9 @@ export default class SpamKiller {
 
         const d = url.parse(urlString);
         const hostname = d.hostname || "";
-        if (this.sharedSettings.spam.allowedUrls.findIndex(u => hostname.endsWith(u)) !== -1)
+        if (this.sharedSettings.spam.allowedUrls.findIndex(u => hostname.endsWith(u) &&
+        (hostname.replace(u, "").endsWith(".") || hostname.replace(u, "").length === 0)) !== -1) // Only allow matching base domain (zero length after replace) and subdomains (ends with ".")
             return;
-
         this.addViolatingMessage(message, `Hey, ${message.author}, we require users to verify that they are human before they are allowed to post a link. If you are a human, react with :+1: to this message to gain link privileges. If you are a bot, please go spam somewhere else. 👍`);
     }
 
