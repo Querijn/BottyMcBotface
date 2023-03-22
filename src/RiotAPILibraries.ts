@@ -166,13 +166,10 @@ export default class RiotAPILibraries {
             applicableLangs = [] as string[];
 
             for (let [lang, libs] of this.languageMap) {
-                for (let lib of libs) {
-                    if (lib.library && lib.library.tags.some(tag => requiredTags.includes(tag))) {
-                        applicableLangs.push(lang)
-                    }
+                if (libs.some(lib => lib.library && lib.library.tags.some(tag => requiredTags.includes(tag)))) {
+                    applicableLangs.push(lang)
                 }
             }
-            applicableLangs = [...new Set(applicableLangs)]; //remove duplicate languages
         }
 
         let reply = this.settings.riotApiLibraries.languageList.replace("{languages}", "`" + applicableLangs.join(", ") + "`");
