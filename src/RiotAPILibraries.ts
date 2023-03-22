@@ -172,6 +172,7 @@ export default class RiotAPILibraries {
                     }
                 }
             }
+            applicableLangs = [...new Set(applicableLangs)]; //remove duplicate languages
         }
 
         let reply = this.settings.riotApiLibraries.languageList.replace("{languages}", "`" + applicableLangs.join(", ") + "`");
@@ -217,7 +218,7 @@ export default class RiotAPILibraries {
 
         let libraryDescriptions: LibraryDescription[] = [];
         let requiredTags = this.allTagOptions;
-        if(message.channel.type == 'text') { // if this is the server text channel)
+        if (message.channel.type == 'text') { // if this is the server text channel
             requiredTags = this.settings.riotApiLibraries.requiredTagContextMap[message.channel.name] || [];
             requiredTags.push("v4");
         }
@@ -229,7 +230,7 @@ export default class RiotAPILibraries {
 
         const embed = new Discord.MessageEmbed({ title: `List of libraries for ${language}:` });
         for (const desc of libraryDescriptions) {
-            if (!desc.library || !desc.library.tags.some(tag => requiredTags.includes(tag))) {
+            if (!desc.library || !desc.library.tags || !desc.library.tags.some(tag => requiredTags.includes(tag))) {
                 // https://github.com/Microsoft/TypeScript/issues/18562
                 continue;
             }
