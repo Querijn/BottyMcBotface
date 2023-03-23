@@ -55,8 +55,8 @@ export default class SpamKiller {
     }
 
     async checkForPlayerSupport(message: Discord.Message) {
-        const wordList1 = ['ban', 'banned', 'hacked', 'stolen'];
-        const wordList2 = ['dev', 'ticket', 'support', 'admin']
+        const wordList1 = ['ban', 'banned', 'hacked', 'stolen', 'suspended'];
+        const wordList2 = ['dev', 'ticket', 'support', 'admin', 'help'];
 
         const splitWords = (message.cleanContent+" ").match(/\b(\w+\W+)/g) || [];
         const words = splitWords.map(w => w.toLowerCase()
