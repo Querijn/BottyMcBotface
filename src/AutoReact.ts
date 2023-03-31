@@ -140,7 +140,8 @@ export default class AutoReact {
             "good morning", "goodmorning",
             "good evening", "goodevening",
             "good night", "goodnight",
-            "good day", "goodday",
+            "good day", "goodday", 
+            "top of the morning",
             // French
             "bonjour", "salut", "coucou",
             // Spanish
