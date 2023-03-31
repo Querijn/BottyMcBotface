@@ -68,7 +68,20 @@ export default class SpamKiller {
         let mentionsSupport = wordList2.some(wl => words.indexOf(wl) !== -1)
 
         if (mentionsBanOrHack && mentionsSupport) {
-            this.addViolatingMessage(message, `Hey, ${message.author}, This Discord server is for the Riot Games API, a tool which provides data to sites like op.gg. No one here will be able to help you with support or gameplay issues. If you're having account related issues or technical problems, contact Riot Games support: <https://support.riotgames.com/hc/en-us>. If you have a game-related suggestion or feedback, post on the relevant discord server (League: <https://discord.gg/lol>, Valorant: <https://discord.gg/valorant>)`, false)
+            const violationEmbed = new Discord.MessageEmbed()
+                .setTitle("There is no game or account support here")
+                .setColor(0xff0000)
+                .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/1/19/Stop2.png")
+                .setDescription(`This Discord server is for the Riot Games API, a tool which provides data to sites like op.gg. No one here will be able to help you with support or gameplay issues. If you're having account related issues or technical problems, contact Player support. If you have game feedback, see the links below.`)
+                .addFields([
+                    {name: "Player Support", value: " [Player Support](https://support.riotgames.com/hc/en-us)", inline: true},
+                    {name: "League", value: "[Discord](https://discord.gg/leagueoflegends)\n[Subreddit](https://reddit.com/leagueoflegends)", inline: true},
+                    {name: "\u200b", value: "\u200b", inline: true},
+                    {name: "Valorant", value: "[Discord](https://discord.gg/valorant)\n[Subreddit](https://reddit.com/valorant)", inline: true},
+                    {name: "LoR", value: "[Discord](https://discord.gg/LegendsOfRuneterra)\n[Subreddit](https://reddit.com/r/LegendsofRuneterra)", inline: true},
+                    {name: "\u200b", value: "\u200b", inline: true}
+                ]);
+            this.addViolatingMessage(message, {content: `Hey ${message.author}, There is no game or account support here`, embed: violationEmbed}, false);
         }
     }
 
@@ -115,7 +128,12 @@ export default class SpamKiller {
         }
 
         if (hasGunbuddyMessage) {
-            this.addViolatingMessage(message, `Hey, ${message.author}, you triggered our spam detector. this is not a Riot Games server. There are no Rioters here, and no one can give you a gunbuddy. See <#914594958202241045> for more information.`, false);
+            const violationEmbed = new Discord.MessageEmbed()
+                .setTitle("There are no gun buddies here")
+                .setColor(0xff0000)
+                .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/1/19/Stop2.png")
+                .setDescription(`You triggered our spam detector. this is not a Riot Games server. There are no Rioters here, and no one can give you a gunbuddy. See <#914594958202241045> for more information`)
+            this.addViolatingMessage(message, {content: `Hey ${message.author}, there are no gun buddies here`, embed: violationEmbed}, false);
         }
     }
 
@@ -140,7 +158,7 @@ export default class SpamKiller {
         this.addViolatingMessage(message, `Hey, ${message.author}, we require users to verify that they are human before they are allowed to post a link. If you are a human, react with :+1: to this message to gain link privileges. If you are a bot, please go spam somewhere else. 👍`);
     }
 
-    async addViolatingMessage(message: Discord.Message, warningMessage: string, allowThrough: boolean = true) {
+    async addViolatingMessage(message: Discord.Message, warningMessage: string | {content?: string, embed: Discord.MessageEmbed}, allowThrough: boolean = true) {
 
         const guild = <Discord.Guild>message.guild; // Got to explicitly cast away null because Typescript doesn't detect this
         if (!guild && !message.guild)
