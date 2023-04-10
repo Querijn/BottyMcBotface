@@ -210,6 +210,72 @@ export default class Admin {
             .setDescription(`You were ${action} from the ${serverName}. \n\n**Reason**\n${reason}`)
     }
 
+    private async banKick(message: Discord.Message, isAdmin: boolean, args: string[], action: "kick" | "ban") {
+
+        // only admins should ban, there should always be at least 1 argument
+        if (!isAdmin || args.length === 0) {
+            return;
+        }
+
+        // get all members and a ban reason, if set
+        const { members, reason } = await this.handleMultiUserArguments(message, args);
+
+
+        // set the words based on the action
+        const words = (action === "kick") ? ["kick", "kicked", "kickable"] : ["ban", "banned", "bannable"];
+        if (members.length === 0) { return; }
+
+        let removed = 0;
+        for (let i = 0; i < members.length; i++) {
+            const member = members[i];
+            let note = `The user was not informed as no ${words[0]} message was given. `;
+
+            // check if eligible to kick/ban
+            if (
+                (action === "kick" && !member.kickable) ||
+                (action === "ban" && !member.bannable)
+            ) {
+                this.replySecretMessage(message, `${member} is not ${words[2]}. `);
+                continue;
+            }
+
+            // try to send the reason to the user. The reason needs to be delivered before the user is removed from the server
+            if (reason.length > 0) {
+                note = `The user received their ${words[0]} message. `;
+                await member.send({ embed: this.getDMEmbed(reason, words[1] === "kicked" ? "kicked" : "banned", message) }).catch(e => {
+                    note = `The user did not receive their ${words[0]} message. `
+                });
+            }
+
+            try {
+                if (action === "ban") {
+                    await member.ban({ reason: (reason.length > 0 ? this.shorten(reason) : "No reason") + " -" + message.author.username });
+                } else if (action === "kick") {
+                    await member.kick((reason.length > 0 ? this.shorten(reason) : "No reason") + " -" + message.author.username);
+                }
+            } catch (e) {
+                this.replySecretMessage(message, `Failed to ${words[0]} ${member}: ${e}`);
+                continue;
+            }
+
+            // logging
+            if (reason.length > 0) {
+                this.replySecretMessage(message, `${member} was ${words[1]} by ${message.author.username} due to "${reason}". ${note}`);
+            } else {
+                this.replySecretMessage(message, `${member} was ${words[1]} by ${message.author.username}. ${note}`);
+            }
+            removed++;
+        }
+
+        // purge log
+        if (members.length > 1) {
+            this.replySecretMessage(message, `${message.author.username} has ${words[1]} ${removed} users. `);
+        }
+
+        await this.deleteNonAdminChannelMessage(message);
+
+    }
+
     private shorten(string: string) {
         if (string.length > 400) {
             return string.slice(0, 400) + "..."
@@ -218,101 +284,15 @@ export default class Admin {
     }
 
     public async onBan(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
-        if (!isAdmin || args.length === 0) {
-            return;
-        }
 
-        const { reason, members } = await this.handleMultiUserArguments(message, args);
-
-        if (members.length === 0) { return; }
-        let removed = 0;
-
-        for (let i = 0; i < members.length; i++) {
-            const member = members[i];
-            let note = "The user was not informed as no ban message was given. ";
-
-            if (!member.bannable) {
-                this.replySecretMessage(message, `${member} is not bannable. `);
-                continue;
-            }
-
-            if (reason.length > 0) {
-                note = "The user received their ban message. ";
-                await member.send({ embed: this.getDMEmbed(reason, "banned", message) }).catch(e => {
-                    note = "The user did not receive their ban message. "
-                });
-            }
-
-            try {
-                await member.ban({ reason: (reason.length > 0 ? this.shorten(reason) : "No reason") + " -" + message.author.username });
-            } catch (e) {
-                this.replySecretMessage(message, `Failed to ban ${member}: ${e}`);
-                continue;
-            }
-
-            if (reason.length > 0) {
-                this.replySecretMessage(message, `${member} was banned by ${message.author.username} due to "${reason}". ${note}`);
-            } else {
-                this.replySecretMessage(message, `${member} was banned by ${message.author.username}. ${note}`);
-            }
-            removed++;
-        }
-
-        if (members.length > 1) {
-            this.replySecretMessage(message, `${message.author.username} has banned ${removed} users. `);
-        }
-
-        await this.deleteNonAdminChannelMessage(message);
+        this.banKick(message, isAdmin, args, "ban");
 
     }
 
     public async onKick(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
-        if (!isAdmin || args.length === 0) {
-            return;
-        }
 
-        const { reason, members } = await this.handleMultiUserArguments(message, args);
+        this.banKick(message, isAdmin, args, "kick");
 
-        if (members.length === 0) { return; }
-        let removed = 0;
-
-        for (let i = 0; i < members.length; i++) {
-            const member = members[i];
-            let note = "The user was not informed as no kick message was given. ";
-
-            if (!member.kickable) {
-                this.replySecretMessage(message, `${member} is not kickable. `);
-                continue;
-            }
-
-            if (reason.length > 0) {
-                note = "The user received their kick message. ";
-                await member.send({ embed: this.getDMEmbed(reason, "kicked", message) }).catch(e => {
-                    note = "The user did not receive their kick message. "
-                });
-            }
-
-            try {
-                await member.kick((reason.length > 0 ? this.shorten(reason) : "No reason") + " -" + message.author.username);
-            }
-            catch (e) {
-                this.replySecretMessage(message, `Failed to kick ${member}: ${e}`);
-                continue;
-            }
-
-            if (reason.length > 0) {
-                this.replySecretMessage(message, `${member} was kicked by ${message.author.username} due to "${reason}". ${note}`);
-            } else {
-                this.replySecretMessage(message, `${member} was kicked by ${message.author.username}. ${note}`);
-            }
-            removed++;
-        }
-
-        if (members.length > 1) {
-            this.replySecretMessage(message, `${message.author.username} has kicked ${removed} users. `);
-        }
-
-        await this.deleteNonAdminChannelMessage(message);
     }
 
     public async onMute(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
