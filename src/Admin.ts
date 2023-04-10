@@ -198,9 +198,14 @@ export default class Admin {
             .setDescription(`You were ${action} from the ${serverName}. \n\n**Reason**\n${reason}`)
     }
 
+    private shorten(string: string) {
+        if (string.length > 400) {
+            return string.slice(0, 400) + "..."
+        }
+        return string;
+    }
 
     public async onBan(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
-
         if (!isAdmin || args.length === 0) {
             return;
         }
@@ -227,7 +232,7 @@ export default class Admin {
             }
 
             let catched = false;
-            member.ban({ reason: (reason.length > 0 ? reason : "No reason") + " -" + message.author.username }).catch(e => {
+            member.ban({ reason: (reason.length > 0 ? this.shorten(reason) : "No reason") + " -" + message.author.username }).catch(e => {
                 catched = true;
                 this.replySecretMessage(message, `Failed to ban ${member}: ${e}`);
             })
@@ -275,7 +280,7 @@ export default class Admin {
             }
 
             let catched = false;
-            member.kick((reason.length > 0 ? reason : "No reason") + " -" + message.author.username).catch(e => {
+            member.kick((reason.length > 0 ? this.shorten(reason) : "No reason") + " -" + message.author.username).catch(e => {
                 catched = true;
                 this.replySecretMessage(message, `Failed to kick ${member}: ${e}`);
             })
