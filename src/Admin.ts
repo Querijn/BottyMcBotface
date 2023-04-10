@@ -231,20 +231,19 @@ export default class Admin {
                 });
             }
 
-            let catched = false;
-            member.ban({ reason: (reason.length > 0 ? this.shorten(reason) : "No reason") + " -" + message.author.username }).catch(e => {
-                catched = true;
+            try {
+                await member.ban({ reason: (reason.length > 0 ? this.shorten(reason) : "No reason") + " -" + message.author.username });
+            } catch (e) {
                 this.replySecretMessage(message, `Failed to ban ${member}: ${e}`);
-            })
-
-            if (!catched) {
-                if (reason.length > 0) {
-                    this.replySecretMessage(message, `${member} was banned by ${message.author.username} due to "${reason}". ${note}`);
-                } else {
-                    this.replySecretMessage(message, `${member} was banned by ${message.author.username}. ${note}`);
-                }
-                removed++;
+                continue;
             }
+
+            if (reason.length > 0) {
+                this.replySecretMessage(message, `${member} was banned by ${message.author.username} due to "${reason}". ${note}`);
+            } else {
+                this.replySecretMessage(message, `${member} was banned by ${message.author.username}. ${note}`);
+            }
+            removed++;
         }
 
         if (members.length > 1) {
@@ -279,20 +278,20 @@ export default class Admin {
                 });
             }
 
-            let catched = false;
-            member.kick((reason.length > 0 ? this.shorten(reason) : "No reason") + " -" + message.author.username).catch(e => {
-                catched = true;
-                this.replySecretMessage(message, `Failed to kick ${member}: ${e}`);
-            })
-
-            if (!catched) {
-                if (reason.length > 0) {
-                    this.replySecretMessage(message, `${member} was kicked by ${message.author.username} due to "${reason}". ${note}`);
-                } else {
-                    this.replySecretMessage(message, `${member} was kicked by ${message.author.username}. ${note}`);
-                }
-                removed++;
+            try {
+                await member.kick((reason.length > 0 ? this.shorten(reason) : "No reason") + " -" + message.author.username);
             }
+            catch (e) {
+                this.replySecretMessage(message, `Failed to kick ${member}: ${e}`);
+                continue;
+            }
+
+            if (reason.length > 0) {
+                this.replySecretMessage(message, `${member} was kicked by ${message.author.username} due to "${reason}". ${note}`);
+            } else {
+                this.replySecretMessage(message, `${member} was kicked by ${message.author.username}. ${note}`);
+            }
+            removed++;
         }
 
         if (members.length > 1) {
