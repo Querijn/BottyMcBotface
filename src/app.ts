@@ -60,7 +60,7 @@ controller.registerCommand(commandList.admin.unmute, admin.onUnmute.bind(admin))
 controller.registerCommand(commandList.admin.mute, admin.onMute.bind(admin));
 controller.registerCommand(commandList.admin.ticket, admin.onTicket.bind(admin));
 controller.registerCommand(commandList.admin.kick, admin.onKick.bind(admin));
-controller.registerCommand(commandList.admin.ban, admin.onKick.bind(admin));
+controller.registerCommand(commandList.admin.ban, admin.onBan.bind(admin));
 
 // Esport commands
 controller.registerCommand(commandList.esports.date, esports.onCheckNext.bind(esports));
