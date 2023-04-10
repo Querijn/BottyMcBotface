@@ -210,6 +210,15 @@ export default class Admin {
             .setDescription(`You were ${action} from the ${serverName}. \n\n**Reason**\n${reason}`)
     }
 
+    private async logSuccessMessage(message: Discord.Message, member: Discord.GuildMember, note: string, reason: string, words: string[]) {
+        // logging
+        if (reason.length > 0) {
+            this.replySecretMessage(message, `${member} was ${words[1]} by ${message.author.username} due to "${reason}". ${note}`);
+        } else {
+            this.replySecretMessage(message, `${member} was ${words[1]} by ${message.author.username}. ${note}`);
+        }
+    }
+
     private async banKick(message: Discord.Message, isAdmin: boolean, args: string[], action: "kick" | "ban") {
 
         // only admins should ban, there should always be at least 1 argument
@@ -247,24 +256,15 @@ export default class Admin {
                 });
             }
 
-            try {
-                if (action === "ban") {
-                    await member.ban({ reason: (reason.length > 0 ? this.shorten(reason) : "No reason") + " -" + message.author.username });
-                } else if (action === "kick") {
-                    await member.kick((reason.length > 0 ? this.shorten(reason) : "No reason") + " -" + message.author.username);
-                }
-            } catch (e) {
-                this.replySecretMessage(message, `Failed to ${words[0]} ${member}: ${e}`);
-                continue;
+            if (action === "ban") {
+                await member.ban({ reason: (reason.length > 0 ? this.shorten(reason) : "No reason") + " -" + message.author.username })
+                    .then(() => { this.logSuccessMessage(message, member, note, reason, words); removed++ })
+                    .catch((e) => this.replySecretMessage(message, `Failed to ${words[0]} ${member}: ${e}`));
+            } else if (action === "kick") {
+                await member.kick((reason.length > 0 ? this.shorten(reason) : "No reason") + " -" + message.author.username)
+                    .then(() => { this.logSuccessMessage(message, member, note, reason, words); removed++ })
+                    .catch((e) => this.replySecretMessage(message, `Failed to ${words[0]} ${member}: ${e}`));
             }
-
-            // logging
-            if (reason.length > 0) {
-                this.replySecretMessage(message, `${member} was ${words[1]} by ${message.author.username} due to "${reason}". ${note}`);
-            } else {
-                this.replySecretMessage(message, `${member} was ${words[1]} by ${message.author.username}. ${note}`);
-            }
-            removed++;
         }
 
         // purge log
