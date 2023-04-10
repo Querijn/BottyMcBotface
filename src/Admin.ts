@@ -123,6 +123,18 @@ export default class Admin {
         });
     }
 
+    private async deleteNonAdminChannelMessage(message: Discord.Message) {
+        if (!this.sharedSettings.admin.keepAdminCommandsChannels.includes(message.channel.id)) {
+            if (message.deletable) {
+                try {
+                    await message.delete();
+                } catch (e) {
+                    console.log(`Failed to delete message (https://discordapp.com/channels/${message.guild?.id}/${message.channel.id}/${message.id}): ${e}`);
+                }
+            }
+        }
+    }
+
 
     public async handleMultiUserArguments(message: Discord.Message, args: string[]) {
 
@@ -250,6 +262,8 @@ export default class Admin {
             this.replySecretMessage(message, `${message.author.username} has banned ${removed} users. `);
         }
 
+        await this.deleteNonAdminChannelMessage(message);
+
     }
 
     public async onKick(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
@@ -297,6 +311,8 @@ export default class Admin {
         if (members.length > 1) {
             this.replySecretMessage(message, `${message.author.username} has kicked ${removed} users. `);
         }
+
+        await this.deleteNonAdminChannelMessage(message);
     }
 
     public async onMute(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
