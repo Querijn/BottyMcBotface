@@ -56,7 +56,12 @@
     "admin": {
         "muteRoleId": "428943553167884307",
         "muteRoleName": "muted",
-        "muteTimeout": 86400000
+        "muteTimeout": 86400000,
+        "keepAdminCommandsChannels": [
+            "865107613992616007",
+            "866816996900864041",
+            "429367396420157460"
+        ]
     },
     "esports": {
         "printChannel": "lol-esports",
