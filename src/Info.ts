@@ -386,7 +386,7 @@ export default class Info {
             await reply.react(category.icon).catch((reason) => console.log(`Cannot react with category '${category}', reason being: ${reason}`));
     }
 
-    private fetchInfo(command: string): InfoData | null {
+    public fetchInfo(command: string, trueMatch: boolean = false): InfoData | null {
 
         if (command.length === 0) return null;
         if (command.length > 300) return { message: `Stop it. Get some help.`, counter: 0, command, categoryId: "" };
@@ -408,6 +408,7 @@ export default class Info {
 
             // if there is more than one note, print the list
             if (data.length > 1) {
+                if (trueMatch) { return null; }
                 let message = "Did you mean: ";
                 message += data.map(s => "`" + s.command + "`").join(", ") + "?";
                 return { message, counter: 0, command, categoryId: "" };
@@ -419,12 +420,15 @@ export default class Info {
 
                 // Return a copy
                 info = Object.assign({}, orig);
-                info.message = `Assuming you meant \`${info.command}\`: ${info.message}`;
+                if (!trueMatch) {
+                    info.message = `Assuming you meant \`${info.command}\`: ${info.message}`;
+                }
 
                 orig.counter = orig.counter != null ? orig.counter + 1 : 0;
             }
 
             if (!info) {
+                if (trueMatch) { return null; }
                 return { message: `No note with the name ${command} was found.`, counter: 0, command, categoryId: "" };
             }
         }

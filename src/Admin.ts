@@ -5,6 +5,7 @@ import { clearTimeout, setTimeout } from "timers";
 import Discord = require("discord.js");
 import prettyMs = require("pretty-ms");
 import joinArguments from "./JoinArguments";
+import Info from "./Info";
 
 class TicketData {
 
@@ -57,10 +58,12 @@ export default class Admin {
     private data: AdminData;
     private muteRole: Discord.Role;
     private muteTimers: { [id: string]: NodeJS.Timer } = {};
+    private notes: Info;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, dataFile: string) {
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings, dataFile: string, notes: Info) {
         console.log("Requested Admin extension..");
         this.bot = bot;
+        this.notes = notes;
 
         this.sharedSettings = sharedSettings;
         this.data = fileBackedObject<AdminData>(dataFile);
@@ -118,6 +121,178 @@ export default class Admin {
         this.bot.on("guildMemberAdd", (user: Discord.GuildMember) => {
             this.handleMuteData(user.id);
         });
+    }
+
+
+    public async handleMultiUserArguments(message: Discord.Message, args: string[]) {
+
+        let streak = 0;
+        function isSnowflake(string: string) {
+            return /^[0-9]{1,}$/.test(string);
+        }
+
+        let members: Discord.GuildMember[] = []
+        for (let i = 0; i < args.length; i++) {
+            const argument = args[i];
+            const snowflake = isSnowflake(argument);
+
+            if (/^\<\@[0-9]{1,}\>$/.test(argument) || snowflake) {
+                streak++;
+
+                const id = (snowflake === false) ? argument.substring(2, argument.length - 1) : argument;
+                try {
+                    const member = await this.muteRole.guild.members.fetch(id);
+                    if (this.sharedSettings.commands.adminRoles.some(x => member.roles.cache.has(x))) {
+                        continue; // better not ban/kick admins here
+                    }
+
+                    members.push(member);
+                } catch (e) {
+                    console.log(e)
+                    // invalid user
+                }
+                continue;
+            }
+            break;
+        };
+
+        let argumentsWithoutUsers = args.slice(streak);
+
+        let reason = this.handleReason(argumentsWithoutUsers.join(" "));
+
+        return {
+            members,
+            reason
+        }
+
+    }
+
+    public handleReason(reason: string) {
+        if (reason.length <= 0) return ""
+
+        if (reason.charAt(0) === ".") {
+            const noteReason = this.notes.fetchInfo(reason.split(" ")[0].substring(1), true)
+            if (noteReason !== null) {
+                const rest = reason.split(" ").slice(1).join(" ")
+                return noteReason.message + ((rest.length > 0) ? "\n" + rest : "");
+            }
+        }
+
+        return reason;
+    }
+
+
+    public getDMEmbed(reason: string, action: "banned" | "kicked", message: Discord.Message) {
+
+        function capitalizeFirstLetter(string: string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+        const iconUrl = message.guild?.iconURL() || "https://upload.wikimedia.org/wikipedia/commons/1/19/Stop2.png";
+        const serverName = message.guild?.name || "Botty McBotface"
+
+        return new Discord.MessageEmbed()
+            .setTitle(`${capitalizeFirstLetter(action)} - ${serverName}`)
+            .setColor(0xff0000)
+            .setThumbnail(iconUrl)
+            .setDescription(`You were ${action} from the ${serverName}. \n\n**Reason**\n${reason}`)
+    }
+
+
+    public async onBan(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
+
+        if (!isAdmin || args.length === 0) {
+            return;
+        }
+
+        const { reason, members } = await this.handleMultiUserArguments(message, args);
+
+        if (members.length === 0) { return; }
+        let removed = 0;
+
+        for (let i = 0; i < members.length; i++) {
+            const member = members[i];
+            let note = "The user was not informed as no ban message was given. ";
+
+            if (!member.bannable) {
+                this.replySecretMessage(message, `${member} is not bannable. `);
+                continue;
+            }
+
+            if (reason.length > 0) {
+                note = "The user received their ban message. ";
+                await member.send({ embed: this.getDMEmbed(reason, "banned", message) }).catch(e => {
+                    note = "The user did not receive their ban message. "
+                });
+            }
+
+            let catched = false;
+            member.ban({ reason: (reason.length > 0 ? reason : "No reason") + " -" + message.author.username }).catch(e => {
+                catched = true;
+                this.replySecretMessage(message, `Failed to ban ${member}: ${e}`);
+            })
+
+            if (!catched) {
+                if (reason.length > 0) {
+                    this.replySecretMessage(message, `${member} was banned by ${message.author.username} due to "${reason}". ${note}`);
+                } else {
+                    this.replySecretMessage(message, `${member} was banned by ${message.author.username}. ${note}`);
+                }
+                removed++;
+            }
+        }
+
+        if (members.length > 1) {
+            this.replySecretMessage(message, `${message.author.username} has banned ${removed} users. `);
+        }
+
+    }
+
+    public async onKick(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
+        if (!isAdmin || args.length === 0) {
+            return;
+        }
+
+        const { reason, members } = await this.handleMultiUserArguments(message, args);
+
+        if (members.length === 0) { return; }
+        let removed = 0;
+
+        for (let i = 0; i < members.length; i++) {
+            const member = members[i];
+            let note = "The user was not informed as no kick message was given. ";
+
+            if (!member.kickable) {
+                this.replySecretMessage(message, `${member} is not kickable. `);
+                continue;
+            }
+
+            if (reason.length > 0) {
+                note = "The user received their kick message. ";
+                await member.send({ embed: this.getDMEmbed(reason, "kicked", message) }).catch(e => {
+                    note = "The user did not receive their kick message. "
+                });
+            }
+
+            let catched = false;
+            member.kick((reason.length > 0 ? reason : "No reason") + " -" + message.author.username).catch(e => {
+                catched = true;
+                this.replySecretMessage(message, `Failed to kick ${member}: ${e}`);
+            })
+
+            if (!catched) {
+                if (reason.length > 0) {
+                    this.replySecretMessage(message, `${member} was kicked by ${message.author.username} due to "${reason}". ${note}`);
+                } else {
+                    this.replySecretMessage(message, `${member} was kicked by ${message.author.username}. ${note}`);
+                }
+                removed++;
+            }
+        }
+
+        if (members.length > 1) {
+            this.replySecretMessage(message, `${message.author.username} has kicked ${removed} users. `);
+        }
     }
 
     public async onMute(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
@@ -178,7 +353,7 @@ export default class Admin {
         }
 
         const tickets: string[] = [];
- 
+
         for (const [id, member] of mentions) {
 
             if (!this.data.tickets[id])
@@ -282,7 +457,7 @@ export default class Admin {
         else { // If redirected to another channel, mention the author
 
             if (reply.charAt(0) !== "I" || reply.charAt(1) !== " ")
-                reply = reply.charAt(0).toLowerCase() + reply.substr(1);
+                reply = reply.charAt(0).toLowerCase() + reply.substring(1);
             this.adminChannel.send(message.author.username + ", " + reply);
         }
     }

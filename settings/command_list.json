@@ -14,10 +14,10 @@
             "aliases": [
                 "lookup",
                 "search",
-                "item", 
-                "perk", 
-                "rune", 
-                "champion", 
+                "item",
+                "perk",
+                "rune",
+                "champion",
                 "champ",
                 "summonerspell",
                 "summ",
@@ -41,6 +41,20 @@
                 "mute"
             ],
             "description": "Mutes a user"
+        },
+        "ban": {
+            "admin": true,
+            "aliases": [
+                "ban"
+            ],
+            "description": "Ban one or several users with a specific note or message. "
+        },
+        "kick": {
+            "admin": true,
+            "aliases": [
+                "kick"
+            ],
+            "description": "Kick one or several users with a specific note or message. "
         },
         "unmute": {
             "admin": true,
