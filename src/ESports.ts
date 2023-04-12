@@ -63,7 +63,7 @@ interface EsportsAPIEventListResponse {
 export default class ESportsAPI {
     private bot: Discord.Client;
     private settings: SharedSettings;
-    private esportsChannel: Discord.GuildChannel | null = null;
+    private esportsChannel: Discord.GuildBasedChannel | null = null;
 
     private schedule: Map<string, Map<string, ESportsLeagueSchedule[]>> = new Map();
     private postInfoTimeOut: NodeJS.Timer | null;
@@ -77,13 +77,13 @@ export default class ESportsAPI {
 
             const channel = this.settings.esports.printChannel;
             const guild = this.bot.guilds.cache.get(this.settings.server.guildId);
-            this.esportsChannel = guild!.channels.cache.find((c) => c.name === channel) || null;
+            this.esportsChannel = guild!.channels.cache.find((c) => c.name === channel && c.type === Discord.ChannelType.GuildText) || null;
             if (this.esportsChannel == null) {
                 if (this.settings.botty.isProduction) {
                     console.error("Esports API ran into an error: We don't have an esports channel but we're on production!");
                 }
                 else {
-                    this.esportsChannel = await guild!.channels.create(channel, { type: "text" });
+                    this.esportsChannel = await guild!.channels.create({name: channel, type: Discord.ChannelType.GuildText });
                 }
             }
 
@@ -199,10 +199,9 @@ export default class ESportsAPI {
             if (!isUpdateMessage) channel.send(`No games played on ${date}`);
             return;
         }
-        const embed = new Discord.MessageEmbed();
-        embed.title = `Games being played ${date}:`;
-        if (!embed.fields) embed.fields = [];
-        embed.color = 0x9b311a;
+        const embed = new Discord.EmbedBuilder();
+        embed.setTitle(`Games being played ${date}:`);
+        embed.setColor(0x9b311a);
 
         for (const [league, games] of data) {
 
@@ -215,14 +214,14 @@ export default class ESportsAPI {
             if (output.trim().length === 0)
                 continue;
 
-            embed.fields.push({
+            embed.addFields({
                 name: league,
                 value: output + `[More about ${league} here](${this.getUrlByLeague(games[0])})\n`,
                 inline: false
             });
         }
 
-        channel.send({ embed }).catch(console.error);
+        channel.send({ embeds: [embed] }).catch(console.error);
     }
 
     private async loadData() {

@@ -152,37 +152,6 @@
         ],
         "description": "Checks the uptime of botty"
     },
-    "officeHours": {
-        "ask": {
-            "aliases": [
-                "ask",
-                "question"
-            ],
-            "description": "Ask a question at the next #office-hours"
-        },
-        "ask_for": {
-            "admin": true,
-            "aliases": [
-                "ask_for",
-                "question_for"
-            ],
-            "description": "Ask a question for someone else at the next #office-hours"
-        },
-        "open": {
-            "admin": true,
-            "aliases": [
-                "open"
-            ],
-            "description": "Open #office-hours"
-        },
-        "close": {
-            "admin": true,
-            "aliases": [
-                "close"
-            ],
-            "description": "Close #office-hours"
-        }
-    },
     "riotApiLibraries": {
         "aliases": [
             "lib",

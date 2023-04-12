@@ -25,7 +25,7 @@ export default class SpamKiller {
         this.bot = bot;
 
         bot.on("messageReactionAdd", this.onReaction.bind(this));
-        bot.on("message", this.onMessage.bind(this));
+        bot.on("messageCreate", this.onMessage.bind(this));
         bot.on("ready", this.onReady.bind(this));
     }
 
@@ -68,7 +68,7 @@ export default class SpamKiller {
         let mentionsSupport = wordList2.some(wl => words.indexOf(wl) !== -1)
 
         if (mentionsBanOrHack && mentionsSupport) {
-            const violationEmbed = new Discord.MessageEmbed()
+            const violationEmbed = new Discord.EmbedBuilder()
                 .setTitle("There is no game or account support here")
                 .setColor(0xff0000)
                 .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/1/19/Stop2.png")
@@ -81,7 +81,7 @@ export default class SpamKiller {
                     {name: "LoR", value: "[Discord](https://discord.gg/LegendsOfRuneterra)\n[Subreddit](https://reddit.com/r/LegendsofRuneterra)", inline: true},
                     {name: "\u200b", value: "\u200b", inline: true}
                 ]);
-            this.addViolatingMessage(message, {content: `Hey ${message.author}, There is no game or account support here`, embed: violationEmbed}, false);
+            this.addViolatingMessage(message, {content: `Hey ${message.author}, There is no game or account support here`, embeds: [violationEmbed]}, false);
         }
     }
 
@@ -128,12 +128,12 @@ export default class SpamKiller {
         }
 
         if (hasGunbuddyMessage) {
-            const violationEmbed = new Discord.MessageEmbed()
+            const violationEmbed = new Discord.EmbedBuilder()
                 .setTitle("There are no gun buddies here")
                 .setColor(0xff0000)
                 .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/1/19/Stop2.png")
                 .setDescription(`You triggered our spam detector. this is not a Riot Games server. There are no Rioters here, and no one can give you a gunbuddy. See <#914594958202241045> for more information`)
-            this.addViolatingMessage(message, {content: `Hey ${message.author}, there are no gun buddies here`, embed: violationEmbed}, false);
+            this.addViolatingMessage(message, {content: `Hey ${message.author}, there are no gun buddies here`, embeds: [violationEmbed]}, false);
         }
     }
 
@@ -158,7 +158,7 @@ export default class SpamKiller {
         this.addViolatingMessage(message, `Hey, ${message.author}, we require users to verify that they are human before they are allowed to post a link. If you are a human, react with :+1: to this message to gain link privileges. If you are a bot, please go spam somewhere else. 👍`);
     }
 
-    async addViolatingMessage(message: Discord.Message, warningMessage: string | {content?: string, embed: Discord.MessageEmbed}, allowThrough: boolean = true) {
+    async addViolatingMessage(message: Discord.Message, warningMessage: string | Discord.MessageCreateOptions, allowThrough: boolean = true) {
 
         const guild = <Discord.Guild>message.guild; // Got to explicitly cast away null because Typescript doesn't detect this
         if (!guild && !message.guild)

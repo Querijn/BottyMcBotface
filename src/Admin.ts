@@ -87,7 +87,7 @@ export default class Admin {
                 return;
             }
             else {
-                adminChannel = await guild.channels.create(this.sharedSettings.server.guruChannel, { type: "text" });
+                adminChannel = await guild.channels.create({name: this.sharedSettings.server.guruChannel, type: Discord.ChannelType.GuildText});
             }
         }
 
@@ -203,7 +203,7 @@ export default class Admin {
         const iconUrl = message.guild?.iconURL() || "https://upload.wikimedia.org/wikipedia/commons/1/19/Stop2.png";
         const serverName = message.guild?.name || "Botty McBotface"
 
-        return new Discord.MessageEmbed()
+        return new Discord.EmbedBuilder()
             .setTitle(`${capitalizeFirstLetter(action)} - ${serverName}`)
             .setColor(0xff0000)
             .setThumbnail(iconUrl)
@@ -251,7 +251,7 @@ export default class Admin {
             // try to send the reason to the user. The reason needs to be delivered before the user is removed from the server
             if (reason.length > 0) {
                 note = `The user received their ${words[0]} message. `;
-                await member.send({ embed: this.getDMEmbed(reason, words[1] === "kicked" ? "kicked" : "banned", message) }).catch(e => {
+                await member.send({ embeds: [this.getDMEmbed(reason, words[1] === "kicked" ? "kicked" : "banned", message)] }).catch(e => {
                     note = `The user did not receive their ${words[0]} message. `
                 });
             }
@@ -379,7 +379,7 @@ export default class Admin {
 
         const user = await this.bot.users.fetch(id);
         if (user) {
-            const guildmember = this.adminChannel!.guild.member(user);
+            const guildmember = this.adminChannel!.guild.members.cache.get(id);
             if (guildmember) {
                 await guildmember.roles.add(this.muteRole);
             }

@@ -1,12 +1,9 @@
 # BottyMcBotface
 
-[![Build Status](https://travis-ci.org/Querijn/BottyMcBotface.svg?branch=master)](https://travis-ci.org/Querijn/BottyMcBotface)
-
 The Riot Games API Discord Bot. This is the bot that helps out with your questions regarding the Riot Games API. 
 
 ## Available commands
 
-- **!ask**: Ask a question at the next #office-hours
 - **!esports**: Prints out a list of esports games.
 - **!help**: Prints all the commands
 - **!lib, !libs, !libraries**: Print a list of the public libraries
@@ -22,11 +19,6 @@ The Riot Games API Discord Bot. This is the bot that helps out with your questio
 ##### Admin-only commands
 
 - **!active_keys, !activekeys**: Prints a list of keys that botty have seen, and that are still active
-- **!ask_for**: Ask a question for someone else at the next #office-hours
-- **!close**: Close #office-hours
-- **!open**: Open #office-hours
-- **!question list**: Print the list of questions waiting for #office-hours
-- **!question remove**: Remove a question from the list waiting for #office-hours
 - **!refresh_thinking**: Reloads the thinking emojis
 - **!restart, !reboot**: Restarts Botty.
 - **!toggle_command**: Enables or disables commands (!toggle_command {command})
@@ -42,9 +34,7 @@ The Riot Games API Discord Bot. This is the bot that helps out with your questio
 - **ApiUrlInterpreter**: Scans for API Urls and tries identifying issues. Otherwise, posts what the result of that API call would be.
 - **VersionChecker**: Checks out if League of Legends or DDragon has updated to a new version. If so, posts in #external-activity.
 - **Info**: Saves all kinds of notes and outputs them on request. This is the !note command.
-- **OfficeHours**: Manages Office Hours states, updates availability of Office Hours with a notification to those requested it, and manages questions asked by users outside of Office Hours.
 - **AutoReact**: A small module that reacts to specific messages made by users.
-- **Uptime**: A module that keeps track of uptime.
 - **ApiStatus**: Keeps track of the API status.
 - **RiotAPILibraries**: Can output the Riot API Libraries from the article on the forum via GitHub.
 - **Esports**: Handles the data collection and output for !esports 

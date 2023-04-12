@@ -20,7 +20,7 @@ export default class UserIntroduction {
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
     private messageContents: string;
-    private commandContents: Discord.MessageEmbed[];
+    private commandContents: Discord.EmbedBuilder[];
     private commandController: CommandController;
     private channels: { [lang: string]: Discord.TextChannel | null } = {};
     private data: UserIntroductionData;
@@ -42,7 +42,7 @@ export default class UserIntroduction {
 
     sendWelcome(user: Discord.GuildMember | Discord.PartialGuildMember) {
         user.send(this.messageContents)
-            .then(() => this.commandContents.forEach(embed => user.send({ embed })))
+            .then(() => this.commandContents.forEach(embed => user.send({ embeds: [embed] })))
             .catch((e) => console.log(`Error: Cannot send the welcome message to ${user.nickname} (${e})`));
         console.log(`Welcomed ${user.displayName}.`);
     }

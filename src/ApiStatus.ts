@@ -80,7 +80,7 @@ export default class ApiStatus {
         }
 
         try {
-            await message.channel.send({ embed: embedContent });
+            await message.channel.send({ embeds: [embedContent] });
         }
         catch (e) {
             if (e instanceof Discord.DiscordAPIError) {
