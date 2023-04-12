@@ -5,6 +5,7 @@ import { clearTimeout, setTimeout } from "timers";
 import Discord = require("discord.js");
 import prettyMs = require("pretty-ms");
 import joinArguments from "./JoinArguments";
+import Info from "./Info";
 
 class TicketData {
 
@@ -57,10 +58,12 @@ export default class Admin {
     private data: AdminData;
     private muteRole: Discord.Role;
     private muteTimers: { [id: string]: NodeJS.Timer } = {};
+    private notes: Info;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, dataFile: string) {
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings, dataFile: string, notes: Info) {
         console.log("Requested Admin extension..");
         this.bot = bot;
+        this.notes = notes;
 
         this.sharedSettings = sharedSettings;
         this.data = fileBackedObject<AdminData>(dataFile);
@@ -118,6 +121,178 @@ export default class Admin {
         this.bot.on("guildMemberAdd", (user: Discord.GuildMember) => {
             this.handleMuteData(user.id);
         });
+    }
+
+    private async deleteNonAdminChannelMessage(message: Discord.Message) {
+        if (!this.sharedSettings.admin.keepAdminCommandsChannels.includes(message.channel.id)) {
+            if (message.deletable) {
+                try {
+                    await message.delete();
+                } catch (e) {
+                    console.log(`Failed to delete message (https://discordapp.com/channels/${message.guild?.id}/${message.channel.id}/${message.id}): ${e}`);
+                }
+            }
+        }
+    }
+
+
+    public async handleMultiUserArguments(message: Discord.Message, args: string[]) {
+
+        let streak = 0;
+        function isSnowflake(string: string) {
+            return /^[0-9]{1,}$/.test(string);
+        }
+
+        let members: Discord.GuildMember[] = []
+        for (let i = 0; i < args.length; i++) {
+            const argument = args[i];
+            const snowflake = isSnowflake(argument);
+
+            if (/^\<\@[0-9]{1,}\>$/.test(argument) || snowflake) {
+                streak++;
+
+                const id = (snowflake === false) ? argument.substring(2, argument.length - 1) : argument;
+                try {
+                    const member = await this.muteRole.guild.members.fetch(id);
+                    if (this.sharedSettings.commands.adminRoles.some(x => member.roles.cache.has(x))) {
+                        continue; // better not ban/kick admins here
+                    }
+
+                    members.push(member);
+                } catch (e) {
+                    console.log(e)
+                    // invalid user
+                }
+                continue;
+            }
+            break;
+        };
+
+        let argumentsWithoutUsers = args.slice(streak);
+
+        let reason = this.handleReason(argumentsWithoutUsers.join(" "));
+
+        return {
+            members,
+            reason
+        }
+
+    }
+
+    public handleReason(reason: string) {
+        if (reason.length <= 0) return ""
+
+        if (reason.charAt(0) === ".") {
+            const noteReason = this.notes.fetchInfo(reason.split(" ")[0].substring(1), true)
+            if (noteReason !== null) {
+                const rest = reason.split(" ").slice(1).join(" ")
+                return noteReason.message + ((rest.length > 0) ? "\n" + rest : "");
+            }
+        }
+
+        return reason;
+    }
+
+
+    public getDMEmbed(reason: string, action: "banned" | "kicked", message: Discord.Message) {
+
+        function capitalizeFirstLetter(string: string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+        const iconUrl = message.guild?.iconURL() || "https://upload.wikimedia.org/wikipedia/commons/1/19/Stop2.png";
+        const serverName = message.guild?.name || "Botty McBotface"
+
+        return new Discord.MessageEmbed()
+            .setTitle(`${capitalizeFirstLetter(action)} - ${serverName}`)
+            .setColor(0xff0000)
+            .setThumbnail(iconUrl)
+            .setDescription(`You were ${action} from the ${serverName}. \n\n**Reason**\n${reason}`)
+    }
+
+    private async logSuccessMessage(message: Discord.Message, member: Discord.GuildMember, note: string, reason: string, words: string[]) {
+        // logging
+        if (reason.length > 0) {
+            this.replySecretMessage(message, `${member} was ${words[1]} by ${message.author.username} due to "${reason}". ${note}`);
+        } else {
+            this.replySecretMessage(message, `${member} was ${words[1]} by ${message.author.username}. ${note}`);
+        }
+    }
+
+    private async banKick(message: Discord.Message, isAdmin: boolean, args: string[], action: "kick" | "ban") {
+
+        // only admins should ban, there should always be at least 1 argument
+        if (!isAdmin || args.length === 0) {
+            return;
+        }
+
+        // get all members and a ban reason, if set
+        const { members, reason } = await this.handleMultiUserArguments(message, args);
+
+
+        // set the words based on the action
+        const words = (action === "kick") ? ["kick", "kicked", "kickable"] : ["ban", "banned", "bannable"];
+        if (members.length === 0) { return; }
+
+        let removed = 0;
+        for (let i = 0; i < members.length; i++) {
+            const member = members[i];
+            let note = `The user was not informed as no ${words[0]} message was given. `;
+
+            // check if eligible to kick/ban
+            if (
+                (action === "kick" && !member.kickable) ||
+                (action === "ban" && !member.bannable)
+            ) {
+                this.replySecretMessage(message, `${member} is not ${words[2]}. `);
+                continue;
+            }
+
+            // try to send the reason to the user. The reason needs to be delivered before the user is removed from the server
+            if (reason.length > 0) {
+                note = `The user received their ${words[0]} message. `;
+                await member.send({ embed: this.getDMEmbed(reason, words[1] === "kicked" ? "kicked" : "banned", message) }).catch(e => {
+                    note = `The user did not receive their ${words[0]} message. `
+                });
+            }
+
+            if (action === "ban") {
+                await member.ban({ reason: (reason.length > 0 ? this.shorten(reason) : "No reason") + " -" + message.author.username })
+                    .then(() => { this.logSuccessMessage(message, member, note, reason, words); removed++ })
+                    .catch((e) => this.replySecretMessage(message, `Failed to ${words[0]} ${member}: ${e}`));
+            } else if (action === "kick") {
+                await member.kick((reason.length > 0 ? this.shorten(reason) : "No reason") + " -" + message.author.username)
+                    .then(() => { this.logSuccessMessage(message, member, note, reason, words); removed++ })
+                    .catch((e) => this.replySecretMessage(message, `Failed to ${words[0]} ${member}: ${e}`));
+            }
+        }
+
+        // purge log
+        if (members.length > 1) {
+            this.replySecretMessage(message, `${message.author.username} has ${words[1]} ${removed} users. `);
+        }
+
+        await this.deleteNonAdminChannelMessage(message);
+
+    }
+
+    private shorten(string: string) {
+        if (string.length > 400) {
+            return string.slice(0, 400) + "..."
+        }
+        return string;
+    }
+
+    public async onBan(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
+
+        this.banKick(message, isAdmin, args, "ban");
+
+    }
+
+    public async onKick(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
+
+        this.banKick(message, isAdmin, args, "kick");
+
     }
 
     public async onMute(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
@@ -178,7 +353,7 @@ export default class Admin {
         }
 
         const tickets: string[] = [];
- 
+
         for (const [id, member] of mentions) {
 
             if (!this.data.tickets[id])
@@ -282,7 +457,7 @@ export default class Admin {
         else { // If redirected to another channel, mention the author
 
             if (reply.charAt(0) !== "I" || reply.charAt(1) !== " ")
-                reply = reply.charAt(0).toLowerCase() + reply.substr(1);
+                reply = reply.charAt(0).toLowerCase() + reply.substring(1);
             this.adminChannel.send(message.author.username + ", " + reply);
         }
     }
