@@ -39,7 +39,7 @@ export interface PageDifferPage {
 
 interface IntroLine {
     id: string;
-    lineTranslation: {[lang: string]: string };
+    lineTranslation: { [lang: string]: string };
     type: "rule" | "intro";
 }
 
@@ -71,6 +71,7 @@ export interface SharedSettings {
         muteRoleId: string;
         muteRoleName: string;
         muteTimeout: number;
+        keepAdminCommandsChannels: string[];
     };
 
     esports: {

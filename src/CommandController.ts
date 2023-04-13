@@ -40,6 +40,8 @@ export interface CommandList {
         unmute: Command;
         mute: Command;
         ticket: Command;
+        ban: Command;
+        kick: Command;
     };
     esports: {
         date: Command;

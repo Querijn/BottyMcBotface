@@ -35,7 +35,7 @@ const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.js
 const apiUrlInterpreter = new ApiUrlInterpreter(bot.client, sharedSettings, apiSchema);
 const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
 const notes = new Info(bot, sharedSettings, "data/info_data.json", versionChecker);
-const admin = new Admin(bot.client, sharedSettings, "data/admin_data.json");
+const admin = new Admin(bot.client, sharedSettings, "data/admin_data.json", notes);
 const react = new AutoReact(bot.client, sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json");
 const status = new ApiStatus(sharedSettings);
 const libraries = new RiotAPILibraries(sharedSettings);
@@ -59,6 +59,8 @@ controller.registerCommand(commandList.gamedata.lookup, gameData.onLookup.bind(g
 controller.registerCommand(commandList.admin.unmute, admin.onUnmute.bind(admin));
 controller.registerCommand(commandList.admin.mute, admin.onMute.bind(admin));
 controller.registerCommand(commandList.admin.ticket, admin.onTicket.bind(admin));
+controller.registerCommand(commandList.admin.kick, admin.onKick.bind(admin));
+controller.registerCommand(commandList.admin.ban, admin.onBan.bind(admin));
 
 // Esport commands
 controller.registerCommand(commandList.esports.date, esports.onCheckNext.bind(esports));
