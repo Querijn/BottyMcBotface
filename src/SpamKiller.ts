@@ -156,7 +156,7 @@ export default class SpamKiller {
         (hostname.replace(u, "").endsWith(".") || hostname.replace(u, "").length === 0)) !== -1) // Only allow matching base domain (zero length after replace) and subdomains (ends with ".")
             return;
 
-        const embed = new Discord.MessageEmbed()
+        const embed = new Discord.EmbedBuilder()
             .setTitle("Robot Check")
             .setColor(0xffff00)
             .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Nuvola_apps_important_yellow2.svg/288px-Nuvola_apps_important_yellow2.svg.png")
