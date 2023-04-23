@@ -158,8 +158,8 @@ export default class SpamKiller {
 
         const embed = new Discord.MessageEmbed()
             .setTitle("Robot Check")
-            .setColor(0xffff00)
-            .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Nuvola_apps_important_yellow2.svg/288px-Nuvola_apps_important_yellow2.svg.png")
+            .setColor(0xffcc00)
+            .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Antu_dialog-warning.svg/240px-Antu_dialog-warning.svg.png")
             .setDescription("We require users to verify that they are human before they are allowed to post a link. If you are a human, react with :+1: to this message to gain link privileges. If you are a bot, please go spam somewhere else. 👍");
         this.addViolatingMessage(message, {content: `Hey, ${message.author} If you are a human, react with :+1: to this message`, embed: embed});
     }
