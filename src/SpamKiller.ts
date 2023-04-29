@@ -155,7 +155,13 @@ export default class SpamKiller {
         if (this.sharedSettings.spam.allowedUrls.findIndex(u => hostname.endsWith(u) &&
         (hostname.replace(u, "").endsWith(".") || hostname.replace(u, "").length === 0)) !== -1) // Only allow matching base domain (zero length after replace) and subdomains (ends with ".")
             return;
-        this.addViolatingMessage(message, `Hey, ${message.author}, we require users to verify that they are human before they are allowed to post a link. If you are a human, react with :+1: to this message to gain link privileges. If you are a bot, please go spam somewhere else. 👍`);
+
+        const embed = new Discord.MessageEmbed()
+            .setTitle("Robot Check")
+            .setColor(0xffcc00)
+            .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Antu_dialog-warning.svg/240px-Antu_dialog-warning.svg.png")
+            .setDescription("We require users to verify that they are human before they are allowed to post a link. If you are a human, react with :+1: to this message to gain link privileges. If you are a bot, please go spam somewhere else. 👍");
+        this.addViolatingMessage(message, {content: `Hey, ${message.author} If you are a human, react with :+1: to this message`, embed: embed});
     }
 
     async addViolatingMessage(message: Discord.Message, warningMessage: string | {content?: string, embed: Discord.MessageEmbed}, allowThrough: boolean = true) {
