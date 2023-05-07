@@ -237,5 +237,12 @@
             ],
             "description": "Shows a list of all Riot API endpoints."
         }
+    },
+    "banCount": {
+        "aliases": [
+            "ban_count",
+            "bancount"
+        ],
+        "description": "Prints the number of bans on the server"
     }
 }

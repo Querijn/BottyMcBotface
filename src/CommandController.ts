@@ -80,6 +80,7 @@ export interface CommandList {
         endpoint: Command;
         endpoints: Command;
     };
+    banCount: Command;
 }
 
 export default class CommandController {
