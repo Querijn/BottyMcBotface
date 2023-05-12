@@ -187,7 +187,7 @@ export default class ApiUrlInterpreter {
             return;
         }
 
-        const replyMessages = await message.channel.send(`Making a request to \`${path!.name}\``);
+        const replyMessages = await message.channel.send(`Making a request to ${path!.name}`);
         const replyMessage = Array.isArray(replyMessages) ? replyMessages[0] : replyMessages;
 
         await this.makeRequest(path!, platformId, url, replyMessage);
