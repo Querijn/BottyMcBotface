@@ -275,24 +275,17 @@ export default class ApiUrlInterpreter {
         try {
             const curIterator = this.iterator;
             const fileName = `${curIterator}.json`;
-            const localFile = `${this.personalSettings.webServer.relativeFolderLocation}${fileName}`;
-
+        
             const json = {
                 url,
                 method: servicedMethodName,
                 result: await resp.json(),
             };
-
-            fs.writeFile(localFile, JSON.stringify(json), null, (err: NodeJS.ErrnoException) => {
-                if (err != null) {
-                    message.edit(`Woah, something went wrong trying to fetch ${url}, sorry!`);
-                    console.warn(`Error ${err.code} (${err.name}) while trying to save \`${url}\` to \`${localFile}\`: ${err.message}`);
-                    return;
-                }
-
-                message.edit(`Response for ${url}:\n${this.personalSettings.webServer.relativeLiveLocation}requests/${fileName}`);
-            });
-
+        
+            const buffer = Buffer.from(JSON.stringify(json, null, 2), 'utf-8');
+            const attachment = new Discord.MessageAttachment(buffer, fileName);
+            await message.channel.send(`Response for ${url}:`, attachment);
+        
             this.iterator = (this.iterator % 50) + 1;
         } catch (e) {
             message.edit("Eh, something went wrong trying to upload this :(").catch((reason) => {
