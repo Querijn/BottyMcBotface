@@ -283,8 +283,8 @@ export default class ApiUrlInterpreter {
             };
         
             const buffer = Buffer.from(JSON.stringify(json, null, 2), 'utf-8');
-            const attachment = new Discord.MessageAttachment(buffer, fileName);
-            await message.channel.send(`Response for ${url}:`, attachment);
+            const attachment = new Discord.AttachmentBuilder(buffer, { name: 'image.png' });
+            await message.channel.send({ content: `Response for ${url}:`, files: [attachment] });
         
             this.iterator = (this.iterator % 50) + 1;
         } catch (e) {

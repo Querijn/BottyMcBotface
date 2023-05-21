@@ -12,7 +12,7 @@ export default class Techblog {
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
     private data: TechblogData;
-    private channel: Discord.TextChannel;
+    private channel: Discord.ForumChannel;
 
     constructor(bot: Discord.Client, sharedSettings: SharedSettings, dataFile: string) {
         this.sharedSettings = sharedSettings;
@@ -31,14 +31,14 @@ export default class Techblog {
                 return;
             }
 
-            this.channel = guild.channels.cache.find(c => c.name === this.sharedSettings.techBlog.channel) as Discord.TextChannel;
+            this.channel = guild.channels.cache.find(c => c.name === this.sharedSettings.techBlog.channel) as Discord.ForumChannel;
             if (!this.channel) {
                 if (this.sharedSettings.botty.isProduction) {
                     console.error(`TechBlog: Unable to find channel: ${this.sharedSettings.techBlog.channel}`);
                     return;
                 }
                 else {
-                    this.channel = await guild!.channels.create({name: this.sharedSettings.techBlog.channel, type: Discord.ChannelType.GuildText }) as Discord.TextChannel;
+                    this.channel = await guild!.channels.create({name: this.sharedSettings.techBlog.channel, type: Discord.ChannelType.GuildForum }) as Discord.ForumChannel;
                 }
             }
 
@@ -66,7 +66,7 @@ export default class Techblog {
             for (const article of results.item.reverse()) { // Old to new
                 const timestamp = new Date(article.pubDate).getTime();
                 if (timestamp > this.data.Last) {
-                    this.channel.send(article.link);
+                    this.channel.threads.create({ name: article.title, message: { content: article.link, } });
                     this.data.Last = timestamp;
                 }
             }
