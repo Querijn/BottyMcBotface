@@ -229,12 +229,12 @@ export default class GameData {
         if (typeof result === "string") {
             message.channel.send(result);
         } else {
-            message.channel.send(this.buildEmbed(result));
+            message.channel.send({embeds: [this.buildEmbed(result)]});
         }
     }
 
     public buildEmbed(rawData: EmbeddableDatum) {
-        const embed = new Discord.MessageEmbed();
+        const embed = new Discord.EmbedBuilder();
         switch (rawData.type) {
             case "ChampionData": {
                 const imageString = `https://cdn.communitydragon.org/latest/champion/${rawData.id}/square`;
@@ -281,12 +281,12 @@ export default class GameData {
             if (valueString !== "") {
                 if (Array.isArray(value)) {
                     if (value.length > 4) {
-                        embed.addField(keyString, `${value.slice(0, 4).join(", ")} + ${value.length - 4} more…`);
+                        embed.addFields({name: keyString, value: `${value.slice(0, 4).join(", ")} + ${value.length - 4} more…`});
                     } else {
-                        embed.addField(keyString, `${value.join(", ")}`);
+                        embed.addFields({name: keyString, value: `${value.join(", ")}`});
                     }
                 } else {
-                    embed.addField(keyString, valueString, true);
+                    embed.addFields({name: keyString, value: valueString, inline: true});
                 }
             }
         }

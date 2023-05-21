@@ -3,7 +3,7 @@ import { PersonalSettings, SharedSettings } from "./SharedSettings";
 import { levenshteinDistance } from "./LevenshteinDistance";
 
 import Discord = require("discord.js");
-import { GuildMember } from "discord.js";
+import { GatewayIntentBits, GuildMember } from "discord.js";
 
 import { exec } from "child_process";
 
@@ -15,7 +15,15 @@ export interface BottySettings {
 }
 
 export default class Botty {
-    public readonly client = new Discord.Client();
+    public readonly client = new Discord.Client({ intents: [
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.DirectMessageReactions,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.MessageContent,
+    ]});
     private personalSettings: PersonalSettings;
     private sharedSettings: SharedSettings;
 
@@ -58,13 +66,13 @@ export default class Botty {
         this.client.on("guildMemberAdd", member => console.log(`${member.displayName}#${member.user?.discriminator} (${member.id}) joined the server.`));
         this.client.on("guildMemberRemove", member => console.log(`${member.displayName}#${member.user?.discriminator} (${member.id}) left (or was removed) from the server.`));
 
-        this.client.on("guildBanAdd", (guild: Discord.Guild, user: Discord.User) => console.log(`${user.username}#${user.discriminator} (${user.id}) has been banned from ${guild.name}.`));
-        this.client.on("guildBanRemove", (guild: Discord.Guild, user: Discord.User) => console.log(`${user.username}#${user.discriminator} (${user.id}) has been unbanned from ${guild.name}.`));
+        this.client.on("guildBanAdd", (guildBan: Discord.GuildBan) => console.log(`${guildBan.user.username}#${guildBan.user.discriminator} (${guildBan.user.id}) has been banned from ${guildBan.guild.name}.`));
+        this.client.on("guildBanRemove", (guildBan: Discord.GuildBan) => console.log(`${guildBan.user.username}#${guildBan.user.discriminator} (${guildBan.user.id}) has been unbanned from ${guildBan.guild.name}.`));
 
         this.client.on("messageDelete", (message: Discord.Message) => {
 
             if (message.author.bot) return; // Ignore bot in general
-            if (message.channel.type === "dm") return; // Don't output DMs
+            if (message.channel.type === Discord.ChannelType.DM) return; // Don't output DMs
 
             console.log(`${message.author.username}'s (${message.author.id}) message in ${message.channel} was deleted. Contents: \n${message.cleanContent}\n`);
         });
@@ -87,7 +95,7 @@ export default class Botty {
 
             if (levenshteinDistance(oldMessage.content, newMessage.content) === 0) return; // To prevent page turning and embed loading to appear in changelog
             if (oldMessage.author.bot) return; // Ignore bot in general
-            if (oldMessage.channel.type === "dm") return; // Don't output DMs
+            if (oldMessage.channel.type === Discord.ChannelType.DM) return; // Don't output DMs
 
             console.log(`${oldMessage.author.username}'s message in ${oldMessage.channel} was changed from: \n${oldMessage.cleanContent}\n\nTo:\n${newMessage.cleanContent}`);
         });
@@ -122,8 +130,8 @@ export default class Botty {
         }
 
         // Set correct nickname
-        if (guild.me) {
-            guild.me.setNickname(this.personalSettings.isProduction ? "Botty McBotface" : "");
+        if (guild.members.me) {
+            guild.members.me.setNickname(this.personalSettings.isProduction ? "Botty McBotface" : "");
         }
     }
 

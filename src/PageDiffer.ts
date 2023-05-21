@@ -49,7 +49,7 @@ export default class PageDiffer {
                 return;
             }
             else {
-                channel = await guild!.channels.create(this.sharedSettings.pageDiffer.channel, { type: "text" });
+                channel = await guild!.channels.create({name: this.sharedSettings.pageDiffer.channel, type: Discord.ChannelType.GuildText});
             }
         }
 
@@ -125,14 +125,14 @@ export default class PageDiffer {
             // Get to the posting part, if we have a difference
             if (!hasDiff) continue;
 
-            const embed = new Discord.MessageEmbed()
+            const embed = new Discord.EmbedBuilder()
                 .setColor(0xffca95)
                 .setTitle(`The ${page.type} "${page.name}" has changed`)
                 .setDescription(`Something has changed on "${page.name}".\n\nYou can see the current version here: ${pageLocation}\n\nYou can check out the difference here: ${this.sharedSettings.botty.webServer.relativeLiveLocation + folderName}`)
                 .setURL(this.sharedSettings.botty.webServer.relativeLiveLocation + folderName)
                 .setThumbnail(this.sharedSettings.pageDiffer.embedImageUrl);
 
-            this.channel.send({ embed });
+            this.channel.send({ embeds: [embed] });
         }
 
         if (this.timeOut !== null) clearTimeout(this.timeOut);

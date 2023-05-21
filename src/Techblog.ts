@@ -38,7 +38,7 @@ export default class Techblog {
                     return;
                 }
                 else {
-                    this.channel = await guild!.channels.create(this.sharedSettings.techBlog.channel, { type: "text" }) as Discord.TextChannel;
+                    this.channel = await guild!.channels.create({name: this.sharedSettings.techBlog.channel, type: Discord.ChannelType.GuildText }) as Discord.TextChannel;
                 }
             }
 
@@ -72,7 +72,6 @@ export default class Techblog {
             }
         }
         catch (error) {
-            
             console.error("Error reading tech blog RSS feed:", error);
         }
     }

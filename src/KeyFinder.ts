@@ -39,7 +39,7 @@ export default class KeyFinder {
                     console.error(`KeyFinder: Unable to find channel: ${this.sharedSettings.keyFinder.reportChannel}`);
                     return;
                 }
-                this.channel = await guild!.channels.create(this.sharedSettings.keyFinder.reportChannel, { type: "text" }) as Discord.TextChannel;
+                this.channel = await guild!.channels.create({name: this.sharedSettings.keyFinder.reportChannel, type: Discord.ChannelType.GuildText }) as Discord.TextChannel;
             }
             else {
                 this.channel = channel;
@@ -48,7 +48,7 @@ export default class KeyFinder {
             console.log("KeyFinder extension loaded.");
             this.testAllKeys();
         });
-        this.bot.on("message", this.onMessage.bind(this));
+        this.bot.on("messageCreate", this.onMessage.bind(this));
     }
 
     public onMessage(incomingMessage: Discord.Message) {

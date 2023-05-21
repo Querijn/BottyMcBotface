@@ -75,7 +75,7 @@ export default class Info {
 
                 const emoji = botty.client.emojis.cache.get(category.icon);
                 if (!emoji) {
-                    console.warn(`Cannot find emoji ${category} for the info categories!`);
+                    console.warn(`Cannot find emoji ${category.icon} for the info categories!`);
                     continue;
                 }
 
@@ -343,17 +343,17 @@ export default class Info {
             return;
         }
 
-        let firstPage: Discord.MessageEmbed | null = null;
-        const pages: { [emoji: string]: Discord.MessageEmbed } = {};
+        let firstPage: Discord.EmbedBuilder | null = null;
+        const pages: { [emoji: string]: Discord.EmbedBuilder } = {};
         for (const category of this.categories) {
             const categoryItems = this.infos.filter(i => i.categoryId === category.icon);
 
-            const page = new Discord.MessageEmbed();
+            const page = new Discord.EmbedBuilder();
             page.setTitle(category.explanation);
 
             for (const item of categoryItems) {
                 const content = item.message.length > maxLength ? item.message.substr(0, maxLength - 3) + "..." : item.message;
-                page.addField("!note " + item.command, content, false);
+                page.addFields({name: "!note " + item.command, value: content});
             }
 
             if (!firstPage) firstPage = page;
@@ -363,7 +363,7 @@ export default class Info {
         if (!firstPage)
             return;
 
-        let replies = await message.channel.send({ embed: firstPage });
+        let replies = await message.channel.send({ embeds: [firstPage] });
         let reply: Discord.Message = Array.isArray(replies) ? replies[0] : replies;
 
         this.categorisedMessages[reply.id] = new CategorisedMessage(pages);
@@ -378,7 +378,7 @@ export default class Info {
 
                 const page = this.categorisedMessages[listener.message.id].setPage(emoji);
 
-                listener.message.edit({ embed: page });
+                listener.message.edit({ embeds: [page] });
             },
         });
 

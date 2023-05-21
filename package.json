@@ -18,7 +18,7 @@
     "bufferutil": "^4.0.0",
     "cheerio": "^1.0.0-rc.10",
     "crc-32": "^1.2.0",
-    "discord.js": "^12.2.0",
+    "discord.js": "^14.8.0",
     "fast-xml-parser": "^4.0.7",
     "feed-reader": "^5.0.0-rc3",
     "fs-extra": "^7.0.1",
