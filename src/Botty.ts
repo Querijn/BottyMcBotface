@@ -21,6 +21,7 @@ export default class Botty {
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.GuildModeration,
         GatewayIntentBits.Guilds,
         GatewayIntentBits.MessageContent,
     ]});
