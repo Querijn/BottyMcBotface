@@ -5,7 +5,7 @@ import { clearTimeout, setTimeout } from "timers";
 import Discord = require("discord.js");
 import crc32 = require("crc-32");
 import fs = require("fs");
-import fetch from "node-fetch";
+import fetch, { FetchError } from "node-fetch";
 import h2p = require("html2plaintext");
 
 interface PageDifferData {
@@ -78,63 +78,66 @@ export default class PageDiffer {
         for (const page of this.sharedSettings.pageDiffer.pages) {
 
             const fetchUrl = this.getFetchUrl(page);
-
-            const resp = await fetch(fetchUrl);
-            if (resp.status !== 200) {
-                console.warn(`PageDiffer got an unusual HTTP status code checking for ${page.type} "${page.name}". "${fetchUrl}" returns ${resp.status}.`);
-                continue;
-            }
-
-            let body = "";
-            let pageLocation = page.ident;
-            switch (page.type) {
-                case PageType.Article: {
-                    const article = (await resp.json()).article;
-                    pageLocation = article.html_url;
-                    body = article.body;
-                    break;
+            try {
+                const resp = await fetch(fetchUrl);
+                if (resp.status !== 200) {
+                    console.warn(`PageDiffer got an unusual HTTP status code checking for ${page.type} "${page.name}". "${fetchUrl}" returns ${resp.status}.`);
+                    continue;
                 }
 
-                case PageType.Page: {
-                    body = await resp.text();
-                    break;
+                let body = "";
+                let pageLocation = page.ident;
+                switch (page.type) {
+                    case PageType.Article: {
+                        const article = (await resp.json()).article;
+                        pageLocation = article.html_url;
+                        body = article.body;
+                        break;
+                    }
+
+                    case PageType.Page: {
+                        body = await resp.text();
+                        break;
+                    }
                 }
+
+                const diffBody = h2p(body).replace(/[\W_]+/g, "");
+                const hash = crc32.str(diffBody);
+                if (this.data.hashes[page.type + page.ident] === hash) continue;
+
+                // Make sure the folders are there
+                if (!fs.existsSync("www")) fs.mkdirSync("www");
+                if (!fs.existsSync("www/pages")) fs.mkdirSync("www/pages");
+
+                const cleanName = page.name.toLowerCase().replace(/[\W_]+/g, "-");
+                const folderName = "pages/" + cleanName + "/";
+                const hasDiff = fs.existsSync("www/" + folderName);
+                if (!hasDiff) fs.mkdirSync("www/" + folderName);
+
+                // Save the file and the info about the file
+                const curTime = Date.now();
+                fs.writeFileSync("www/" + folderName + curTime + "_info.json", JSON.stringify(page));
+                fs.writeFileSync("www/" + folderName + curTime + ".html", body);
+                fs.writeFileSync("www/" + folderName + curTime + "_debug.txt", diffBody);
+                fs.writeFileSync("www/" + folderName + "index.json", JSON.stringify(fs.readdirSync("www/" + folderName).filter(f => f.endsWith(".html")).map(f => f.replace(/.html/g, ""))));
+                this.data.hashes[page.type + page.ident] = hash;
+
+                // Get to the posting part, if we have a difference
+                if (!hasDiff) continue;
+
+                const embed = new Discord.EmbedBuilder()
+                    .setColor(0xffca95)
+                    .setTitle(`The ${page.type} "${page.name}" has changed`)
+                    .setDescription(`Something has changed on "${page.name}".\n\nYou can see the current version here: ${pageLocation}\n\nYou can check out the difference here: ${this.sharedSettings.botty.webServer.relativeLiveLocation + folderName}`)
+                    .setURL(this.sharedSettings.botty.webServer.relativeLiveLocation + folderName)
+                    .setThumbnail(this.sharedSettings.pageDiffer.embedImageUrl);
+
+                this.channel.send({ embeds: [embed] });
             }
-
-            const diffBody = h2p(body).replace(/[\W_]+/g, "");
-            const hash = crc32.str(diffBody);
-            if (this.data.hashes[page.type + page.ident] === hash) continue;
-
-            // Make sure the folders are there
-            if (!fs.existsSync("www")) fs.mkdirSync("www");
-            if (!fs.existsSync("www/pages")) fs.mkdirSync("www/pages");
-
-            const cleanName = page.name.toLowerCase().replace(/[\W_]+/g, "-");
-            const folderName = "pages/" + cleanName + "/";
-            const hasDiff = fs.existsSync("www/" + folderName);
-            if (!hasDiff) fs.mkdirSync("www/" + folderName);
-
-            // Save the file and the info about the file
-            const curTime = Date.now();
-            fs.writeFileSync("www/" + folderName + curTime + "_info.json", JSON.stringify(page));
-            fs.writeFileSync("www/" + folderName + curTime + ".html", body);
-            fs.writeFileSync("www/" + folderName + curTime + "_debug.txt", diffBody);
-            fs.writeFileSync("www/" + folderName + "index.json", JSON.stringify(fs.readdirSync("www/" + folderName).filter(f => f.endsWith(".html")).map(f => f.replace(/.html/g, ""))));
-            this.data.hashes[page.type + page.ident] = hash;
-
-            // Get to the posting part, if we have a difference
-            if (!hasDiff) continue;
-
-            const embed = new Discord.EmbedBuilder()
-                .setColor(0xffca95)
-                .setTitle(`The ${page.type} "${page.name}" has changed`)
-                .setDescription(`Something has changed on "${page.name}".\n\nYou can see the current version here: ${pageLocation}\n\nYou can check out the difference here: ${this.sharedSettings.botty.webServer.relativeLiveLocation + folderName}`)
-                .setURL(this.sharedSettings.botty.webServer.relativeLiveLocation + folderName)
-                .setThumbnail(this.sharedSettings.pageDiffer.embedImageUrl);
-
-            this.channel.send({ embeds: [embed] });
+            catch (e) {
+                console.warn(`PageDiffer got an error checking for ${page.type} "${page.name}". "${fetchUrl}": ${e}`);
+            }
         }
-
         if (this.timeOut !== null) clearTimeout(this.timeOut);
         this.timeOut = setTimeout(this.checkPages.bind(this), this.sharedSettings.pageDiffer.checkInterval);
     }
