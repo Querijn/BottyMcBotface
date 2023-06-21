@@ -153,8 +153,9 @@ export default class Admin {
 
                 const id = (snowflake === false) ? argument.substring(2, argument.length - 1) : argument;
                 try {
-                    const member = await this.muteRole.guild.members.fetch(id);
-                    if (this.sharedSettings.commands.adminRoles.some(x => member.roles.cache.has(x))) {
+                    let member = this.muteRole.guild.members.cache.find(cachedMember => cachedMember.id === id);
+                    if (!member) member = await this.muteRole.guild.members.fetch(id);
+                    if (this.sharedSettings.commands.adminRoles.some(x => member!.roles.cache.has(x))) {
                         continue; // better not ban/kick admins here
                     }
 
