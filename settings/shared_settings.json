@@ -1,6 +1,7 @@
 {
     "server": {
         "guildId": "342988445498474498",
+        "guruChannel": "gurus",
         "guruLogChannel": "content-alerts",
         "introChannel": "new-users"
     },

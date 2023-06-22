@@ -54,6 +54,7 @@ class AdminData {
 export default class Admin {
     private bot: Discord.Client;
     private adminChannel: Discord.TextChannel | null = null;
+    private adminLogChannel: Discord.TextChannel | null = null;
     private sharedSettings: SharedSettings;
     private data: AdminData;
     private muteRole: Discord.Role;
@@ -80,7 +81,8 @@ export default class Admin {
             return;
         }
 
-        let adminChannel = guild.channels.cache.find(c => c.name === this.sharedSettings.server.guruLogChannel);
+        let adminChannel = guild.channels.cache.find(c => c.name === this.sharedSettings.server.guruChannel);
+        let adminLogChannel;
         if (!adminChannel) {
             if (this.sharedSettings.botty.isProduction) {
                 console.error(`Admin: Unable to find moderators channel!`);
@@ -89,6 +91,7 @@ export default class Admin {
             else {
                 adminChannel = await guild.channels.create({name: this.sharedSettings.server.guruLogChannel, type: Discord.ChannelType.GuildText});
             }
+            adminLogChannel = guild.channels.cache.find(c => c.name === this.sharedSettings.server.guruLogChannel) || this.adminChannel;
         }
 
         if (!(adminChannel instanceof Discord.TextChannel)) {
@@ -112,6 +115,7 @@ export default class Admin {
         this.muteRole = muteRole;
 
         this.adminChannel = adminChannel as Discord.TextChannel;
+        this.adminLogChannel = adminLogChannel as Discord.TextChannel;
         console.log("Admin extension loaded.");
 
         for (const id in this.data.muted) {
@@ -379,7 +383,7 @@ export default class Admin {
 
         const user = await this.bot.users.fetch(id);
         if (user) {
-            const guildmember = this.adminChannel!.guild.members.cache.get(id);
+            const guildmember = this.adminLogChannel!.guild.members.cache.get(id);
             if (guildmember) {
                 await guildmember.roles.add(this.muteRole);
             }
@@ -426,9 +430,9 @@ export default class Admin {
             console.log(`${member.username} has left the server, so we are unable to remove their role`);
         }
 
-        if (this.adminChannel) {
+        if (this.adminLogChannel) {
             const muter = await this.muteRole.guild.members.fetch(data.muterId);
-            this.adminChannel.send(`${muter}, I just unmuted ${member.username}.`);
+            this.adminLogChannel.send(`${muter}, I just unmuted ${member.username}.`);
         }
 
         if (this.muteTimers[id]) {
@@ -445,20 +449,20 @@ export default class Admin {
 
     private async replySecretMessage(message: Discord.Message, reply: string) {
 
-        if (!this.adminChannel) {
+        if (!this.adminLogChannel) {
             message.author.send(reply).catch(e => {
                 console.log("Admin: Could not DM " + message.author.username + ".");
                 message.reply("I cannot send you a direct message, and there's no admin channel I can use.. Can't really give you this info.");
             });
         }
-        else if (message.channel.id === this.adminChannel.id) {
-            this.adminChannel.send(reply);
+        else if (message.channel.id === this.adminLogChannel.id) {
+            this.adminLogChannel.send(reply);
         }
         else { // If redirected to another channel, mention the author
 
             if (reply.charAt(0) !== "I" || reply.charAt(1) !== " ")
                 reply = reply.charAt(0).toLowerCase() + reply.substring(1);
-            this.adminChannel.send(message.author.username + ", " + reply);
+            this.adminLogChannel.send(message.author.username + ", " + reply);
         }
     }
 
