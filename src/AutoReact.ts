@@ -140,7 +140,7 @@ export default class AutoReact {
             "good morning", "goodmorning",
             "good evening", "goodevening",
             "good night", "goodnight",
-            "good day", "goodday", 
+            "good day", "goodday",
             "top of the morning",
             // French
             "bonjour", "salut", "coucou",
@@ -173,7 +173,7 @@ export default class AutoReact {
             "dobro jutro", "jutro",
             "dobro veče", "laku noć",
             "dobar dan", "dobar dan",
-            //indonesian
+            // indonesian
             "selamat pagi",
         ];
 
