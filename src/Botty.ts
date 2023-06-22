@@ -3,7 +3,7 @@ import { PersonalSettings, SharedSettings } from "./SharedSettings";
 import { levenshteinDistance } from "./LevenshteinDistance";
 
 import Discord = require("discord.js");
-import { GatewayIntentBits, GuildMember } from "discord.js";
+import { GatewayIntentBits, GuildMember, Partials } from "discord.js";
 
 import { exec } from "child_process";
 
@@ -21,9 +21,10 @@ export default class Botty {
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildMessageReactions,
+        GatewayIntentBits.GuildModeration,
         GatewayIntentBits.Guilds,
         GatewayIntentBits.MessageContent,
-    ]});
+    ], partials: [Partials.Channel]});
     private personalSettings: PersonalSettings;
     private sharedSettings: SharedSettings;
 
