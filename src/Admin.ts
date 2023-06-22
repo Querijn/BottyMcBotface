@@ -91,7 +91,7 @@ export default class Admin {
             else {
                 adminChannel = await guild.channels.create({name: this.sharedSettings.server.guruLogChannel, type: Discord.ChannelType.GuildText});
             }
-            adminLogChannel = guild.channels.cache.find(c => c.name === this.sharedSettings.server.guruLogChannel) || this.adminChannel;
+            adminLogChannel = guild.channels.cache.find(c => c.name === this.sharedSettings.server.guruLogChannel) || adminChannel;
         }
 
         if (!(adminChannel instanceof Discord.TextChannel)) {
