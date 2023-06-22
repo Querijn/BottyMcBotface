@@ -106,10 +106,10 @@ export default class Logger {
         this.oldLog(message, ...optionalParams);
 
         try {
-            let chunks = `[${(new Date()).toUTCString()}] Log: ${message.toString()}`.match(/.{1,2000}/g) || [message.toString()];
+            let chunks = `[${(new Date()).toUTCString()}] Log: ${message.toString()}`.match(/.{1,2000}/sg) || [message.toString()];
             chunks.forEach(chunk => { this.logChannel.send(chunk)})
             for (let i = 0; i < optionalParams.length; i++) {
-                let chunks = `[${(new Date()).toUTCString()}] Log param ${(i + 1)}: ${optionalParams.toString()}`.match(/.{1,2000}/g) || [message.toString()];
+                let chunks = `[${(new Date()).toUTCString()}] Log param ${(i + 1)}: ${optionalParams.toString()}`.match(/.{1,2000}/sg) || [message.toString()];
                 chunks.forEach(chunk => { this.logChannel.send(chunk)})
             }
         } catch (e) {
