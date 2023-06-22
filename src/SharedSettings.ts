@@ -46,7 +46,7 @@ interface IntroLine {
 export interface SharedSettings {
     server: {
         guildId: string;
-        guruChannel: string;
+        guruLogChannel: string;
         introChannel: string;
     };
 
