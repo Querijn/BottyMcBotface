@@ -52,6 +52,15 @@ export default class SpamKiller {
         this.checkForLinks(message);
         this.checkForGunbuddy(message);
         this.checkForPlayerSupport(message);
+        this.checkForCryptoSpam(message);
+    }
+
+    async checkForCryptoSpam(message: Discord.Message) {
+        const cryptoKeywords = ['10individuals', 'crypto', 'commission'];
+
+        if (!cryptoKeywords.every(word => message.content.indexOf(word) !== -1)) return;
+
+        this.addViolatingMessage(message, "You seem to be spamming crypto messages", false);
     }
 
     async checkForPlayerSupport(message: Discord.Message) {
