@@ -91,7 +91,7 @@ export default class ESportsAPI {
                 this.postInfo(true);
             }
             catch (e) {
-                console.log(e);
+                console.error(e);
             }
             finally {
                 if (this.loadDataTimeOut) {
