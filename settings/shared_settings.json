@@ -209,7 +209,11 @@
         "ignoredRoles": [
             "1055545240058073138",
             "1097223791836414073"
-        ]
+        ],
+        "duplicateMessageThreshold": 4,
+        "duplicateMessageTime": 30,
+        "floodMessageThreshold": 3,
+        "floodMessageTime": 10
     },
     "userIntro": {
         "icon": {
