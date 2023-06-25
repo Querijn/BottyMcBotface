@@ -213,7 +213,7 @@
         "duplicateMessageThreshold": 4,
         "duplicateMessageTime": 30,
         "floodMessageThreshold": 3,
-        "floodMessageTime": 10
+        "floodMessageTime": 4
     },
     "userIntro": {
         "icon": {
