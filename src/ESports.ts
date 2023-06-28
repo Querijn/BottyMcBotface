@@ -86,9 +86,20 @@ export default class ESportsAPI {
                     this.esportsChannel = await guild!.channels.create({name: channel, type: Discord.ChannelType.GuildText });
                 }
             }
-
-            await this.loadData();
-            this.postInfo(true);
+            try {
+                await this.loadData();
+                this.postInfo(true);
+            }
+            catch (e) {
+                console.error(e);
+            }
+            finally {
+                if (this.loadDataTimeOut) {
+                    clearTimeout(this.loadDataTimeOut);
+                    this.loadDataTimeOut = null;
+                }
+                this.loadDataTimeOut = setTimeout(this.loadData.bind(this), this.settings.esports.updateTimeout);
+            }
         });
     }
 
@@ -260,11 +271,6 @@ export default class ESportsAPI {
         });
 
         this.schedule = schedule;
-        if (this.loadDataTimeOut) {
-            clearTimeout(this.loadDataTimeOut);
-            this.loadDataTimeOut = null;
-        }
-        this.loadDataTimeOut = setTimeout(this.loadData.bind(this), this.settings.esports.updateTimeout);
     }
 
     private getUrlByLeague(leagueName: ESportsLeagueSchedule) {
