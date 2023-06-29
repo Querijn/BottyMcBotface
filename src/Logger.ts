@@ -123,7 +123,7 @@ export default class Logger {
         chunks.forEach(chunk => { logChannel.send(chunk).catch(e => this.oldError(`Error trying to send an ${type.toLocaleLowerCase()} message: ${e.toString()}`))});
         for (let i = 0; i < optionalParams.length; i++) {
             if (optionalParams.reduce((accumulator, currentValue) => accumulator + currentValue.length, 0) == 0) return;
-            const chunks = `[${(new Date()).toUTCString()}] ${type} param ${(i + 1)}: ${optionalParams.toString()}`.match(/.{1,2000}/g) || [message.toString()];
+            const chunks = `[${(new Date()).toUTCString()}] ${type} param ${(i + 1)}: ${optionalParams.toString()}`.match(/.{1,2000}/sg) || [message.toString()];
             chunks.forEach(chunk => { logChannel.send(chunk).catch(e => this.oldError(`Error trying to send an ${type.toLocaleLowerCase()} message: ${e.toString()}`))});
         }
     }
