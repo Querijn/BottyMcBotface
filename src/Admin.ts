@@ -82,16 +82,22 @@ export default class Admin {
         }
 
         let adminChannel = guild.channels.cache.find(c => c.name === this.sharedSettings.server.guruChannel);
-        let adminLogChannel;
+        let adminLogChannel = guild.channels.cache.find(c => c.name === this.sharedSettings.server.guruLogChannel)
         if (!adminChannel) {
             if (this.sharedSettings.botty.isProduction) {
                 console.error(`Admin: Unable to find moderators channel!`);
                 return;
             }
             else {
-                adminChannel = await guild.channels.create({name: this.sharedSettings.server.guruLogChannel, type: Discord.ChannelType.GuildText});
+                adminChannel = await guild.channels.create({name: this.sharedSettings.server.guruChannel, type: Discord.ChannelType.GuildText});
             }
-            adminLogChannel = guild.channels.cache.find(c => c.name === this.sharedSettings.server.guruLogChannel) || adminChannel;
+        }
+        if (!adminLogChannel) {
+            try {
+                adminLogChannel = await guild.channels.create({name: this.sharedSettings.server.guruLogChannel, type: Discord.ChannelType.GuildText});
+            } catch {
+                adminLogChannel = adminChannel;
+            }
         }
 
         if (!(adminChannel instanceof Discord.TextChannel)) {
