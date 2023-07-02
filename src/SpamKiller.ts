@@ -254,7 +254,7 @@ export default class SpamKiller {
                     const userMessageHistory = this.messageHistory.get(member.id) || [];
                     const memberGuildMessageHistory = userMessageHistory.filter(mhEntry => mhEntry.guildId == member.guild.id);
                     const remainingEntries = userMessageHistory.filter(mhEntry => mhEntry.guildId != member.guild.id);
-                    memberGuildMessageHistory.forEach(mhEntry => mhEntry.delete().catch());
+                    memberGuildMessageHistory.filter(mhEntry => mhEntry.id !== message.id).forEach(mhEntry => mhEntry.delete().catch(() => {}));
                     this.messageHistory.set(member.id, remainingEntries);
                 }
                 violator.response = null;
