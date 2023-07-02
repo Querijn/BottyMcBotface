@@ -80,20 +80,20 @@ export default class SpamKiller {
     }
 
     async checkForFlood(message: Discord.Message) {
-        const time = new Date().getTime() - (this.floodMessageThreshold);
+        const time = new Date().getTime() - (this.floodMessageTime);
         const messageHistory = this.fetchMessageCache(message.member!, time);
 
-        if (messageHistory.length >= this.floodMessageThreshold) this.addViolatingMessage(message, "Stop flooding!", false, true);
+        if (messageHistory.length >= this.floodMessageThreshold) this.addViolatingMessage(message, `Hey <@${message.author.id}>, stop spamming!`, false, true);
 
     }
 
     async checkForDupes(message: Discord.Message) {
-        const time = new Date().getTime() - (this.dupeMessageThreshold);
+        const time = new Date().getTime() - (this.dupeMessageTime);
         const messageHistory = this.fetchMessageCache(message.member!, time);
 
         const dupeMessages = messageHistory.filter(messageHistoryEntry => message.content == messageHistoryEntry.content);
         if (dupeMessages.length >= this.dupeMessageThreshold) {
-            this.addViolatingMessage(message, "Stop spamming!", false, true);
+            this.addViolatingMessage(message, `Hey <@${message.author.id}>, Stop spamming!`, false, true);
         }
     }
 
@@ -102,7 +102,7 @@ export default class SpamKiller {
 
         if (!cryptoKeywords.every(word => message.content.indexOf(word) !== -1)) return;
 
-        this.addViolatingMessage(message, "You seem to be spamming crypto messages", false);
+        this.addViolatingMessage(message, `Hey <@${message.author.id}>, you seem to be spamming crypto messages`, false);
     }
 
     async checkForPlayerSupport(message: Discord.Message) {
@@ -249,7 +249,7 @@ export default class SpamKiller {
                 }
                 catch {}
 
-                await member.kick();
+                await member.kick().catch(console.error);
                 if (clearMessagesOnKick) {
                     const userMessageHistory = this.messageHistory.get(member.id) || [];
                     const memberGuildMessageHistory = userMessageHistory.filter(mhEntry => mhEntry.guildId == member.guild.id);
