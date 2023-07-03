@@ -58,7 +58,7 @@ export default class SpamKiller {
             return;
         }
         this.role = role;
-        this.floodCheckTimer = setTimeout(this.messageHistoryCleanup.bind(this), this.maxMessageHistoryAge);
+        this.floodCheckTimer = setTimeout(this.messageHistoryCleanup.bind(this));
     }
 
     async onMessage(message: Discord.Message) {
@@ -311,7 +311,7 @@ export default class SpamKiller {
             else this.messageHistory.set(entry, userMessageList.filter(entry => entry.createdAt.getTime() > timeLimit))
         }
         if (this.floodCheckTimer) clearTimeout(this.floodCheckTimer);
-        this.floodCheckTimer = setTimeout(this.messageHistoryCleanup.bind(this), 60 * 1000);
+        this.floodCheckTimer = setTimeout(this.messageHistoryCleanup.bind(this), this.maxMessageHistoryAge);
     }
 
     private fetchMessageCache(member: Discord.GuildMember, messageAfterTimestamp: number) {
