@@ -207,6 +207,11 @@ export default class SpamKiller {
         (hostname.replace(u, "").endsWith(".") || hostname.replace(u, "").length === 0)) !== -1) // Only allow matching base domain (zero length after replace) and subdomains (ends with ".")
             return;
 
+        if (this.sharedSettings.spam.blockedUrls.findIndex((blockedUrl => hostname == blockedUrl)) !== -1) {
+            console.log(`SpamKiller: ${message.author} posted: '${message.content}' which contains a blocked url, deleting the message..`);
+            return message.delete().catch();
+        }
+
         const embed = new Discord.EmbedBuilder()
             .setTitle("Robot Check")
             .setColor(0xffcc00)
@@ -291,7 +296,7 @@ export default class SpamKiller {
             if (!this.sharedSettings.commands.adminRoles.some(x => member.roles.cache.has(x)))
                 return;
         }
-
+        console.log(`SpamKiller: ${user.username} (${user.id}) reacted with ${messageReaction.emoji.name}, reposting the message`);
         await deletedEntry.response?.channel.send(`${deletedEntry.authorUsername} just said: \n${deletedEntry.messageContent}`);
         await deletedEntry.response?.delete();
 
