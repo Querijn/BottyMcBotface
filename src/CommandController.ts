@@ -58,7 +58,6 @@ export interface CommandList {
     };
     keyFinder: Command;
     welcome: Command;
-    uptime: Command;
     autoReact: {
         toggle_default_thinking: Command;
         toggle_react: Command;

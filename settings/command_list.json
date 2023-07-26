@@ -146,12 +146,6 @@
         "description": "Prints out a copy of the welcome message.",
         "cooldown": 300000
     },
-    "uptime": {
-        "aliases": [
-            "uptime"
-        ],
-        "description": "Checks the uptime of botty"
-    },
     "riotApiLibraries": {
         "aliases": [
             "lib",

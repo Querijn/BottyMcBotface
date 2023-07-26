@@ -13,7 +13,6 @@ The Riot Games API Discord Bot. This is the bot that helps out with your questio
 - **!toggle_default_thinking**: Changes bottys reaction from the normal thinking emote, to one of the custom ones (or opposite)
 - **!toggle_react**: Decides if botty reacts to your messages
 - **!update_schema, !updateschema**: Loads an updated api url schema
-- **!uptime**: Checks the uptime of botty
 - **!welcome**: Prints out a copy of the welcome message.
 
 ##### Admin-only commands
