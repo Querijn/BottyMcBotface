@@ -9,6 +9,7 @@ import Discord = require("discord.js");
 import { levenshteinDistance } from "./LevenshteinDistance";
 import VersionChecker from "./VersionChecker";
 import joinArguments from "./JoinArguments";
+import InteractionManager from "./InteractionManager";
 
 interface InfoFile {
     messages: InfoData[];
@@ -47,7 +48,7 @@ export default class Info {
     private reactionListeners: ReactionListener[] = [];
     private categorisedMessages: { [msgId: string]: CategorisedMessage } = {};
 
-    constructor(botty: Botty, sharedSettings: SharedSettings, userFile: string, versionChecker: VersionChecker) {
+    constructor(botty: Botty, interactionManager: InteractionManager, sharedSettings: SharedSettings, userFile: string, versionChecker: VersionChecker) {
         console.log("Requested Info extension..");
         this.command = sharedSettings.info.command;
         this.versionChecker = versionChecker;
@@ -85,6 +86,15 @@ export default class Info {
                 });
             }
         });
+        const command = new Discord.SlashCommandBuilder()
+        .setName("note")
+        .setDescription("Infos")
+        .addStringOption(opt => opt
+            .setName("name")
+            .setDescription("Name of the note")
+            .setAutocomplete(true)
+        );
+        interactionManager.addSlashCommand(command.toJSON(), true, false, this.onInteraction.bind(this));
     }
 
     public onReaction(messageReaction: Discord.MessageReaction, user: Discord.User) {
@@ -104,22 +114,32 @@ export default class Info {
         }
     }
 
+    private validateNoteName(name: string)
+    {
+        return /^[a-z0-9-]+$/i.test(name);
+    }
+
+    private prepareNote(infoData: InfoData) {
+        let response = infoData.message;
+        response = response.replace(/{ddragonVersion}/g, this.versionChecker.ddragonVersion);
+        response = response.replace(/{gameVersion}/g, this.versionChecker.gameVersion);
+        response = response.replace(/{counter}/g, (infoData.counter || 0).toString());
+
+        return response;
+    }
+
     public async onAll(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         let response: string | undefined;
         if (args.length === 0) return;
         const name = args[0].toLowerCase();
 
-        const regexp = /^[a-z0-9-]+$/i;
-        if (!regexp.test(name)) return;
+        if (!this.validateNoteName(name)) return;
 
         const infoData = this.fetchInfo(name);
 
         // if we got a valid note, replace variables
         if (infoData) {
-            response = infoData.message;
-            response = response.replace(/{ddragonVersion}/g, this.versionChecker.ddragonVersion);
-            response = response.replace(/{gameVersion}/g, this.versionChecker.gameVersion);
-            response = response.replace(/{counter}/g, (infoData.counter || 0).toString());
+            response = this.prepareNote(infoData);
         }
 
         // if we didnt get a valid note from fetchInfo, we return;
@@ -450,5 +470,24 @@ export default class Info {
             const oldListener = this.reactionListeners.splice(0, 1)[0];
             oldListener.message.delete();
         }
+    }
+
+    public onInteraction(interaction: Discord.CommandInteraction | Discord.AutocompleteInteraction, isAdmin: boolean) {
+        if (interaction.commandName !== "note") throw new Error("Unknown command");
+
+        const noteName = interaction.options.get("name")?.value?.toString().toLocaleLowerCase() || "";
+        if (interaction.isAutocomplete()) {
+            const autocompleteText = interaction.options.getFocused(true).value
+            console.log(`Autocomplete: ${autocompleteText}`)
+            const startsWithNotes = this.infos.filter(info => info.command.startsWith(autocompleteText));
+            const matchingNotes = this.infos.filter(info => !info.command.startsWith(autocompleteText) && info.command.indexOf(autocompleteText) !== -1);
+            const responses = [...startsWithNotes, ...matchingNotes].map(info => { return {name: info.command, value: info.command} })
+            console.log(responses)
+            return interaction.respond(responses.slice(0, 24))
+        }
+        if (!this.validateNoteName(noteName)) return interaction.reply({content: "This note name is not valid", ephemeral: true});
+        const infoData = this.fetchInfo(noteName)
+        if (infoData) return interaction.reply({content: "**" + infoData.command + "**: " + this.prepareNote(infoData)})
+        interaction.reply({content: "Something went wrong", ephemeral: true});
     }
 }
