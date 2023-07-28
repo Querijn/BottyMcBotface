@@ -208,7 +208,13 @@ export default class SpamKiller {
             return;
 
         if (this.sharedSettings.spam.blockedUrls.findIndex((blockedUrl => hostname == blockedUrl)) !== -1) {
+            // Exempt admins
+            if (this.sharedSettings.commands.adminRoles.some(x => message.member && message.member.roles.cache.has(x))) return;
+
             console.log(`SpamKiller: ${message.author} posted: '${message.content}' which contains a blocked url, deleting the message..`);
+            // Not using addViolatingMessage because affecting people with ok roles is intentional
+            const reportChannel = this.bot.guilds.cache.find(gc => gc.id == this.sharedSettings.server.guildId)?.channels.cache.find(cc => cc.name == this.sharedSettings.server.guruChannel && cc.type == Discord.ChannelType.GuildText);
+            if (reportChannel) (reportChannel as Discord.TextChannel).send(`SpamKiller: ${message.author.username} (${message.author.id} posted blocked url ${urlString}`);
             return message.delete().catch();
         }
 
