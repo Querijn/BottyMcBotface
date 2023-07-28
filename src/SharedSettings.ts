@@ -63,10 +63,6 @@ export interface SharedSettings {
         maxGuessCount: number;
     };
 
-    uptimeSettings: {
-        checkInterval: number,
-    };
-
     admin: {
         muteRoleId: string;
         muteRoleName: string;

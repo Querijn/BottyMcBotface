@@ -68,9 +68,6 @@
         "updateTimeout": 18000000,
         "printToChannelTimeout": 43200000
     },
-    "uptimeSettings": {
-        "checkInterval": 60000
-    },
     "techBlog": {
         "checkInterval": 300000,
         "channel": "tech-articles",
