@@ -1,6 +1,6 @@
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
-
+import InteractionManager, { InteractionCommandData } from "./InteractionManager";
 import Discord = require("discord.js");
 
 export default class AutoReact {
@@ -10,12 +10,14 @@ export default class AutoReact {
     private greetingEmoji: Discord.Emoji;
     private sharedSettings: SharedSettings;
     private bot: Discord.Client;
+    private interactionManager;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, userFile: string, ignoreFile: string) {
+    constructor(bot: Discord.Client, interactionManager: InteractionManager, sharedSettings: SharedSettings, userFile: string, ignoreFile: string) {
         console.log("Requested Thinking extension..");
 
         this.sharedSettings = sharedSettings;
         this.bot = bot;
+        this.interactionManager = interactionManager;
 
         this.thinkingUsers = fileBackedObject(userFile);
         console.log("Successfully loaded original thinking user file.");
@@ -25,8 +27,30 @@ export default class AutoReact {
 
         this.bot.on("ready", this.onConnect.bind(this));
         this.bot.on("messageCreate", this.onMessage.bind(this));
-    }
 
+        this.registerInteractionCommands();
+    }
+    public registerInteractionCommands() {
+        const commands : InteractionCommandData[] = [];
+
+        const toggleReactionCommand = new Discord.SlashCommandBuilder()
+            .setName("toggle_react")
+            .setDescription("Toggles reacting to greeting messages")
+            .toJSON();
+        commands.push({body: toggleReactionCommand, adminOnly: false, handler: this.onInteraction.bind(this)});
+
+        const toggleThinkingCommand = new Discord.SlashCommandBuilder()
+            .setName("toggle_thinking")
+            .setDescription("Toggles adding thinking reacts to your message").toJSON();
+        commands.push({body: toggleThinkingCommand, adminOnly: false, handler: this.onInteraction.bind(this)});
+
+        const refreshThinkingCommand = new Discord.SlashCommandBuilder()
+            .setName("refresh_thinking")
+            .setDescription("Refresh thinking emojis").toJSON();
+        commands.push({body: refreshThinkingCommand, adminOnly: true, handler: this.onInteraction.bind(this)});
+
+        commands.forEach(cmd => this.interactionManager.addSlashCommand(cmd.body, true, false, cmd.handler))
+    }
     public onConnect() {
         this.refreshThinkingEmojis();
 
@@ -52,7 +76,21 @@ export default class AutoReact {
     public onToggleReact(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
         this.onToggleReactRequest(message, message.author.id);
     }
-
+    public onInteraction(interaction: Discord.CommandInteraction, isAdmin?: false) {
+        switch (interaction.commandName) {
+            case "refresh_thinking":
+                if (!isAdmin) return interaction.reply({content: "You don't have permission to use this command", ephemeral: true})
+                this.refreshThinkingEmojis();
+                interaction.reply({content: "Refreshed thinking emojis", ephemeral: true});
+                break;
+            case "toggle_thinking":
+                this.onToggleThinkingRequest(interaction, interaction.user.id)
+                break;
+            case "toggle_react":
+                this.onToggleReactRequest(interaction, interaction.user.id);
+                break;
+        }
+    }
     private onMessage(message: Discord.Message) {
         // Only react to people not on list
         if (this.ignoreUsers.indexOf(message.author.id) !== -1) return;
@@ -91,36 +129,41 @@ export default class AutoReact {
         }
     }
 
-    private onToggleReactRequest(message: Discord.Message, authorId: string) {
+    private onToggleReactRequest(message: Discord.Message | Discord.CommandInteraction, authorId: string) {
 
         const reactIndex = this.ignoreUsers.indexOf(authorId);
+        const resp = (message instanceof Discord.CommandInteraction) ? {content: "", ephemeral: true} : {content: ""};
 
         // Add
         if (reactIndex === -1) {
             this.ignoreUsers.push(authorId);
-            message.reply("I will no longer react to your messages");
+            resp.content = "I will no longer react to your messages";
+            message.reply(resp);
             return;
         }
 
         // Remove
         this.ignoreUsers.splice(reactIndex, 1);
-        message.reply("I will now react to your messages");
+        resp.content = "I will now react to your messages"
+        message.reply(resp);
     }
 
-    private onToggleThinkingRequest(message: Discord.Message, authorId: string) {
+    private onToggleThinkingRequest(message: Discord.Message | Discord.CommandInteraction, authorId: string) {
 
         const thinkIndex = this.thinkingUsers.indexOf(authorId);
-
+        const resp = (message instanceof Discord.CommandInteraction) ? {content: "", ephemeral: true} : {content: ""};
         // Add
         if (thinkIndex === -1) {
             this.thinkingUsers.push(authorId);
-            message.reply("I will now only reply with default thinking emojis.");
+            resp.content = "I will now only reply with default thinking emojis.";
+            message.reply(resp);
             return;
         }
 
         // Remove
         this.thinkingUsers.splice(thinkIndex, 1);
-        message.reply("I will no longer only reply with default thinking emojis.");
+        resp.content = "I will no longer only reply with default thinking emojis."
+        message.reply(resp);
     }
 
     private onGreeting(message: Discord.Message) {

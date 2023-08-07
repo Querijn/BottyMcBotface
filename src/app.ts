@@ -20,6 +20,7 @@ import { SharedSettings } from "./SharedSettings";
 import SpamKiller from "./SpamKiller";
 import Admin from "./Admin";
 import GameData from "./GameData";
+import InteractionManager from "./InteractionManager";
 
 // Load and initialise settings
 const sharedSettings = overrideFileBackedObject<SharedSettings>("settings/shared_settings.json", "private/shared_settings.json");
@@ -27,6 +28,7 @@ const commandList = fileBackedObject<CommandList>("settings/command_list.json", 
 const bot = new Botty(sharedSettings);
 
 // Load extensions
+const interactionManager = new InteractionManager(bot, sharedSettings);
 const controller = new CommandController(bot.client, sharedSettings, "data/command_data.json");
 const apiSchema = new APISchema(sharedSettings);
 const logger = new Logger(bot.client, sharedSettings);
@@ -34,9 +36,9 @@ const keyFinder = new KeyFinder(bot.client, sharedSettings, "data/riot_keys.json
 const techblog = new Techblog(bot.client, sharedSettings, "data/techblog_data.json");
 const apiUrlInterpreter = new ApiUrlInterpreter(bot.client, sharedSettings, apiSchema);
 const versionChecker = new VersionChecker(bot.client, sharedSettings, "data/version_data.json");
-const notes = new Info(bot, sharedSettings, "data/info_data.json", versionChecker);
+const notes = new Info(bot, interactionManager, sharedSettings, "data/info_data.json", versionChecker);
 const admin = new Admin(bot.client, sharedSettings, "data/admin_data.json", notes);
-const react = new AutoReact(bot.client, sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json");
+const react = new AutoReact(bot.client, interactionManager, sharedSettings, "data/thinking_data.json", "data/ignored_react_data.json");
 const status = new ApiStatus(sharedSettings);
 const libraries = new RiotAPILibraries(sharedSettings);
 const esports = new ESportsAPI(bot.client, sharedSettings);
