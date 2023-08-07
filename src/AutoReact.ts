@@ -124,7 +124,7 @@ export default class AutoReact {
     }
 
     private onGreeting(message: Discord.Message) {
-
+        if (message.channel instanceof Discord.ThreadChannel) return;
         if (message.author.bot) return;
         const greeting = message.content.toLowerCase();
 
