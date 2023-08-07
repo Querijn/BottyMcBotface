@@ -189,6 +189,7 @@ export interface SharedSettings {
 
     spam: {
         allowedUrls: string[];
+        blockedUrls: string[];
         ignoredRoles: string[];
         floodMessageThreshold: number;
         floodMessageTime: number;

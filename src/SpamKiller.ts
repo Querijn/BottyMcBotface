@@ -207,6 +207,17 @@ export default class SpamKiller {
         (hostname.replace(u, "").endsWith(".") || hostname.replace(u, "").length === 0)) !== -1) // Only allow matching base domain (zero length after replace) and subdomains (ends with ".")
             return;
 
+        if (this.sharedSettings.spam.blockedUrls.findIndex((blockedUrl => hostname == blockedUrl)) !== -1) {
+            // Exempt admins
+            if (this.sharedSettings.commands.adminRoles.some(x => message.member && message.member.roles.cache.has(x))) return;
+
+            console.log(`SpamKiller: ${message.author} posted: '${message.content}' which contains a blocked url, deleting the message..`);
+            // Not using addViolatingMessage because affecting people with ok roles is intentional
+            const reportChannel = this.bot.guilds.cache.find(gc => gc.id == this.sharedSettings.server.guildId)?.channels.cache.find(cc => cc.name == this.sharedSettings.server.guruChannel && cc.type == Discord.ChannelType.GuildText);
+            if (reportChannel) (reportChannel as Discord.TextChannel).send(`SpamKiller: ${message.author.username} (${message.author.id} posted blocked url ${urlString}`);
+            return message.delete().catch();
+        }
+
         const embed = new Discord.EmbedBuilder()
             .setTitle("Robot Check")
             .setColor(0xffcc00)
@@ -291,7 +302,7 @@ export default class SpamKiller {
             if (!this.sharedSettings.commands.adminRoles.some(x => member.roles.cache.has(x)))
                 return;
         }
-
+        console.log(`SpamKiller: ${user.username} (${user.id}) reacted with ${messageReaction.emoji.name}, reposting the message`);
         await deletedEntry.response?.channel.send(`${deletedEntry.authorUsername} just said: \n${deletedEntry.messageContent}`);
         await deletedEntry.response?.delete();
 

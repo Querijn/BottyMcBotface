@@ -203,6 +203,9 @@
             "riotgames.com",
             "leagueoflegends.com"
         ],
+        "blockedUrls": [
+            "t.me"
+        ],
         "ignoredRoles": [
             "1055545240058073138",
             "1097223791836414073"
