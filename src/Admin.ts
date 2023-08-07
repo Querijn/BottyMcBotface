@@ -94,6 +94,10 @@ export default class Admin {
         }
         if (!adminLogChannel) {
             try {
+                if (this.sharedSettings.botty.isProduction) {
+                    console.error(`Admin: Unable to find moderator log channel!`);
+                    return;
+                }
                 adminLogChannel = await guild.channels.create({name: this.sharedSettings.server.guruLogChannel, type: Discord.ChannelType.GuildText});
             } catch {
                 adminLogChannel = adminChannel;
