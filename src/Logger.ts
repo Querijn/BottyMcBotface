@@ -104,50 +104,27 @@ export default class Logger {
 
     public onLog(message?: any, ...optionalParams: any[]) {
         this.oldLog(message, ...optionalParams);
-
-        try {
-            let chunks = `[${(new Date()).toUTCString()}] Log: ${message.toString()}`.match(/.{1,2000}/g) || [message.toString()];
-            chunks.forEach(chunk => { this.logChannel.send(chunk)})
-            for (let i = 0; i < optionalParams.length; i++) {
-                let chunks = `[${(new Date()).toUTCString()}] Log param ${(i + 1)}: ${optionalParams.toString()}`.match(/.{1,2000}/g) || [message.toString()];
-                chunks.forEach(chunk => { this.logChannel.send(chunk)})
-            }
-        } catch (e) {
-            this.oldError(`Error trying to send a log message: ${e.toString()}`);
-        }
+        this.logToDiscord("Log", message, optionalParams);
     }
 
     public onWarning(message?: any, ...optionalParams: any[]) {
         this.oldWarning(message, ...optionalParams);
-
-        try {
-            let error = `[${(new Date()).toUTCString()}] Warning: ${message.toString()}\n`;
-            for (let i = 0; i < optionalParams.length; i++) {
-                error += `[${(new Date()).toUTCString()}] Warning param ${(i + 1)}: ${optionalParams.toString()}\n`;
-            }
-
-            error += new Error().stack;
-            let chunks = error.split("", 2000)
-            chunks.forEach(chunk => { this.errorChannel.send(chunk)})
-        } catch (e) {
-            this.oldError(`Error trying to send a warning message: ${e.toString()}`);
-        }
+        this.logToDiscord("Warning", message, optionalParams);
     }
 
     public onError(message?: any, ...optionalParams: any[]) {
         this.oldError(message, ...optionalParams);
+        this.logToDiscord("Error", message, optionalParams);
+    }
 
-        try {
-            let error = `[${(new Date()).toUTCString()}] Error: ${message.toString()}\n`;
-            for (let i = 0; i < optionalParams.length; i++) {
-                error += `[${(new Date()).toUTCString()}] Error param ${(i + 1)}: ${optionalParams.toString()}\n`;
-            }
-
-            error += new Error("").stack;
-            let chunks = error.match(/.{1,2000}/g) || [message.toString()];
-            chunks.forEach(chunk => { this.errorChannel.send(chunk)})
-        } catch (e) {
-            this.oldError(`Error trying to send an error message: ${e.toString()}`);
+    private logToDiscord(type: "Error" | "Warning" | "Log", message?: any, ...optionalParams: any[]) {
+        const logChannel = (type == "Log") ? this.logChannel : this.errorChannel;
+        const chunks = `[${(new Date()).toUTCString()}] ${type}: ${message.toString()}`.match(/.{1,2000}/sg) || [message.toString()];
+        chunks.forEach(chunk => { logChannel.send(chunk).catch(e => this.oldError(`Error trying to send an ${type.toLocaleLowerCase()} message: ${e.toString()}`))});
+        for (let i = 0; i < optionalParams.length; i++) {
+            if (optionalParams.reduce((accumulator, currentValue) => accumulator + currentValue.length, 0) == 0) return;
+            const chunks = `[${(new Date()).toUTCString()}] ${type} param ${(i + 1)}: ${optionalParams.toString()}`.match(/.{1,2000}/sg) || [message.toString()];
+            chunks.forEach(chunk => { logChannel.send(chunk).catch(e => this.oldError(`Error trying to send an ${type.toLocaleLowerCase()} message: ${e.toString()}`))});
         }
     }
 }
