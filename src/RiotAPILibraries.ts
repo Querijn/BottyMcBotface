@@ -50,6 +50,13 @@ interface LibraryDescription {
 }
 
 export default class RiotAPILibraries {
+    static CHANNEL_TOPICS = {
+        lol: ["lol", "v4"],
+        lcu: ["lcu"],
+        tft: ["tft"],
+        lor: ["lor"]
+    } as const;
+
     private settings: SharedSettings;
 
     private lastCall: number;
@@ -74,12 +81,24 @@ export default class RiotAPILibraries {
 
     public onLibs(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
 
+        let topics: string[] = ["v4"];
+        if ("name" in message.channel) {
+            for (const [topic, tags] of Object.entries(RiotAPILibraries.CHANNEL_TOPICS)) {
+                if (message.channel.name.toLowerCase().includes(topic)) {
+                    topics = tags as unknown as string[];
+                    break;
+                }
+            }
+        }
+
         if (args.length === 0) {
             return this.getList(message);
         }
 
         if (args.length > 1) {
-            return message.channel.send(`unknown argument for command; ${args}`);
+            for (let i = 1; i < args.length; i++) {
+                topics.push(args[i].toLowerCase());
+            }
         }
 
         const param = args[0].toLowerCase();
@@ -88,15 +107,18 @@ export default class RiotAPILibraries {
             return this.getList(message);
         }
 
-        return this.getListForLanguage(message, param);
+        return this.getListForLanguage(message, param, topics);
     }
 
-    private async describeAPILibrary(json: GithubAPIStruct): Promise<LibraryDescription> {
+    private async describeAPILibrary(json: GithubAPIStruct, tags: string[] = ["v4"]): Promise<LibraryDescription> {
 
         const libraryResponse = await fetch(json.download_url);
         const libraryInfo: APILibraryStruct = await libraryResponse.json();
 
-        if (!libraryInfo.tags || libraryInfo.tags.indexOf("v4") === -1) {
+        const hasAtLeastOneTag = !!libraryInfo.tags?.some((tag) =>
+            tags.includes(tag)
+        );
+        if (!hasAtLeastOneTag) {
             return { stars: 0, valid: false, library: null, links: [] };
         }
 
@@ -161,7 +183,7 @@ export default class RiotAPILibraries {
         message.channel.send(reply);
     }
 
-    private async getLibrariesForLanguage(language: string): Promise<LibraryDescription[]> {
+    private async getLibrariesForLanguage(language: string, tags: string[] = ["v4"]): Promise<LibraryDescription[]> {
         const response = await fetch(this.settings.riotApiLibraries.baseURL + language);
         switch (response.status) {
             case 200: {
@@ -180,19 +202,19 @@ export default class RiotAPILibraries {
         if (!Array.isArray(libraryList) || libraryList.length === 0 || !libraryList[0].sha) {
             throw new Error(this.settings.riotApiLibraries.noLanguage + language);
         }
-        const promises = libraryList.map(lib => this.describeAPILibrary(lib));
+        const promises = libraryList.map(lib => this.describeAPILibrary(lib, tags));
         const libraryDescriptions = (await Promise.all(promises))
             .filter(l => l.valid && l.library); // Only valid ones
 
         return libraryDescriptions;
     }
 
-    private async getListForLanguage(message: Discord.Message, language: string): Promise<void> {
+    private async getListForLanguage(message: Discord.Message, language: string, tags: string[] = ["v4"]): Promise<void> {
 
         // Check if alias
         for (const [key, values] of Object.entries(this.settings.riotApiLibraries.aliases)) {
             if (values.find(self => self.toLowerCase() === language)) {
-                return this.getListForLanguage(message, key);
+                return this.getListForLanguage(message, key, tags);
             }
         }
 
@@ -200,7 +222,7 @@ export default class RiotAPILibraries {
 
         let libraryDescriptions: LibraryDescription[] = [];
         try {
-            libraryDescriptions = (await this.getLibrariesForLanguage(language))
+            libraryDescriptions = (await this.getLibrariesForLanguage(language, tags))
                 .sort((a, b) => b.stars - a.stars); // Sort by stars
         }
         catch (e) {
