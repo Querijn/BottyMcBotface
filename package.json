@@ -8,7 +8,9 @@
   "scripts": {
     "compile": "tsc -p .",
     "start": "tsc -p . && node ./dist/app.js",
-    "test": "mocha -r ts-node/register test/**/*.spec.ts"
+    "test": "mocha -r ts-node/register test/**/*.spec.ts",
+    "lint": "tslint -c tslint.json -p tsconfig.json",
+    "lint:fix": "tslint -c tslint.json -p tsconfig.json --fix"
   },
   "author": "Querijn Heijmans <querijn@irule.at>",
   "license": "MIT",
