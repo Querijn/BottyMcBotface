@@ -239,7 +239,7 @@ export default class RiotAPILibraries {
         if (Array.isArray(editMessage)) { editMessage = editMessage[0]; }
 
         if (libraryDescriptions.length === 0) {
-            editMessage.edit(`No up-to-date libraries found for ${language}`);
+            editMessage.edit(`No up-to-date libraries found for ${language} tagged with \`${tags.join("\`, \`")}\``);
             return;
         }
 
