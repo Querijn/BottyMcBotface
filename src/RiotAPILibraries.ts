@@ -78,7 +78,7 @@ export default class RiotAPILibraries {
         if ("name" in message.channel) {
             for (const [topic, tags] of Object.entries(this.settings.riotApiLibraries.channelTopics)) {
                 if (message.channel.name.toLowerCase().includes(topic)) {
-                    topics = tags as unknown as string[];
+                    topics = tags
                     break;
                 }
             }
