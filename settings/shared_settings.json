@@ -133,6 +133,21 @@
                 "objc"
             ]
         },
+        "channelTopics": {
+            "lol": [
+                "lol",
+                "v4"
+            ],
+            "lcu": [
+                "lcu"
+            ],
+            "tft": [
+                "tft"
+            ],
+            "lor": [
+                "lor"
+            ]
+        },
         "checkInterval": 10800000
     },
     "autoReact": {

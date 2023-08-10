@@ -50,13 +50,6 @@ interface LibraryDescription {
 }
 
 export default class RiotAPILibraries {
-    static CHANNEL_TOPICS = {
-        lol: ["lol", "v4"],
-        lcu: ["lcu"],
-        tft: ["tft"],
-        lor: ["lor"]
-    } as const;
-
     private settings: SharedSettings;
 
     private lastCall: number;
@@ -83,7 +76,7 @@ export default class RiotAPILibraries {
 
         let topics: string[] = ["v4"];
         if ("name" in message.channel) {
-            for (const [topic, tags] of Object.entries(RiotAPILibraries.CHANNEL_TOPICS)) {
+            for (const [topic, tags] of Object.entries(this.settings.riotApiLibraries.channelTopics)) {
                 if (message.channel.name.toLowerCase().includes(topic)) {
                     topics = tags as unknown as string[];
                     break;
