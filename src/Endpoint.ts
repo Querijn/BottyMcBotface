@@ -71,13 +71,18 @@ export default class Endpoint {
             return;
         }
 
-        let content = "";
+        let content = "The Riot API has the following endpoints available:\n";
 
         for (const endpoint of this.endpoints.endpoints) {
-            content += `- ${endpoint}: ${this.baseUrl + endpoint}\n`;
+            const newContent = `- ${endpoint}: ${this.baseUrl + endpoint}\n`;
+            if (content.length + newContent.length > 2000) {
+                message.channel.send(content);
+                content = "";
+            }
+            content += newContent;
         }
-
-        message.channel.send(`The Riot API has the following endpoints available:\n${content}`);
+        if (content.length == 0) return;
+        message.channel.send(content);
     }
 
     /**
