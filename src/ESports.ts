@@ -4,6 +4,7 @@ import { SharedSettings } from "./SharedSettings";
 import { clearTimeout, setTimeout } from "timers";
 import * as CheerioAPI from "cheerio";
 import * as momentjs from "moment";
+import InteractionManager from "./InteractionManager";
 
 interface ESportsAPIReturnData {
     resultsHtml: string;
@@ -69,7 +70,7 @@ export default class ESportsAPI {
     private postInfoTimeOut: NodeJS.Timer | null;
     private loadDataTimeOut: NodeJS.Timer | null;
 
-    constructor(bot: Discord.Client, settings: SharedSettings) {
+    constructor(bot: Discord.Client, settings: SharedSettings, interactionManager?: InteractionManager) {
         this.bot = bot;
         this.settings = settings;
 
@@ -100,7 +101,16 @@ export default class ESportsAPI {
                 }
                 this.loadDataTimeOut = setTimeout(this.loadData.bind(this), this.settings.esports.updateTimeout);
             }
+            
         });
+        const command = new Discord.SlashCommandBuilder()
+        .setName("esports")
+        .setDescription("Displays esports matches")
+        .addStringOption(opt => opt.setName("date")
+            .setDescription("Today/Tomorrow or future date in mm/dd or yyyy/mm/dd format")
+            .setRequired(false)
+        ).toJSON();
+        interactionManager?.addSlashCommand(command, true, false, this.onInteraction.bind(this));
     }
 
     public async onCheckNext(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
@@ -113,39 +123,8 @@ export default class ESportsAPI {
         if (args.length === 0) args = ["today"];
         if (args.length !== 1) return;
 
-        const data = args[0].trim().split(/[\/ -]/g);
-        let date;
-
-        const fullCheck = /\d{4}\/\d{1,2}\/\d{1,2}/;
-        const curYearCheck = /\d{1,2}\/\d{1,2}/;
-
-        // YYYY/MM/DD
-        if (fullCheck.test(args[0])) {
-            date = `${data[0]} ${parseInt(data[1], 10)} ${parseInt(data[2], 10)}`;
-        }
-
-        // MM/DD
-        else if (curYearCheck.test(args[0])) {
-            const currentYear = new Date().getFullYear();
-            date = `${currentYear} ${parseInt(data[0], 10)} ${parseInt(data[1], 10)}`;
-        }
-
-        else if (args[0].toLowerCase() === "today") {
-            const today = new Date();
-            date = `${today.getFullYear()} ${today.getMonth() + 1} ${today.getDate()}`;
-        }
-
-        else if (args[0].toLowerCase() === "tomorrow") {
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            date = `${tomorrow.getFullYear()} ${tomorrow.getMonth() + 1} ${tomorrow.getDate()}`;
-        }
-
-        // No match
-        else {
-            message.channel.send("The date you specified didn't match the format needed. (MM/DD or YYYY/MM/DD)");
-            return;
-        }
+        let date = this.strToDate(args[0]);
+        if (date == false) return message.channel.send("The date you specified didn't match the format needed. (MM/DD or YYYY/MM/DD)");
 
         date = date.split(" ").map(part => part.padStart(2, "0")).join(" ");
         const jsDate = new Date(date);
@@ -158,6 +137,20 @@ export default class ESportsAPI {
 
         const schedule = this.schedule.get(date);
         this.sendPrintout(message.channel as Discord.TextChannel, schedule, date, false);
+    }
+
+    public onInteraction(interaction: Discord.CommandInteraction) {
+        let ephemeral = true;
+        let date: string | false;
+        let dateOption = interaction.options.get("date")?.value as string || "";
+        if (interaction.guild && interaction.channelId == this.esportsChannel?.id) ephemeral = false;
+
+        date = this.strToDate(dateOption);
+        if (date == false) return interaction.reply({content: "The date you specified didn't match the format needed. (MM/DD or YYYY/MM/DD)", ephemeral: true});
+
+        const embed = this.getPrintout(this.schedule.get(date), date) as Discord.InteractionReplyOptions;
+        embed.ephemeral = ephemeral;
+        interaction.reply(embed);
     }
 
     private postInfo(isUpdateMessage: boolean = false) {
@@ -203,13 +196,47 @@ export default class ESportsAPI {
         this.postInfoTimeOut = setTimeout(this.postInfo.bind(this, true), this.settings.esports.printToChannelTimeout);
     }
 
-    private sendPrintout(channel: Discord.TextChannel, data: Map<string, ESportsLeagueSchedule[]> | undefined, date: string, isUpdateMessage: boolean) {
+    private strToDate(strDate: string) {
+        let date;
+        const fullCheck = /\d{4}\/\d{1,2}\/\d{1,2}/;
+        const curYearCheck = /\d{1,2}\/\d{1,2}/;
 
-        date = (date.replace(/ /g, "/") || momentjs().format("YYYY/M/D"));
-        if (!data || data.size === 0) {
-            if (!isUpdateMessage) channel.send(`No games played on ${date}`);
-            return;
+        if (strDate == "") strDate = "today";
+
+        const data = strDate.trim().split(/[\/ -]/g);
+        // YYYY/MM/DD
+        if (fullCheck.test(strDate)) {
+            date = `${data[0]} ${parseInt(data[1], 10)} ${parseInt(data[2], 10)}`;
         }
+
+        // MM/DD
+        else if (curYearCheck.test(strDate)) {
+            const currentYear = new Date().getFullYear();
+            date = `${currentYear} ${parseInt(data[0], 10)} ${parseInt(data[1], 10)}`;
+        }
+
+        else if (strDate.toLowerCase() === "today") {
+            const today = new Date();
+            date = `${today.getFullYear()} ${today.getMonth() + 1} ${today.getDate()}`;
+        }
+
+        else if (strDate.toLowerCase() === "tomorrow") {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            date = `${tomorrow.getFullYear()} ${tomorrow.getMonth() + 1} ${tomorrow.getDate()}`;
+        }
+        // No match
+        else return false;
+        return date;
+    }
+
+    private getPrintout(data: Map<string, ESportsLeagueSchedule[]> | undefined, date: string) {
+        date = (date.replace(/ /g, "/") || momentjs().format("YYYY/M/D"));
+
+        if (!data || data.size === 0) {
+            return {content: `No games played on ${date}`} as Discord.MessageCreateOptions;
+        }
+
         const embed = new Discord.EmbedBuilder();
         embed.setTitle(`Games being played ${date}:`);
         embed.setColor(0x9b311a);
@@ -231,8 +258,14 @@ export default class ESportsAPI {
                 inline: false
             });
         }
+        return {embeds: [embed]} as Discord.MessageCreateOptions;
+    }
 
-        channel.send({ embeds: [embed] }).catch(console.error);
+    private sendPrintout(channel: Discord.TextChannel, data: Map<string, ESportsLeagueSchedule[]> | undefined, date: string, isUpdateMessage: boolean) {
+        const payload = this.getPrintout(data, date);
+
+        if (payload.content) return (isUpdateMessage) ? undefined : channel.send(payload); 
+        channel.send(payload).catch(console.error);
     }
 
     private async loadData() {
