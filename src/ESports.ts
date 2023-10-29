@@ -93,13 +93,6 @@ export default class ESportsAPI {
             catch (e) {
                 console.error(e);
             }
-            finally {
-                if (this.loadDataTimeOut) {
-                    clearTimeout(this.loadDataTimeOut);
-                    this.loadDataTimeOut = null;
-                }
-                this.loadDataTimeOut = setTimeout(this.loadData.bind(this), this.settings.esports.updateTimeout);
-            }
         });
     }
 
@@ -236,6 +229,12 @@ export default class ESportsAPI {
     }
 
     private async loadData() {
+        if (this.loadDataTimeOut) {
+            clearTimeout(this.loadDataTimeOut);
+            this.loadDataTimeOut = null;
+        }
+        this.loadDataTimeOut = setTimeout(this.loadData.bind(this), this.settings.esports.updateTimeout);
+
         const leagueLists = await (await fetch("https://esports-api.lolesports.com/persisted/gw/getLeagues?hl=en-US", {
             headers: { "x-api-key": "0TvQnueqKa5mxJntVWt0w4LpLfEkrV1Ta8rQBb9Z" },
         })).json() as EsportsAPILeagueResponse;
