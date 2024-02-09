@@ -282,7 +282,7 @@ export default class ApiUrlInterpreter {
                 result: await resp.json(),
             };
         
-            const buffer = Buffer.from(JSON.stringify(json, null, 2), 'utf-8');
+            const buffer = Buffer.from(JSON.stringify(json.result, null, 2), 'utf-8');
             const attachment = new Discord.AttachmentBuilder(buffer, { name: 'reponse.json' });
             await message.channel.send({ content: `Response for ${url}:`, files: [attachment] });
         
