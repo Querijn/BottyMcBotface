@@ -17,9 +17,10 @@ export class Path {
         // Escape slashes
         regex = regex.replace(/\//g, "\\/");
         // Replace each parameter with a named regex group
-        regex = regex.replace(/\{(.*?)\}/, (match, p2) => `(?<${p2}>[^\\/?\\s]*)`);
+        while (regex.match(/\{(.*?)\}/))
+            regex = regex.replace(/\{(.*?)\}/, (match, p2) => `(?<${p2}>[^\\/?\\s]*)`);
 
-        return XRegExp(regex);
+        return XRegExp(regex + "$");
     }
 
     public name: string;
