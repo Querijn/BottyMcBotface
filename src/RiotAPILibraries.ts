@@ -105,10 +105,8 @@ export default class RiotAPILibraries {
         const libraryResponse = await fetch(json.download_url);
         const libraryInfo: APILibraryStruct = await libraryResponse.json();
 
-        const hasAtLeastOneTag = !!libraryInfo.tags?.some((tag) =>
-            tags.includes(tag)
-        );
-        if (!hasAtLeastOneTag) {
+        const hasAllTags = tags.every(tag => libraryInfo.tags?.includes(tag));
+        if (!hasAllTags) {
             return { stars: 0, valid: false, library: null, links: [] };
         }
 
