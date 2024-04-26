@@ -73,8 +73,7 @@ export default class RiotAPILibraries {
     }
 
     public onLibs(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-
-        let topics: string[] = ["v4"];
+        let topics: string[] = ["v4"]; // Default tag applies to all channels that don't have specific tags and when no tags are specified in the command
         if ("name" in message.channel) {
             for (const [topic, tags] of Object.entries(this.settings.riotApiLibraries.channelTopics)) {
                 if (message.channel.name.toLowerCase().includes(topic)) {
@@ -89,9 +88,7 @@ export default class RiotAPILibraries {
         }
 
         if (args.length > 1) {
-            for (let i = 1; i < args.length; i++) {
-                topics.push(args[i].toLowerCase());
-            }
+            topics = args.slice(1).map(x => x.toLowerCase()); // Set the tags to the ones specified in the command
         }
 
         const param = args[0].toLowerCase();
