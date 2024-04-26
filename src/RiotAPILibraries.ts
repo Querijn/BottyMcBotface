@@ -172,7 +172,7 @@ export default class RiotAPILibraries {
     }
 
     private async getLibrariesForLanguage(language: string, tags: string[] = ["v4"]): Promise<LibraryDescription[]> {
-        const response = await fetch(this.settings.riotApiLibraries.baseURL + language);
+        const response = await fetch(this.settings.riotApiLibraries.baseURL + language, this.fetchSettings);
         switch (response.status) {
             case 200: {
                 // continue
