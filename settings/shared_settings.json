@@ -132,6 +132,9 @@
             ],
             "objective-c": [
                 "objc"
+            ],
+            "python": [
+                "py"
             ]
         },
         "channelTopics": {
