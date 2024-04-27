@@ -65,11 +65,12 @@ export default class SpamKiller {
         if (!message.guild || message.author.bot)
             return;
 
-        this.checkForLinks(message);
-        this.checkForGunbuddy(message);
-        this.checkForPlayerSupport(message);
-        this.checkForCryptoSpam(message);
-        this.checkForDupes(message);
+        // Functions return true if they delete the message. This makes sure that a message only gets deleted once
+        this.checkForLinks(message) || 
+        this.checkForGunbuddy(message) || 
+        this.checkForPlayerSupport(message) || 
+        this.checkForCryptoWords(message) || 
+        this.checkForDupes(message) || 
         this.checkForFlood(message);
 
         if (!message.member) return; // This shouldn't happen but...
@@ -79,33 +80,48 @@ export default class SpamKiller {
         
     }
 
-    async checkForFlood(message: Discord.Message) {
+    checkForFlood(message: Discord.Message) {
         const time = new Date().getTime() - (this.floodMessageTime);
         const messageHistory = this.fetchMessageCache(message.member!, time);
 
-        if (messageHistory.length >= this.floodMessageThreshold) this.addViolatingMessage(message, `Hey <@${message.author.id}>, stop spamming!`, false, true);
+        if (messageHistory.length >= this.floodMessageThreshold) {
+            this.addViolatingMessage(message, `Hey <@${message.author.id}>, stop spamming!`, false, true);
+            return true;
+        }
 
+        return false;
     }
 
-    async checkForDupes(message: Discord.Message) {
+    checkForDupes(message: Discord.Message) {
         const time = new Date().getTime() - (this.dupeMessageTime);
         const messageHistory = this.fetchMessageCache(message.member!, time);
 
         const dupeMessages = messageHistory.filter(messageHistoryEntry => message.content == messageHistoryEntry.content);
         if (dupeMessages.length >= this.dupeMessageThreshold) {
             this.addViolatingMessage(message, `Hey <@${message.author.id}>, Stop spamming!`, false, true);
+            return true;
         }
+
+        return false;
     }
 
-    async checkForCryptoSpam(message: Discord.Message) {
-        const cryptoKeywords = ['10individuals', 'crypto', 'commission'];
+    /** Checks if a user sends a messsage containing words related to crypto and triggers the bot check in that case */
+    checkForCryptoWords(message: Discord.Message) {
+        const cryptoWords = ["crypto", "blockchain", "web3", "10individuals"];
+        const mentionsCrypto = cryptoWords.some(word => message.content.toLowerCase().indexOf(word) !== -1);
+        if (!mentionsCrypto) return false;
 
-        if (!cryptoKeywords.every(word => message.content.indexOf(word) !== -1)) return;
+        const embed = new Discord.EmbedBuilder()
+            .setTitle("Robot Check")
+            .setColor(0xffcc00)
+            .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Antu_dialog-warning.svg/240px-Antu_dialog-warning.svg.png")
+            .setDescription("We require users to verify that they are human before they are allowed to post about crypto. If you are a human, react with :+1: to this message. If you are a bot, please go spam somewhere else. 👍");
 
-        this.addViolatingMessage(message, `Hey <@${message.author.id}>, you seem to be spamming crypto messages`, false);
+        this.addViolatingMessage(message, {content: `Hey, ${message.author} If you are a human, react with :+1: to this message`, embeds: [embed] });
+        return true;
     }
 
-    async checkForPlayerSupport(message: Discord.Message) {
+    checkForPlayerSupport(message: Discord.Message) {
         const wordList1 = ['ban', 'banned', 'hacked', 'stolen', 'suspended'];
         const wordList2 = ['dev', 'ticket', 'support', 'admin', 'help'];
 
@@ -133,10 +149,14 @@ export default class SpamKiller {
                     {name: "\u200b", value: "\u200b", inline: true}
                 ]);
             this.addViolatingMessage(message, {content: `Hey ${message.author}, There is no game or account support here`, embeds: [violationEmbed]}, false);
+
+            return true;
         }
+
+        return false;
     }
 
-    async checkForGunbuddy(message: Discord.Message) {
+    checkForGunbuddy(message: Discord.Message) {
         const splitWords = (message.cleanContent+" ").match(/\b(\w+\W+)/g) || [];
         const words = splitWords.map(w => w.toLowerCase()
             .replace(/[,-\.\/\?]/g, "") // No garbage
@@ -185,10 +205,14 @@ export default class SpamKiller {
                 .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/1/19/Stop2.png")
                 .setDescription(`You triggered our spam detector. this is not a Riot Games server. There are no Rioters here, and no one can give you a gunbuddy. See <#914594958202241045> for more information`)
             this.addViolatingMessage(message, {content: `Hey ${message.author}, there are no gun buddies here`, embeds: [violationEmbed]}, false);
+
+            return true;
         }
+
+        return false;
     }
 
-    async checkForLinks(message: Discord.Message) {
+    checkForLinks(message: Discord.Message) {
         const httpOffset = message.content.indexOf("http://");
         const httpsOffset = message.content.indexOf("https://");
 
@@ -199,23 +223,24 @@ export default class SpamKiller {
         else if (httpsOffset >= 0)
             urlString = message.content.substr(httpsOffset);
         else
-            return;
+            return false;
 
         const d = url.parse(urlString);
         const hostname = d.hostname || "";
         if (this.sharedSettings.spam.allowedUrls.findIndex(u => hostname.endsWith(u) &&
         (hostname.replace(u, "").endsWith(".") || hostname.replace(u, "").length === 0)) !== -1) // Only allow matching base domain (zero length after replace) and subdomains (ends with ".")
-            return;
+            return false;
 
         if (this.sharedSettings.spam.blockedUrls.findIndex((blockedUrl => hostname == blockedUrl)) !== -1) {
             // Exempt admins
-            if (this.sharedSettings.commands.adminRoles.some(x => message.member && message.member.roles.cache.has(x))) return;
+            if (this.sharedSettings.commands.adminRoles.some(x => message.member && message.member.roles.cache.has(x))) return false;
 
             console.log(`SpamKiller: ${message.author} posted: '${message.content}' which contains a blocked url, deleting the message..`);
             // Not using addViolatingMessage because affecting people with ok roles is intentional
             const reportChannel = this.bot.guilds.cache.find(gc => gc.id == this.sharedSettings.server.guildId)?.channels.cache.find(cc => cc.name == this.sharedSettings.server.guruChannel && cc.type == Discord.ChannelType.GuildText);
             if (reportChannel) (reportChannel as Discord.TextChannel).send(`SpamKiller: ${message.author.username} (${message.author.id}) posted blocked url ${urlString}`);
-            return message.delete().catch();
+            message.delete();
+            return true;
         }
 
         const embed = new Discord.EmbedBuilder()
@@ -224,6 +249,8 @@ export default class SpamKiller {
             .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Antu_dialog-warning.svg/240px-Antu_dialog-warning.svg.png")
             .setDescription("We require users to verify that they are human before they are allowed to post a link. If you are a human, react with :+1: to this message to gain link privileges. If you are a bot, please go spam somewhere else. 👍");
         this.addViolatingMessage(message, {content: `Hey, ${message.author} If you are a human, react with :+1: to this message`, embeds: [embed] });
+
+        return true;
     }
 
     async addViolatingMessage(message: Discord.Message, warningMessage: string | Discord.MessageCreateOptions, allowThrough: boolean = true, clearMessagesOnKick: boolean = false) {
@@ -303,7 +330,7 @@ export default class SpamKiller {
                 return;
         }
         console.log(`SpamKiller: ${user.username} (${user.id}) reacted with ${messageReaction.emoji.name}, reposting the message`);
-        await deletedEntry.response?.channel.send(`${deletedEntry.authorUsername} just said: \n${deletedEntry.messageContent}`);
+        await deletedEntry.response?.channel.send(`<@${deletedEntry.authorId}> (${deletedEntry.authorUsername}) just said: \n${deletedEntry.messageContent}`);
         await deletedEntry.response?.delete();
 
         const member = await this.guild.members.fetch(deletedEntry.authorId);
