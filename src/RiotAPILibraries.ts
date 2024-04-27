@@ -115,7 +115,8 @@ export default class RiotAPILibraries {
         // Make a list of the links
         const githubLink = `github.com/${libraryInfo.owner}/${libraryInfo.repo}`;
         let links = libraryInfo.links ? libraryInfo.links.map(link => `[${link.name}](${link.url})`) : []; // Can be empty array or null, sigh
-        if (links.length === 0 || links.some(l => l.indexOf(githubLink) !== 0)) {
+
+        if (links.length === 0 || links.every(l => l.indexOf(githubLink) === -1)) {
             // Make sure there is at least the github link
             links = [`[Github](https://${githubLink})`].concat(links);
         }
