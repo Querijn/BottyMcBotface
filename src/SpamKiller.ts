@@ -68,7 +68,7 @@ export default class SpamKiller {
         this.checkForLinks(message);
         this.checkForGunbuddy(message);
         this.checkForPlayerSupport(message);
-        this.checkForCryptoSpam(message);
+        this.checkForCryptoWords(message);
         this.checkForDupes(message);
         this.checkForFlood(message);
 
@@ -97,12 +97,19 @@ export default class SpamKiller {
         }
     }
 
-    async checkForCryptoSpam(message: Discord.Message) {
-        const cryptoKeywords = ['10individuals', 'crypto', 'commission'];
+    /** Checks if a user sends a messsage containing words related to crypto and triggers the bot check in that case */
+    checkForCryptoWords(message: Discord.Message) {
+        const cryptoWords = ["crypto", "blockchain", "web3", "10individuals"];
+        const mentionsCrypto = cryptoWords.some(word => message.content.toLowerCase().indexOf(word) !== -1);
+        if (!mentionsCrypto) return;
 
-        if (!cryptoKeywords.every(word => message.content.indexOf(word) !== -1)) return;
+        const embed = new Discord.EmbedBuilder()
+            .setTitle("Robot Check")
+            .setColor(0xffcc00)
+            .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Antu_dialog-warning.svg/240px-Antu_dialog-warning.svg.png")
+            .setDescription("We require users to verify that they are human before they are allowed to post about crypto. If you are a human, react with :+1: to this message. If you are a bot, please go spam somewhere else. 👍");
 
-        this.addViolatingMessage(message, `Hey <@${message.author.id}>, you seem to be spamming crypto messages`, false);
+        this.addViolatingMessage(message, {content: `Hey, ${message.author} If you are a human, react with :+1: to this message`, embeds: [embed] });
     }
 
     async checkForPlayerSupport(message: Discord.Message) {
