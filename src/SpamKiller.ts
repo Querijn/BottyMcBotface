@@ -303,7 +303,7 @@ export default class SpamKiller {
                 return;
         }
         console.log(`SpamKiller: ${user.username} (${user.id}) reacted with ${messageReaction.emoji.name}, reposting the message`);
-        await deletedEntry.response?.channel.send(`${deletedEntry.authorUsername} just said: \n${deletedEntry.messageContent}`);
+        await deletedEntry.response?.channel.send(`<@${deletedEntry.authorId}> (${deletedEntry.authorUsername}) just said: \n${deletedEntry.messageContent}`);
         await deletedEntry.response?.delete();
 
         const member = await this.guild.members.fetch(deletedEntry.authorId);
