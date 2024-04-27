@@ -132,11 +132,13 @@
             ],
             "objective-c": [
                 "objc"
+            ],
+            "python": [
+                "py"
             ]
         },
         "channelTopics": {
             "lol": [
-                "lol",
                 "v4"
             ],
             "lcu": [
@@ -147,6 +149,12 @@
             ],
             "lor": [
                 "lor"
+            ],
+            "val": [
+                "val"
+            ],
+            "rso": [
+                "rso"
             ]
         },
         "checkInterval": 10800000

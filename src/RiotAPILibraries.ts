@@ -73,8 +73,7 @@ export default class RiotAPILibraries {
     }
 
     public onLibs(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-
-        let topics: string[] = ["v4"];
+        let topics: string[] = ["v4"]; // Default tag applies to all channels that don't have specific tags and when no tags are specified in the command
         if ("name" in message.channel) {
             for (const [topic, tags] of Object.entries(this.settings.riotApiLibraries.channelTopics)) {
                 if (message.channel.name.toLowerCase().includes(topic)) {
@@ -89,9 +88,7 @@ export default class RiotAPILibraries {
         }
 
         if (args.length > 1) {
-            for (let i = 1; i < args.length; i++) {
-                topics.push(args[i].toLowerCase());
-            }
+            topics = args.slice(1).map(x => x.toLowerCase()); // Set the tags to the ones specified in the command
         }
 
         const param = args[0].toLowerCase();
@@ -108,10 +105,8 @@ export default class RiotAPILibraries {
         const libraryResponse = await fetch(json.download_url);
         const libraryInfo: APILibraryStruct = await libraryResponse.json();
 
-        const hasAtLeastOneTag = !!libraryInfo.tags?.some((tag) =>
-            tags.includes(tag)
-        );
-        if (!hasAtLeastOneTag) {
+        const hasAllTags = tags.every(tag => libraryInfo.tags?.includes(tag));
+        if (!hasAllTags) {
             return { stars: 0, valid: false, library: null, links: [] };
         }
 
@@ -120,7 +115,8 @@ export default class RiotAPILibraries {
         // Make a list of the links
         const githubLink = `github.com/${libraryInfo.owner}/${libraryInfo.repo}`;
         let links = libraryInfo.links ? libraryInfo.links.map(link => `[${link.name}](${link.url})`) : []; // Can be empty array or null, sigh
-        if (links.length === 0 || links.some(l => l.indexOf(githubLink) !== 0)) {
+
+        if (links.length === 0 || links.every(l => l.indexOf(githubLink) === -1)) {
             // Make sure there is at least the github link
             links = [`[Github](https://${githubLink})`].concat(links);
         }
@@ -177,7 +173,7 @@ export default class RiotAPILibraries {
     }
 
     private async getLibrariesForLanguage(language: string, tags: string[] = ["v4"]): Promise<LibraryDescription[]> {
-        const response = await fetch(this.settings.riotApiLibraries.baseURL + language);
+        const response = await fetch(this.settings.riotApiLibraries.baseURL + language, this.fetchSettings);
         switch (response.status) {
             case 200: {
                 // continue
