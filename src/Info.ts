@@ -97,7 +97,6 @@ export default class Info {
             .setDescription("Name of the note")
             .setAutocomplete(true)
             .setRequired(true)
-            .setRequired(true)
         ).addBooleanOption(opt => opt
             .setName("embed")
             .setDescription("Use the embed version of this note (if available)")
