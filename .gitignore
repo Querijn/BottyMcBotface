@@ -72,3 +72,5 @@ www/
 
 # Mac
 .DS_Store
+
+data/*.json

@@ -14,6 +14,7 @@ import InteractionManager from "./InteractionManager";
 interface InfoFile {
     messages: InfoData[];
     categories: Category[];
+    recents: string[];
 }
 
 interface Category {
@@ -38,6 +39,7 @@ export default class Info {
     private userId: string;
     private infos: InfoData[];
     private categories: Category[] = [];
+    private recents: string[];
     private sharedSettings: SharedSettings;
     private command: string;
     private versionChecker: VersionChecker;
@@ -56,6 +58,7 @@ export default class Info {
 
         const file = fileBackedObject<InfoFile>(userFile, "www/" + userFile);
         this.infos = file.messages;
+        this.recents = file.recents;
 
         console.log("Successfully loaded info file.");
 
@@ -93,6 +96,14 @@ export default class Info {
             .setName("name")
             .setDescription("Name of the note")
             .setAutocomplete(true)
+            .setRequired(true)
+            .setRequired(true)
+        ).addBooleanOption(opt => opt
+            .setName("embed")
+            .setDescription("Use the embed version of this note (if available)")
+        ).addBooleanOption(opt => opt
+            .setName("embed")
+            .setDescription("Use the embed version of this note (if available)")
         );
         interactionManager.addSlashCommand(command.toJSON(), true, false, this.onInteraction.bind(this));
     }
@@ -125,6 +136,7 @@ export default class Info {
         response = response.replace(/{gameVersion}/g, this.versionChecker.gameVersion);
         response = response.replace(/{counter}/g, (infoData.counter || 0).toString());
 
+        this.addRecent(infoData);
         return response;
     }
 
@@ -146,6 +158,8 @@ export default class Info {
         if (!response) return;
 
         try {
+            //this.recents.push(infoData?.command!);
+            if (this.recents.length > 24) { this.recents.splice(0, this.recents.length-24); }
             await message.channel.send(response);
         }
         catch (e) {
@@ -175,7 +189,8 @@ export default class Info {
         }
 
         if (action === "list") {
-            this.handleNoteList(message, args[1] === "here");
+            //this.handleNoteList(message, args[1] === "here");
+            this.handleNoteList(message, false);
             return;
         }
 
@@ -476,18 +491,55 @@ export default class Info {
         if (interaction.commandName !== "note") throw new Error("Unknown command");
 
         const noteName = interaction.options.get("name")?.value?.toString().toLocaleLowerCase() || "";
+        const useEmbed = interaction.options.get("embed")?.value as boolean
         if (interaction.isAutocomplete()) {
             const autocompleteText = interaction.options.getFocused(true).value
             console.log(`Autocomplete: ${autocompleteText}`)
+            if (autocompleteText == "") return interaction.respond([...new Set<string>(this.recents)].filter(r => r.length <= 100).slice(0, 24).map((r => { return {name: r, value: r} })));
             const startsWithNotes = this.infos.filter(info => info.command.startsWith(autocompleteText));
             const matchingNotes = this.infos.filter(info => !info.command.startsWith(autocompleteText) && info.command.indexOf(autocompleteText) !== -1);
-            const responses = [...startsWithNotes, ...matchingNotes].map(info => { return {name: info.command, value: info.command} })
-            console.log(responses)
+            const responses = [...startsWithNotes, ...matchingNotes].map(info => { return {name: info.command, value: info.command} });
             return interaction.respond(responses.slice(0, 24))
         }
         if (!this.validateNoteName(noteName)) return interaction.reply({content: "This note name is not valid", ephemeral: true});
+                if (useEmbed && noteName.toLocaleLowerCase() == "server-info") {
+                        const embed = new Discord.EmbedBuilder()
+                        .setTitle("There is no game or account support here")
+                        .setColor(0xff0000)
+                        .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/1/19/Stop2.png")
+                        .setDescription(`This Discord server is for the Riot Games API, a tool which provides data to sites like op.gg. No one here will be able to help you with support or gameplay issues. If you're having account related issues or technical problems, contact Player support. If you have game feedback, see the links below.`)
+                        .addFields([
+                            {name: "Player Support", value: " [Player Support](https://support.riotgames.com/hc/en-us)", inline: true},
+                            {name: "League", value: "[Discord](https://discord.gg/leagueoflegends)\n[Subreddit](https://reddit.com/leagueoflegends)", inline: true},
+                            {name: "\u200b", value: "\u200b", inline: true},
+                            {name: "Valorant", value: "[Discord](https://discord.gg/valorant)\n[Subreddit](https://reddit.com/valorant)", inline: true},
+                            {name: "LoR", value: "[Discord](https://discord.gg/LegendsOfRuneterra)\n[Subreddit](https://reddit.com/r/LegendsofRuneterra)", inline: true},
+                            {name: "\u200b", value: "\u200b", inline: true}
+                        ]);
+                        return interaction.reply({content: "There is no game or account support here.", embeds: [embed]});
+                    }
+        if (useEmbed && noteName.toLocaleLowerCase() == "server-info") {
+            const embed = new Discord.EmbedBuilder()
+            .setTitle("There is no game or account support here")
+            .setColor(0xff0000)
+            .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/1/19/Stop2.png")
+            .setDescription(`This Discord server is for the Riot Games API, a tool which provides data to sites like op.gg. No one here will be able to help you with support or gameplay issues. If you're having account related issues or technical problems, contact Player support. If you have game feedback, see the links below.`)
+            .addFields([
+                {name: "Player Support", value: " [Player Support](https://support.riotgames.com/hc/en-us)", inline: true},
+                {name: "League", value: "[Discord](https://discord.gg/leagueoflegends)\n[Subreddit](https://reddit.com/leagueoflegends)", inline: true},
+                {name: "\u200b", value: "\u200b", inline: true},
+                {name: "Valorant", value: "[Discord](https://discord.gg/valorant)\n[Subreddit](https://reddit.com/valorant)", inline: true},
+                {name: "LoR", value: "[Discord](https://discord.gg/LegendsOfRuneterra)\n[Subreddit](https://reddit.com/r/LegendsofRuneterra)", inline: true},
+                {name: "\u200b", value: "\u200b", inline: true}
+            ]);
+            return interaction.reply({content: "There is no game or account support here.", embeds: [embed]});
+        }
         const infoData = this.fetchInfo(noteName)
-        if (infoData) return interaction.reply({content: "**" + infoData.command + "**: " + this.prepareNote(infoData)})
+        if (infoData) return interaction.reply({content: this.prepareNote(infoData)})
         interaction.reply({content: "Something went wrong", ephemeral: true});
+    }
+    
+    private addRecent(infoData: InfoData) {
+        this.recents.push(infoData.command);
     }
 }
