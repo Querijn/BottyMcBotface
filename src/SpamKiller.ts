@@ -3,6 +3,7 @@ import prettyMs = require("pretty-ms");
 import { SharedSettings } from "./SharedSettings";
 import url = require("url");
 import { levenshteinDistance } from "./LevenshteinDistance";
+import fetch from "node-fetch";
 
 class Violator {
     public response: Discord.Message | null;
@@ -27,6 +28,10 @@ export default class SpamKiller {
 
     private violators: Violator[] = [];
     private sharedSettings: SharedSettings;
+    private tldList: string[];
+
+    private caughtSpammingLinks: Set<string> = new Set();
+    private guruLogChannel: Discord.GuildBasedChannel | undefined;
 
     constructor(bot: Discord.Client, sharedSettings: SharedSettings) {
         this.sharedSettings = sharedSettings;
@@ -59,6 +64,17 @@ export default class SpamKiller {
         }
         this.role = role;
         this.floodCheckTimer = setTimeout(this.messageHistoryCleanup.bind(this));
+        try { 
+            let tldListReq = await fetch("https://data.iana.org/TLD/tlds-alpha-by-domain.txt");
+            let tldListResp = await tldListReq.text();
+
+            this.tldList = tldListResp.split(/\r?\n/).map(entry => "." + entry);
+            this.tldList.shift() // Remove comment from first line of list
+        }
+        catch {
+            console.error("Failed to load TLD list")
+        }
+        this.guruLogChannel = this.bot.guilds.cache.find(gc => gc.id == this.sharedSettings.server.guildId)?.channels.cache.find(cc => cc.name == this.sharedSettings.server.guruLogChannel && cc.type == Discord.ChannelType.GuildText);
     }
 
     async onMessage(message: Discord.Message) {
@@ -66,12 +82,16 @@ export default class SpamKiller {
             return;
 
         // Functions return true if they delete the message. This makes sure that a message only gets deleted once
+        this.checkInviteLinkSpam(message) ||
         this.checkForLinks(message) || 
         this.checkForGunbuddy(message) || 
         this.checkForPlayerSupport(message) || 
         this.checkForCryptoWords(message) || 
         this.checkForDupes(message) || 
         this.checkForFlood(message);
+        this.checkForFlood(message) ||
+        this.checkForMisleadingLinks(message) ||
+        this.checkForTelegramSpam(message);
 
         if (!message.member) return; // This shouldn't happen but...
         const memberMessageHistory = this.messageHistory.get(message.member?.id) || [];
@@ -79,7 +99,59 @@ export default class SpamKiller {
         this.messageHistory.set(message.member.id, memberMessageHistory);
         
     }
+    checkInviteLinkSpam(message: Discord.Message) {
+        if (!message.guild) return false;
+        const bad = ['nsfw', 'onlyfans', 'nudes', '18+', '+18', 'egirls', '🍑'];
+        if (message.content.indexOf("https://discord.gg") !== -1) {
+            const link = message.content.split("https://discord.gg/")[1].split(/\s+/)[0];
 
+            this.bot.fetchInvite(link).then(inviteInfo => {
+                if (!inviteInfo.guild) return;
+                const guildNameLower = inviteInfo.guild.name.toLowerCase().split(" ");
+                const hasBad = bad.some(word => guildNameLower.includes(word));
+                if (!hasBad) return false;
+                message.delete().catch(console.error);
+                if (message.member?.kickable) {
+                    message.member.kick("Spamming NSFW invite links");
+                    message.channel.send("🛫");
+                    if (this.guruLogChannel instanceof Discord.TextChannel) {
+                        console.log(`SpamKiller: Removing <@${message.author.id}> from the server for spamming NSFW invite links`);
+                        this.guruLogChannel.send(`SpamKiller: Removing <@${message.author.id}> from the server for spamming NSFW invite links`);
+                    }
+                }
+                else {
+                    console.log(`SpamKiller: <@${message.author.id}> appears to be spamming NSFW links but isn't kickable`);
+                }
+            })
+        }
+        return false
+    }
+    checkForTelegramSpam(message: Discord.Message<boolean>) {
+        //if (!this.caughtSpammingLinks.has(message.author.id)) return;
+        if (message.content.indexOf("(HOW)") !== -1
+            && message.content.indexOf("commission") !== -1
+            && message.content.indexOf("crypto") !== -1) {
+            console.log("High confidence of crypto spam from " + `<@${message.author.id}>`)
+            const reportChannel = this.bot.guilds.cache.find(gc => gc.id == this.sharedSettings.server.guildId)?.channels.cache.find(cc => cc.name == this.sharedSettings.server.guruLogChannel && cc.type == Discord.ChannelType.GuildText);
+            if (reportChannel && reportChannel instanceof Discord.TextChannel) reportChannel.send(`SpamKiller: Message may be crpto spam: https://discordapp.com/channels/${message.guild?.id}/${message.channel.id}/${message.id})`);
+        }
+    }
+    checkForMisleadingLinks(message: Discord.Message) {
+        const reportChannel = this.bot.guilds.cache.find(gc => gc.id == this.sharedSettings.server.guildId)?.channels.cache.find(cc => cc.name == this.sharedSettings.server.guruLogChannel && cc.type == Discord.ChannelType.GuildText);
+        //let links = message.content.match(/(\[(https?:\/\/.*?)\]\((https:\/\/.*?)\)/g);
+        let links = message.content.match(/(\[.*?\])(\(<?https:\/\/.*?\)\>?)/g);
+
+        let misleading: string[][] = [];
+        links?.forEach(link => {
+            let linkText = link.substring(1, link.indexOf("]"));
+            if (this.tldList.some(k => linkText.indexOf(k) !== -1)) misleading.push([link, linkText])
+        })
+        if (misleading.length == 0) return false;
+        console.log("SpamKiller: misleading links found in message id " + message.id);
+        let report = misleading.map(entry => `\`\`\`${entry[0]}\`\`\` != ${entry[1]}`).join("\n")
+        if (reportChannel && reportChannel instanceof Discord.TextChannel) reportChannel.send(`SpamKiller: Message with potentially misleading links posted by <@${message.author.id}> in <#${message.channel.id}> (https://discordapp.com/channels/${message.guild?.id}/${message.channel.id}/${message.id})\n` + report);
+        return true;
+    }
     checkForFlood(message: Discord.Message) {
         const time = new Date().getTime() - (this.floodMessageTime);
         const messageHistory = this.fetchMessageCache(message.member!, time);
@@ -124,6 +196,7 @@ export default class SpamKiller {
     checkForPlayerSupport(message: Discord.Message) {
         const wordList1 = ['ban', 'banned', 'hacked', 'stolen', 'suspended'];
         const wordList2 = ['dev', 'ticket', 'support', 'admin', 'help'];
+        const exemptWords = ['127.0.0.1', 'localhost', 'portal', 'console', 'python', 'lcu'];
 
         const splitWords = (message.cleanContent+" ").match(/\b(\w+\W+)/g) || [];
         const words = splitWords.map(w => w.toLowerCase()
@@ -131,10 +204,11 @@ export default class SpamKiller {
             .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g,'') // No emoji
             .trim());
 
-        let mentionsBanOrHack = wordList1.some(wl => words.indexOf(wl) !== -1)
-        let mentionsSupport = wordList2.some(wl => words.indexOf(wl) !== -1)
+        let mentionsBanOrHack = wordList1.some(wl => words.indexOf(wl) !== -1);
+        let mentionsSupport = wordList2.some(wl => words.indexOf(wl) !== -1);
+        let mentionsExempt = exemptWords.some(wl => words.indexOf(wl) !== -1);
 
-        if (mentionsBanOrHack && mentionsSupport) {
+        if (mentionsBanOrHack && mentionsSupport && !mentionsExempt) {
             const violationEmbed = new Discord.EmbedBuilder()
                 .setTitle("There is no game or account support here")
                 .setColor(0xff0000)
@@ -239,6 +313,7 @@ export default class SpamKiller {
             // Not using addViolatingMessage because affecting people with ok roles is intentional
             const reportChannel = this.bot.guilds.cache.find(gc => gc.id == this.sharedSettings.server.guildId)?.channels.cache.find(cc => cc.name == this.sharedSettings.server.guruChannel && cc.type == Discord.ChannelType.GuildText);
             if (reportChannel) (reportChannel as Discord.TextChannel).send(`SpamKiller: ${message.author.username} (${message.author.id}) posted blocked url ${urlString}`);
+            if (message.content.indexOf("(HOW)") !== -1) { message.member?.kickable ? message.member?.kick("Crypto spam").then(() => { message.channel.send("🛫") }) : ""}
             message.delete();
             return true;
         }
@@ -267,12 +342,15 @@ export default class SpamKiller {
             console.log(`SpamKiller: ${message.author.username}#${message.author.discriminator}'s message triggered our spam detector, but they've got ${member.roles.cache.size} roles. (https://discordapp.com/channels/${message.guild?.id}/${message.channel.id}/${message.id})`);
             return;
         }
+        if (message.channel instanceof Discord.ThreadChannel && (message.channel.parentId == "978519681184964629" || message.channel.parentId == "978514449352777798" || message.channel.parent instanceof Discord.ForumChannel)) {
+            return console.log(`SpamKiller: ${message.author.username}#${message.author.discriminator}'s message triggered our spam detector, but channel has an exemption. (https://discordapp.com/channels/${message.guild?.id}/${message.channel.id}/${message.id})`);
+        }
 
         console.log(`SpamKiller: ${message.author} posted: '${message.content}', deleting the message..`);
         const author = message.author;
         const messageContent = message.cleanContent;
         if (message.deletable)
-            message.delete();
+            message.delete().catch(console.error);
 
         // If we've asked them to verify, don't ask again
         const violator = this.violators.find(v => message.author.id === v.authorId);

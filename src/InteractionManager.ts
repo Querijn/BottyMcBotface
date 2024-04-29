@@ -51,11 +51,16 @@ export default class InteractionManager {
         ];
 
         // Find global commands
-        this.globalCommands = await this.rest.get(Discord.Routes.applicationCommands(this.clientId)) as Discord.RESTGetAPIApplicationCommandsResult;
-        this.initialized = true;
-        // Add admin commands related to interaction manager
-        for (const adminCommand of adminCommands) {
-            this.addSlashCommand(adminCommand, true, true, this.onInteraction.bind(this))
+        try {
+            this.globalCommands = await this.rest.get(Discord.Routes.applicationCommands(this.clientId)) as Discord.RESTGetAPIApplicationCommandsResult;
+            this.initialized = true;
+            // Add admin commands related to interaction manager
+            for (const adminCommand of adminCommands) {
+                this.addSlashCommand(adminCommand, true, true, this.onInteraction.bind(this))
+            }
+        }
+        catch (e) {
+            console.error(e);
         }
     }
 
