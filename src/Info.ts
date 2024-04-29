@@ -501,22 +501,6 @@ export default class Info {
             return interaction.respond(responses.slice(0, 24))
         }
         if (!this.validateNoteName(noteName)) return interaction.reply({content: "This note name is not valid", ephemeral: true});
-                if (useEmbed && noteName.toLocaleLowerCase() == "server-info") {
-                        const embed = new Discord.EmbedBuilder()
-                        .setTitle("There is no game or account support here")
-                        .setColor(0xff0000)
-                        .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/1/19/Stop2.png")
-                        .setDescription(`This Discord server is for the Riot Games API, a tool which provides data to sites like op.gg. No one here will be able to help you with support or gameplay issues. If you're having account related issues or technical problems, contact Player support. If you have game feedback, see the links below.`)
-                        .addFields([
-                            {name: "Player Support", value: " [Player Support](https://support.riotgames.com/hc/en-us)", inline: true},
-                            {name: "League", value: "[Discord](https://discord.gg/leagueoflegends)\n[Subreddit](https://reddit.com/leagueoflegends)", inline: true},
-                            {name: "\u200b", value: "\u200b", inline: true},
-                            {name: "Valorant", value: "[Discord](https://discord.gg/valorant)\n[Subreddit](https://reddit.com/valorant)", inline: true},
-                            {name: "LoR", value: "[Discord](https://discord.gg/LegendsOfRuneterra)\n[Subreddit](https://reddit.com/r/LegendsofRuneterra)", inline: true},
-                            {name: "\u200b", value: "\u200b", inline: true}
-                        ]);
-                        return interaction.reply({content: "There is no game or account support here.", embeds: [embed]});
-                    }
         if (useEmbed && noteName.toLocaleLowerCase() == "server-info") {
             const embed = new Discord.EmbedBuilder()
             .setTitle("There is no game or account support here")
