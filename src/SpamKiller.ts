@@ -180,7 +180,7 @@ export default class SpamKiller {
 
     /** Checks if a user sends a messsage containing words related to crypto and triggers the bot check in that case */
     checkForCryptoWords(message: Discord.Message) {
-        const cryptoWords = ["crypto", "blockchain", "web3", "10individuals"];
+        const cryptoWords = ["crypto", "blockchain", "web3", "10individuals", " nft", "bitcoin", "ethereum"];
         const mentionsCrypto = cryptoWords.some(word => message.content.toLowerCase().indexOf(word) !== -1);
         if (!mentionsCrypto) return false;
 
@@ -192,7 +192,7 @@ export default class SpamKiller {
 
         this.addViolatingMessage(message, {content: `Hey, ${message.author} If you are a human, react with :+1: to this message`, embeds: [embed] });
         return true;
-    }
+    }    
 
     checkForPlayerSupport(message: Discord.Message) {
         const wordList1 = ['ban', 'banned', 'hacked', 'stolen', 'suspended'];
