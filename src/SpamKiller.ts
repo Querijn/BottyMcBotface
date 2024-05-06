@@ -88,7 +88,6 @@ export default class SpamKiller {
         this.checkForPlayerSupport(message) || 
         this.checkForCryptoWords(message) || 
         this.checkForDupes(message) || 
-        this.checkForFlood(message);
         this.checkForFlood(message) ||
         this.checkForMisleadingLinks(message) ||
         this.checkForTelegramSpam(message);
