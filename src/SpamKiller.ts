@@ -134,6 +134,8 @@ export default class SpamKiller {
             const reportChannel = this.bot.guilds.cache.find(gc => gc.id == this.sharedSettings.server.guildId)?.channels.cache.find(cc => cc.name == this.sharedSettings.server.guruLogChannel && cc.type == Discord.ChannelType.GuildText);
             if (reportChannel && reportChannel instanceof Discord.TextChannel) reportChannel.send(`SpamKiller: Message may be crpto spam: https://discordapp.com/channels/${message.guild?.id}/${message.channel.id}/${message.id})`);
         }
+
+        return false;
     }
     checkForMisleadingLinks(message: Discord.Message) {
         const reportChannel = this.bot.guilds.cache.find(gc => gc.id == this.sharedSettings.server.guildId)?.channels.cache.find(cc => cc.name == this.sharedSettings.server.guruLogChannel && cc.type == Discord.ChannelType.GuildText);
