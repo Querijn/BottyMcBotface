@@ -25,6 +25,7 @@ interface GithubAPIStruct {
 }
 interface GithubAPILibraryStruct {
     stargazers_count: number;
+    description: string;
 }
 
 interface APILibraryLink {
@@ -123,6 +124,10 @@ export default class RiotAPILibraries {
 
         const repoResponse = await repoResponsePromise;
         const repoInfo: GithubAPILibraryStruct = await repoResponse.json();
+
+        if(!libraryInfo.description){
+            libraryInfo.description = repoInfo.description;
+        }
 
         return {
             library: libraryInfo,
