@@ -180,7 +180,7 @@ export default class SpamKiller {
 
     /** Checks if a user sends a messsage containing words related to crypto and triggers the bot check in that case */
     checkForCryptoWords(message: Discord.Message) {
-        const cryptoWords = ["crypto", "blockchain", "web3", "nft", "$", "€", "bitcoin", "btc", "ethereum", "eth"];
+        const cryptoWords = ["crypto", "blockchain", "web3", " nft", "nft ", "$", "€", "bitcoin", " btc", "btc ", "ethereum", " eth", " eth"];
         const mentionsCrypto = cryptoWords.some(word => message.content.toLowerCase().indexOf(word) !== -1);
         if (!mentionsCrypto) return false;
 
