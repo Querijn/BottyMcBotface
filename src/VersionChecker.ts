@@ -106,11 +106,11 @@ export default class VersionChecker {
                 patchNotes = `https://www.leagueoflegends.com/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
                 tries++;
 
-                let response = await fetch(`https://www.leagueoflegends.com/page-data/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/page-data.json`, {
+                let response = await fetch(patchNotes, {
                     method: "GET",
                 });
 
-                if (response.ok && response.headers.get("Content-Type") === "application/json") {
+                if (response.ok) {
                     lastNewValidMajor = nextMajor;
                     lastNewValidMinor = nextMinor;
                     validPatchNotes = patchNotes;
@@ -123,11 +123,11 @@ export default class VersionChecker {
                     patchNotes = `https://www.leagueoflegends.com/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
                     tries++;
 
-                    response = await fetch(`https://www.leagueoflegends.com/page-data/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/page-data.json`, {
+                    response = await fetch(patchNotes, {
                         method: "GET",
                     });
 
-                    if (response.ok && response.headers.get("Content-Type") === "application/json") {
+                    if (response.ok) {
                         lastNewValidMajor = nextMajor;
                         lastNewValidMinor = nextMinor;
                         validPatchNotes = patchNotes;
