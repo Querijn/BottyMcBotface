@@ -492,8 +492,7 @@ export default class Info {
         const noteName = interaction.options.get("name")?.value?.toString().toLocaleLowerCase() || "";
         const useEmbed = interaction.options.get("embed")?.value as boolean
         if (interaction.isAutocomplete()) {
-            const autocompleteText = interaction.options.getFocused(true).value
-            console.log(`Autocomplete: ${autocompleteText}`)
+            const autocompleteText = interaction.options.getFocused(true).value;
             if (autocompleteText == "") return interaction.respond([...new Set<string>(this.recents)].filter(r => r.length <= 100).slice(0, 24).map((r => { return {name: r, value: r} })));
             const startsWithNotes = this.infos.filter(info => info.command.startsWith(autocompleteText));
             const matchingNotes = this.infos.filter(info => !info.command.startsWith(autocompleteText) && info.command.indexOf(autocompleteText) !== -1);
