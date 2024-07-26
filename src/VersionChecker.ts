@@ -102,8 +102,8 @@ export default class VersionChecker {
             let newPatch = false;
 
             do {
-                nextMinor++; // https://www.leagueoflegends.com/en-us/news/game-updates/lol-patch-14-13-notes/
-                patchNotes = `https://www.leagueoflegends.com/en-us/news/game-updates/lol-patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
+                nextMinor++;
+                patchNotes = `https://www.leagueoflegends.com/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
                 tries++;
 
                 let response = await fetch(patchNotes, {
@@ -120,7 +120,7 @@ export default class VersionChecker {
                     nextMajor++;
                     nextMinor = 1;
 
-                    patchNotes = `https://www.leagueoflegends.com/en-us/news/game-updates/lol-patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
+                    patchNotes = `https://www.leagueoflegends.com/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
                     tries++;
 
                     response = await fetch(patchNotes, {
