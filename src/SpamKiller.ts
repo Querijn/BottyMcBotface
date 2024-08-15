@@ -80,6 +80,9 @@ export default class SpamKiller {
     async onMessage(message: Discord.Message) {
         if (!message.guild || message.author.bot)
             return;
+        // Stop Botty from acting on message on AutoMod alert channel
+        if (message.member && !(message.guild.channels.cache.find(c => c.id == message.channelId)?.permissionsFor(message.member)?.has(Discord.PermissionFlagsBits.SendMessages, true)))
+            return;
 
         // Functions return true if they delete the message. This makes sure that a message only gets deleted once
         this.checkInviteLinkSpam(message) ||
