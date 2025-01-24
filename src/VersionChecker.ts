@@ -1,5 +1,6 @@
 import Discord = require("discord.js");
 import fetch from "node-fetch";
+import cheerio = require("cheerio");
 
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
@@ -8,7 +9,16 @@ export interface VersionCheckerData {
     latestGameVersion: string;
     latestDataDragonVersion: string;
 }
-
+interface BladeItem {
+    title: string;
+    publishedAt: string;
+    action: {
+        type: string;
+        payload: {
+            url: string;
+        }
+    }
+}
 export default class VersionChecker {
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
@@ -88,72 +98,66 @@ export default class VersionChecker {
 
     private async updateGameVersion() {
         try {
-            const currentVersionArray = this.data.latestGameVersion.split(".");
-            let nextMajor: number = parseInt(currentVersionArray[0], 10);
-            let nextMinor: number = parseInt(currentVersionArray[1], 10);
+            let latestNotesItem: BladeItem;
+            let lastPostedPatchNotesItem: BladeItem | undefined;
+            let lastPostedPatchNotes = this.data.latestGameVersion;
+            let lastPostedPatchNotesDate: Date = new Date(NaN);
+            let patchNotes: BladeItem[] = [];
+            const gameUpdatesPage = await fetch("https://www.leagueoflegends.com/en-us/news/game-updates/",  {
+                method: "GET"
+            });
+            const gameUpdatesPageHtml = cheerio.load(await gameUpdatesPage.text());
+            let gameUpdatesPageJson = gameUpdatesPageHtml("#__NEXT_DATA__").html();
 
-            let tries = 0;
-
-            let patchNotes: string;
-
-            let lastNewValidMajor = nextMajor;
-            let lastNewValidMinor = nextMinor;
-            let validPatchNotes: string = "invalid";
-            let newPatch = false;
-
-            do {
-                nextMinor++;
-                patchNotes = `https://www.leagueoflegends.com/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
-                tries++;
-
-                let response = await fetch(patchNotes, {
-                    method: "GET",
-                });
-
-                if (response.ok) {
-                    lastNewValidMajor = nextMajor;
-                    lastNewValidMinor = nextMinor;
-                    validPatchNotes = patchNotes;
-                    newPatch = true;
-                }
-                else { // check for change in season
-                    nextMajor++;
-                    nextMinor = 1;
-
-                    patchNotes = `https://www.leagueoflegends.com/en-us/news/game-updates/patch-${nextMajor.toString()}-${nextMinor.toString()}-notes/`;
-                    tries++;
-
-                    response = await fetch(patchNotes, {
-                        method: "GET",
-                    });
-
-                    if (response.ok) {
-                        lastNewValidMajor = nextMajor;
-                        lastNewValidMinor = nextMinor;
-                        validPatchNotes = patchNotes;
-                        newPatch = true;
-                    }
-                    else {
-                        break;
-                    }
+            if (!gameUpdatesPage.ok) {
+                throw new Error(`Got status code ${gameUpdatesPage.status} while trying to get the game updates page`)
+            }
+            else if (!gameUpdatesPageJson) {
+                throw new Error("Failed to find JSON on the LoL game updates page");
+            }
+            let json = JSON.parse(gameUpdatesPageJson);
+            // Check if we have something that looks like the game updates page
+            if (!json.props.pageProps.page.blades) {
+                throw new Error("Got a JSON that doesn't seem to be the game updates page");
+            }
+            // Find which blade has the articles
+            for (const blade of json.props.pageProps.page.blades) {
+                if (blade.type == "articleCardGrid") {
+                    patchNotes = blade.items.filter((bladeItem: BladeItem) => bladeItem.title.match(/^Patch (\d{2}\.S[1-3]\.\d{1,2}|\d{2}\.\d{1,2}) Notes$/i));
+                    break;
                 }
             }
-            while (tries < 100);
-
-            if (newPatch === false) return; // no new version
-
-            this.data.latestGameVersion = `${lastNewValidMajor.toString()}.${lastNewValidMinor.toString()}`;
-
-            const embed = new Discord.EmbedBuilder()
-                .setColor(0xf442e5)
-                .setTitle("New League of Legends version!")
-                .setDescription(`Version ${this.data.latestGameVersion} of League of Legends has posted its patch notes. You can expect the game to update soon.\n\nYou can find the notes here:\n${validPatchNotes}`)
-                .setURL(validPatchNotes)
-                .setThumbnail(this.sharedSettings.versionChecker.gameThumbnail);
-
-            this.channel.send({ embeds: [embed] });
-        } catch (e) {
-            console.error("Game version fetch error: " + e.message);
+            if (patchNotes) {
+                latestNotesItem = patchNotes.reduce((latest, current) => new Date(current.publishedAt) > new Date(latest.publishedAt) ? current : latest);
+                lastPostedPatchNotesItem = patchNotes.find(bladeItem => bladeItem.title == `Patch ${lastPostedPatchNotes} Notes`);
+                if (lastPostedPatchNotesItem) {
+                    lastPostedPatchNotesDate = new Date(lastPostedPatchNotesItem.publishedAt);
+                }
+                // Maybe the patch note version is too old to still be on page?
+                if (isNaN(lastPostedPatchNotesDate.getTime())) {
+                    console.error(`Couldn't find publish date for Patch ${lastPostedPatchNotes}. Latest found title is ${latestNotesItem}, updating latestGameVersion but not making post`);
+                    this.data.latestGameVersion = latestNotesItem.title.split(" ")[1];
+                    return;
+                }
+                if (new Date(latestNotesItem.publishedAt) > lastPostedPatchNotesDate) {
+                    this.data.latestGameVersion = latestNotesItem.title.split(" ")[1];
+                    const embed = new Discord.EmbedBuilder()
+                    .setColor(0xf442e5)
+                    .setTitle("New League of Legends version!")
+                    .setDescription(`Version ${this.data.latestGameVersion} of League of Legends has posted its patch notes. You can expect the game to update soon.\n\nYou can find the notes here:\nhttps://www.leagueoflegends.com${latestNotesItem.action.payload.url}`)
+                    .setURL("https://www.leagueoflegends.com" + latestNotesItem.action.payload.url)
+                    .setThumbnail(this.sharedSettings.versionChecker.gameThumbnail);
+    
+                this.channel.send({ embeds: [embed] });
+                }
+                
+            }
+            else {
+                console.error("Failed to find/parse the JSON on the game update page");
+            }
+        }
+        catch (e){
+            console.error(e);
         }
     }
 
