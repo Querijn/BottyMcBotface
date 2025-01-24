@@ -117,14 +117,14 @@ export default class AutoReact {
 
         // If original thinking user
         if (this.thinkingUsers.indexOf(message.author.id) !== -1) {
-            message.react("🤔").catch();
+            message.react("🤔").catch(() => {});
             return;
         }
 
         // Otherwise use our custom ones
         const emoji = message.guild!.emojis.cache.filter((x: Discord.Emoji) => x.name !== null && this.isThinkingEmojiName(x.name)).random();
         if (emoji) {
-            message.react(emoji).catch();
+            message.react(emoji).catch(() => {});
             return;
         }
     }
@@ -240,7 +240,7 @@ export default class AutoReact {
             return;
         }
 
-        message.react(`${this.greetingEmoji.id}`).catch();
+        message.react(`${this.greetingEmoji.id}`).catch(() => {});
     }
 
     private isThinkingEmojiName(emojiName: string) {
