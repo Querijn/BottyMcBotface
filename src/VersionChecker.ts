@@ -123,7 +123,7 @@ export default class VersionChecker {
             // Find which blade has the articles
             for (const blade of json.props.pageProps.page.blades) {
                 if (blade.type == "articleCardGrid") {
-                    patchNotes = blade.items.filter((bladeItem: BladeItem) => bladeItem.title.match(/^Patch (\d{2}\.S[1-3]\.\d{1,2}|\d{2}\.\d{1,2}) Notes$/i));
+                    patchNotes = blade.items.filter((bladeItem: BladeItem) => bladeItem.title.match(/^Patch ((20)?\d{2}\.S[1-3]\.\d{1,2}|\d{2}\.\d{1,2}) Notes$/i));
                     break;
                 }
             }
