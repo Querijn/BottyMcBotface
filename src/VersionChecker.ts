@@ -127,7 +127,7 @@ export default class VersionChecker {
                     break;
                 }
             }
-            if (patchNotes) {
+            if (patchNotes && patchNotes.length > 0) {
                 latestNotesItem = patchNotes.reduce((latest, current) => new Date(current.publishedAt) > new Date(latest.publishedAt) ? current : latest);
                 lastPostedPatchNotesItem = patchNotes.find(bladeItem => bladeItem.title == `Patch ${lastPostedPatchNotes} Notes`);
                 if (lastPostedPatchNotesItem) {
