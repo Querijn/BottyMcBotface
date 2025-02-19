@@ -40,7 +40,7 @@
     "@types/ws": "^7.2.4",
     "@types/xregexp": "^3.0.29",
     "chai": "^4.2.0",
-    "mocha": "^10.2.0",
+    "mocha": "^10.8.2",
     "ts-mockito": "^2.5.0",
     "ts-node": "^8.9.0",
     "tslint": "^6.1.1",
