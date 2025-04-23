@@ -167,7 +167,6 @@ export default class Endpoint {
             console.log("Updated endpoints!", this.endpoints.endpoints);
         } catch (e) {
             console.error("Schema fetch error: " + e.message);
-            throw e;
         }
 
         if (this.timeOut) {
