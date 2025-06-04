@@ -88,7 +88,17 @@ export default class KeyFinder {
         });
 
         const rateLimit = resp.headers.get("x-app-rate-limit");
-        if (resp.status !== 403 && rateLimit === null) {
+        if (resp.status === 401) {
+            const body = await resp.json();
+
+            if (body.status?.message == "Unknown apikey") {
+                return null;
+            }
+            else {
+                console.warn(`Got weird response body while checking key \`${key}\`:${JSON.stringify(body)}`);
+            }
+        }
+        else if (resp.status !== 403 && rateLimit === null) {
 
             const availableHeaders: string[] = [];
             resp.headers.forEach((value: string, header: string) => availableHeaders.push(`${header}: ${value}`));
