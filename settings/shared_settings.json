@@ -169,7 +169,7 @@
         "checkInterval": 1800000,
         "channel": "external-activity",
         "dataDragonThumbnail": "https://cdn.discordapp.com/attachments/187652476080488449/357422324015955970/ddragon.png",
-        "gameThumbnail": "https://brand.riotgames.com/static/a91000434ed683358004b85c95d43ce0/3591c/lol-logo.webp"
+        "gameThumbnail": "https://cdn.discordapp.com/attachments/358285665571700736/1383086208699203695/lollogo.png"
     },
     "logger": {
         "server": "342988445498474498",
