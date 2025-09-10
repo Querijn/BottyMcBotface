@@ -103,30 +103,31 @@ export default class SpamKiller {
     }
     checkInviteLinkSpam(message: Discord.Message) {
         if (!message.guild) return false;
+        const inviteRegex = /(?:https?:\/\/)?(?:www\.)?(?:discord(?:app)?\.com\/invite|discord\.gg)\/([a-z0-9-]+)/i;
         const bad = ['nsfw', 'onlyfans', 'nudes', '18+', '+18', 'egirls', '🍑'];
-        if (message.content.indexOf("https://discord.gg") !== -1) {
-            const link = message.content.split("https://discord.gg/")[1].split(/\s+/)[0];
-
-            this.bot.fetchInvite(link).then(inviteInfo => {
-                if (!inviteInfo.guild) return;
-                const guildNameLower = inviteInfo.guild.name.toLowerCase().split(" ");
-                const hasBad = bad.some(word => guildNameLower.includes(word));
-                if (!hasBad) return false;
-                message.delete().catch(console.error);
-                if (message.member?.kickable) {
-                    message.member.kick("Spamming NSFW invite links");
-                    message.channel.send("🛫");
-                    if (this.guruLogChannel instanceof Discord.TextChannel) {
+        if (inviteRegex.test(message.content)) {
+            const inviteLinks = message.content.match(inviteRegex) || [];
+            for (const link of inviteLinks) {
+                this.bot.fetchInvite(link).then(inviteInfo => {
+                    if (!inviteInfo.guild) return;
+                    const guildNameLower = inviteInfo.guild.name.toLowerCase().split(" ");
+                    const hasBad = bad.some(word => guildNameLower.includes(word));
+                    if (!hasBad) return false;
+                    message.delete().catch(console.error);
+                    if (message.member?.kickable) {
+                        message.member.kick("Spamming NSFW invite links");
                         console.log(`SpamKiller: Removing <@${message.author.id}> from the server for spamming NSFW invite links`);
-                        this.guruLogChannel.send(`SpamKiller: Removing <@${message.author.id}> from the server for spamming NSFW invite links`);
+                        if (this.guruLogChannel instanceof Discord.TextChannel) {
+                            this.guruLogChannel.send(`SpamKiller: Removing <@${message.author.id}> from the server for spamming NSFW invite links`);
+                        }
                     }
-                }
-                else {
-                    console.log(`SpamKiller: <@${message.author.id}> appears to be spamming NSFW links but isn't kickable`);
-                }
-            })
+                    else {
+                        console.log(`SpamKiller: <@${message.author.id}> appears to be spamming NSFW links but isn't kickable`);
+                    }
+                }).catch(() => {});
+            }
         }
-        return false
+        return false;
     }
     checkForTelegramSpam(message: Discord.Message<boolean>) {
         //if (!this.caughtSpammingLinks.has(message.author.id)) return;
