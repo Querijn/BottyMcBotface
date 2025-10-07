@@ -316,7 +316,7 @@ export default class SpamKiller {
 
             console.log(`SpamKiller: ${message.author} posted: '${message.content}' which contains a blocked url, deleting the message..`);
             // Not using addViolatingMessage because affecting people with ok roles is intentional
-            const reportChannel = this.bot.guilds.cache.find(gc => gc.id == this.sharedSettings.server.guildId)?.channels.cache.find(cc => cc.name == this.sharedSettings.server.guruChannel && cc.type == Discord.ChannelType.GuildText);
+            const reportChannel = this.bot.guilds.cache.find(gc => gc.id == this.sharedSettings.server.guildId)?.channels.cache.find(cc => cc.name == this.sharedSettings.server.guruLogChannel && cc.type == Discord.ChannelType.GuildText);
             if (reportChannel) (reportChannel as Discord.TextChannel).send(`SpamKiller: ${message.author.username} (${message.author.id}) posted blocked url ${urlString}`);
             if (message.content.indexOf("(HOW)") !== -1) { message.member?.kickable ? message.member?.kick("Crypto spam").then(() => { message.channel.send("🛫") }) : ""}
             message.delete();
