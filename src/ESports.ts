@@ -89,7 +89,7 @@ export default class ESportsAPI {
             }
             try {
                 await this.loadData();
-                //this.postInfo(true);
+                this.postInfo(true);
             }
             catch (e) {
                 console.error(e);
@@ -185,7 +185,7 @@ export default class ESportsAPI {
             clearTimeout(this.postInfoTimeOut);
             this.postInfoTimeOut = null;
         }
-        //this.postInfoTimeOut = setTimeout(this.postInfo.bind(this, true), this.settings.esports.printToChannelTimeout);
+        this.postInfoTimeOut = setTimeout(this.postInfo.bind(this, true), this.settings.esports.printToChannelTimeout);
     }
 
     private strToDate(strDate: string) {
