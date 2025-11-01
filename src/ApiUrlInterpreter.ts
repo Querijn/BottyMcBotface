@@ -13,6 +13,7 @@ import { APISchema, Path } from "./ApiSchema";
 import { fileBackedObject } from "./FileBackedObject";
 import { levenshteinDistance } from "./LevenshteinDistance";
 import { PersonalSettings, SharedSettings } from "./SharedSettings";
+import Info from "./Info";
 
 class RatelimitResult {
     public rateLimit: number;
@@ -40,6 +41,7 @@ export default class ApiUrlInterpreter {
     private sharedSettings: SharedSettings;
     private personalSettings: PersonalSettings;
     private apiSchema: APISchema;
+    private notes: Info;
     private iterator: number = 1;
 
     private applicationRatelimitLastTime: number = 0;
@@ -49,12 +51,13 @@ export default class ApiUrlInterpreter {
 
     private fetchSettings: object;
 
-    constructor(bot: Discord.Client, sharedSettings: SharedSettings, apiSchema: APISchema) {
+    constructor(bot: Discord.Client, sharedSettings: SharedSettings, apiSchema: APISchema, notes: Info) {
         console.log("Requested API URL Interpreter extension..");
 
         this.sharedSettings = sharedSettings;
         this.personalSettings = sharedSettings.botty;
         this.apiSchema = apiSchema;
+        this.notes = notes;
         console.log("Successfully loaded API URL Interpreter settings.");
 
         this.fetchSettings = {
@@ -173,6 +176,12 @@ export default class ApiUrlInterpreter {
         }
         if (!path) {
             mistakes.push(`- This URL does not appear to be using a valid endpoint`);
+
+            if (urlMatch.path.startsWith("/lol/summoner/v4/summoners/by-name/")) {
+                const nameNote = this.notes.fetchInfo("summoner-name");
+                mistakes.push(nameNote!.message);
+            }
+
             fatalError = true;
         }
 
