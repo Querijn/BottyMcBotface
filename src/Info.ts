@@ -63,6 +63,7 @@ export default class Info {
         console.log("Successfully loaded info file.");
 
         botty.client.on("messageReactionAdd", this.onReaction.bind(this));
+        botty.client.on("messageCreate", this.onMessage.bind(this));
         botty.client.on("ready", () => {
 
             this.userId = botty.client.user!.id;
@@ -124,8 +125,35 @@ export default class Info {
         }
     }
 
-    private validateNoteName(name: string)
-    {
+    private async onMessage(message: Discord.Message) {
+        if (message.author.bot) return;
+
+        const messageContent = message.content.toLowerCase();
+        if (!messageContent.includes("how long") ||
+            (!messageContent.includes("app") &&
+                !messageContent.includes("application") &&
+                !messageContent.includes("approved") &&
+                !messageContent.includes("approve") &&
+                !messageContent.includes("pending"))) return;
+
+        const infoData = this.fetchInfo("how-long", true);
+        if (!infoData) return;
+
+        try {
+            const response = this.prepareNote(infoData);
+            await message.channel.send(response);
+        }
+        catch (e) {
+            if (e instanceof Discord.DiscordAPIError) {
+                console.error(`Received DiscordAPIError while outputting an info ticket: ${e.code} "${e.message}"`);
+            }
+            else {
+                console.error(`Received unknown error while outputting an info ticket: ${e}"`);
+            }
+        }
+    }
+
+    private validateNoteName(name: string) {
         return /^[a-z0-9-]+$/i.test(name);
     }
 
