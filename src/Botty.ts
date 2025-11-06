@@ -50,9 +50,9 @@ export default class Botty {
     public async onRestart(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
 
         if (!isAdmin) return;
-
+        const restartCommand = (this.personalSettings.restartCommand) ?  this.personalSettings.restartCommand : "pm2 restart " + this.personalSettings.appName;
         await message.channel.send("Restarting...");
-        exec("pm2 restart " + this.personalSettings.appName, (err, stdout, stderr) => {
+        exec(restartCommand, (err, stdout, stderr) => {
             if (err) {
                 console.error(err.message);
                 return;

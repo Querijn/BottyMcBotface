@@ -24,6 +24,7 @@ export interface PersonalSettings {
 
     isProduction: boolean;
     appName: string;
+    restartCommand?: string;
 }
 
 export enum PageType {
@@ -197,6 +198,8 @@ export interface SharedSettings {
         floodMessageTime: number;
         duplicateMessageThreshold: number;
         duplicateMessageTime: number;
+        externalAntiSpamServiceEnabled: boolean;
+        externalAntiSpamServiceURL: string;
     };
 
     userIntro: {

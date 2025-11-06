@@ -10,8 +10,16 @@ class Violator {
     public authorId: string;
     public authorUsername: string;
     public messageContent: string;
+    public origMessageId?: string;
     public violations = 0;
 }
+
+interface ClassifierResponse {
+    spam_confidence: number,
+    mtime: number
+}
+
+class ClassifierHTTPError extends Error {}
 
 export default class SpamKiller {
     private bot: Discord.Client;
@@ -32,6 +40,7 @@ export default class SpamKiller {
 
     private caughtSpammingLinks: Set<string> = new Set();
     private guruLogChannel: Discord.GuildBasedChannel | undefined;
+    private tempUserExemptions = new Map<string, number>();
 
     constructor(bot: Discord.Client, sharedSettings: SharedSettings) {
         this.sharedSettings = sharedSettings;
@@ -47,6 +56,7 @@ export default class SpamKiller {
         bot.on("messageReactionAdd", this.onReaction.bind(this));
         bot.on("messageCreate", this.onMessage.bind(this));
         bot.on("ready", this.onReady.bind(this));
+        bot.on("interactionCreate", this.onInteraction.bind(this));
     }
 
     async onReady() {
@@ -100,6 +110,7 @@ export default class SpamKiller {
         memberMessageHistory.push(message);
         this.messageHistory.set(message.member.id, memberMessageHistory);
         
+        await this.checkExternalClassifier(message);
     }
     checkInviteLinkSpam(message: Discord.Message) {
         if (!message.guild) return false;
@@ -333,6 +344,44 @@ export default class SpamKiller {
         return true;
     }
 
+    async checkExternalClassifier(message: Discord.Message) {
+        if (!message.guild) return;
+        // Exempt gurus
+        if (message.member?.roles.cache.hasAny(...this.sharedSettings.commands.adminRoles)) return false;
+        // Check temporary exemptions
+        const exemptInfo = this.tempUserExemptions.get(message.author.id);
+        if (exemptInfo && exemptInfo > Date.now()) {
+            return false;
+        }
+
+        try {
+            const response = await this.queryExternalAntiSpam(message);
+            if (response === false) return;
+
+            if (response.spam_confidence > .80) {
+                let extraInfo;
+                await message.delete();
+                const logMessageInfo = await (this.guruLogChannel as Discord.TextChannel)?.send(this.createClassifierRemovalEmbed(message));
+                if (logMessageInfo && logMessageInfo.id) extraInfo = `[Guru Info](https://discord.com/channels/${message.guild.id}/${logMessageInfo.channelId}/${logMessageInfo.id})`
+                const removalMessage = await message.channel.send(this.createClassifierRemovalUserMessage(message, response, extraInfo))
+                this.violators.push({ response: removalMessage, messageContent: message.content, authorId: message.author.id, authorUsername: message.author.username, origMessageId: message.id, violations: 1 });
+            }
+            else if (response.spam_confidence && typeof response.spam_confidence === "number" && response.spam_confidence > .60) {
+                console.log(`SpamKiller: Message in <#${message.channelId}> is potentially spam https://discord.com/channels/${message.guild.id}/${message.channelId}/${message.id} Confidence: ${response.spam_confidence}\nContent: ${message.cleanContent}`);
+                if (this.guruLogChannel instanceof Discord.TextChannel) {
+                    this.guruLogChannel.send(`SpamKiller: Message in <#${message.channelId}> is potentially spam https://discord.com/channels/${message.guild.id}/${message.channelId}/${message.id} Confidence: ${response.spam_confidence}\nContent: ${message.cleanContent}`).catch(() => {});
+                }
+            }
+        }
+        catch (e) {
+            if (e instanceof ClassifierHTTPError) {
+                console.warn(e, e.stack);
+            }
+            else {
+                console.debug(e,e.stack);
+            }
+        }
+    }
     async addViolatingMessage(message: Discord.Message, warningMessage: string | Discord.MessageCreateOptions, allowThrough: boolean = true, clearMessagesOnKick: boolean = false) {
 
         const guild = <Discord.Guild>message.guild; // Got to explicitly cast away null because Typescript doesn't detect this
@@ -382,7 +431,7 @@ export default class SpamKiller {
             }
             return;
         }
-
+        if (allowThrough) {}
         let response = await message.channel.send(warningMessage);
 
         if (Array.isArray(response))
@@ -423,7 +472,50 @@ export default class SpamKiller {
         if (deletedId >= 0)
             this.violators.splice(deletedId, 1);
     }
+    async onInteraction(interaction: Discord.Interaction) {
+        if (!interaction.guild) return;
+        if (!interaction.isButton()) return;
+        if (!interaction.customId.startsWith("spamkiller_")) return;
 
+        let repost = false;
+        const origMessageId = interaction.customId.substring(interaction.customId.lastIndexOf("_")+1);
+        const violationEntry = this.violators.find(v => v.origMessageId == origMessageId);
+
+        const externalAntiSpamServiceEnabled = this.sharedSettings.spam.externalAntiSpamServiceEnabled;
+        const externalAntiSpamServiceURL = this.sharedSettings.spam.externalAntiSpamServiceURL;
+        if (!externalAntiSpamServiceEnabled || !externalAntiSpamServiceURL)
+            return interaction.reply("The Anti-Spam service is currently disabled");
+        if (!violationEntry) {
+            return interaction.reply("Couldn't find violating message with id " + origMessageId);
+        }
+        if (interaction.customId.startsWith("spamkiller_tempexempt_")) {
+            const user = this.guild.members.cache.get(violationEntry.authorId)
+            if (!user) {
+                return interaction.reply({content: "Unable to find that user in the cache"});
+            }
+            this.tempUserExemptions.set(user.id, Date.now() + 15 * 60 * 1000);
+            interaction.reply({content: `Temporarily exempted <@${user.id}>`});
+        }
+        else if (interaction.customId.startsWith("spamkiller_notspam_") || interaction.customId.startsWith("spamkiller_confirmspam_")) {
+            // DELETE = not spam, PATCH = use as additional training data
+            const method = (interaction.customId.startsWith("spamkiller_notspam_")) ? "DELETE" : "PATCH";
+
+            await interaction.reply("Update requested to classifier");
+            let result = await fetch(externalAntiSpamServiceURL, { 
+                method: method,
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({text: violationEntry.messageContent})
+            });
+            if (result.ok)
+                interaction.followUp("Update success");
+            if (method == "DELETE")
+                repost = true;
+        }
+        if (repost) {
+            await violationEntry.response?.channel.send(`<@${violationEntry.authorId}> (${violationEntry.authorUsername}) just said: \n${violationEntry.messageContent}`);
+            await violationEntry.response?.delete();
+        }
+    }
     private messageHistoryCleanup() {
         const timeLimit = new Date().getTime() + (2 * 60 * 1000);
         for (const entry in this.messageHistory.keys()) {
@@ -434,10 +526,57 @@ export default class SpamKiller {
         if (this.floodCheckTimer) clearTimeout(this.floodCheckTimer);
         this.floodCheckTimer = setTimeout(this.messageHistoryCleanup.bind(this), this.maxMessageHistoryAge);
     }
+    private async queryExternalAntiSpam(message: Discord.Message) {
+        if (!message.guild) return false;
+        const externalAntiSpamServiceEnabled = this.sharedSettings.spam.externalAntiSpamServiceEnabled;
+        const externalAntiSpamServiceURL = this.sharedSettings.spam.externalAntiSpamServiceURL;
 
+        if (!externalAntiSpamServiceEnabled || !externalAntiSpamServiceURL) return false;
+
+        let result = await fetch(externalAntiSpamServiceURL, { 
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({text: message.content})
+        });
+        if (result.ok) {
+            return await result.json() as ClassifierResponse;
+        }
+        throw new ClassifierHTTPError(`Classifer fetch failed with error code ${result.status} - ${result.statusText}`);
+    }
     private fetchMessageCache(member: Discord.GuildMember, messageAfterTimestamp: number) {
         return (this.messageHistory.get(member.id) || [])
             .filter(mhEntry => mhEntry.createdTimestamp > messageAfterTimestamp) // Filter for time
             .filter(mhEntry => mhEntry.guild && (mhEntry.guild.id == member.guild.id)); // Filter for guild
+    }
+    private createClassifierRemovalEmbed(message: Discord.Message): Discord.MessageCreateOptions {
+        return {
+            content: `SpamKiller: Spam classifier removal threshold exceeded, removing message\nContent: ${message.cleanContent}`,
+            components: [
+                new Discord.ActionRowBuilder<Discord.ButtonBuilder>()
+                .addComponents(
+                    new Discord.ButtonBuilder()
+                    .setCustomId("spamkiller_notspam_" + message.id)
+                    .setLabel("Not Spam")
+                    .setStyle(Discord.ButtonStyle.Primary)
+                    ,
+                    new Discord.ButtonBuilder()
+                    .setCustomId("spamkiller_tempexempt_" + message.id)
+                    .setLabel("Exempt temporarily")
+                    .setStyle(Discord.ButtonStyle.Secondary)
+                )
+            ]
+        }
+    }
+    private createClassifierRemovalUserMessage(message: Discord.Message, response: ClassifierResponse, extraInfo: string | undefined): Discord.MessageCreateOptions {
+        return { 
+            embeds: [
+                new Discord.EmbedBuilder()
+                .setTitle("Message Removed")
+                .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Antu_dialog-warning.svg/240px-Antu_dialog-warning.svg.png")
+                .setDescription(`<@${ message.author.id } > Your message has been removed by an automated filter. If you believe this was an error, please contact a Guru or Admin.`)
+                .addFields({ name: "\xa0", value: extraInfo || "" })
+                .setFooter({ text: "v:" + response.mtime + " | Message scored " + response.spam_confidence.toPrecision(5) + `| Message ID: ${ message.id }`})
+            ]
+        }
     }
 }
