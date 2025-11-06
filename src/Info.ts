@@ -133,7 +133,8 @@ export default class Info {
             (!messageContent.includes("app") &&
                 !messageContent.includes("application") &&
                 !messageContent.includes("approved") &&
-                !messageContent.includes("approve"))) return;
+                !messageContent.includes("approve") &&
+                !messageContent.includes("pending"))) return;
 
         const infoData = this.fetchInfo("how-long", true);
         if (!infoData) return;
