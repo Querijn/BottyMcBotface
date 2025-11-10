@@ -209,7 +209,7 @@ export default class RiotAPILibraries {
             "typescript": 0X2B7489,
             "python": 0X3572A5,
             "c-sharp": 0X178600,
-            "c++": 0XF34B7D,
+            "cpp": 0XF34B7D,
             "c": 0X555555,
             "java": 0XB07219,
             "php": 0X777BB4,
