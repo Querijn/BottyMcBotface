@@ -99,11 +99,8 @@ export default class Info {
             .setAutocomplete(true)
             .setRequired(true)
         ).addBooleanOption(opt => opt
-            .setName("embed")
-            .setDescription("Use the embed version of this note (if available)")
-        ).addBooleanOption(opt => opt
-            .setName("embed")
-            .setDescription("Use the embed version of this note (if available)")
+            .setName("ephemeral")
+            .setDescription("Make the response only visible to you")
         );
         interactionManager.addSlashCommand(command.toJSON(), true, false, this.onInteraction.bind(this));
     }
@@ -518,7 +515,7 @@ export default class Info {
         if (interaction.commandName !== "note") throw new Error("Unknown command");
 
         const noteName = interaction.options.get("name")?.value?.toString().toLocaleLowerCase() || "";
-        const useEmbed = interaction.options.get("embed")?.value as boolean
+        const ephemeral = interaction.options.get("ephemeral")?.value as boolean ?? false;
         if (interaction.isAutocomplete()) {
             const autocompleteText = interaction.options.getFocused(true).value;
             if (autocompleteText == "") return interaction.respond([...new Set<string>(this.recents)].filter(r => r.length <= 100).slice(0, 24).map((r => { return {name: r, value: r} })));
@@ -528,24 +525,8 @@ export default class Info {
             return interaction.respond(responses.slice(0, 24))
         }
         if (!this.validateNoteName(noteName)) return interaction.reply({content: "This note name is not valid", ephemeral: true});
-        if (useEmbed && noteName.toLocaleLowerCase() == "server-info") {
-            const embed = new Discord.EmbedBuilder()
-            .setTitle("There is no game or account support here")
-            .setColor(0xff0000)
-            .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/1/19/Stop2.png")
-            .setDescription(`This Discord server is for the Riot Games API, a tool which provides data to sites like op.gg. No one here will be able to help you with support or gameplay issues. If you're having account related issues or technical problems, contact Player support. If you have game feedback, see the links below.`)
-            .addFields([
-                {name: "Player Support", value: " [Player Support](https://support.riotgames.com/hc/en-us)", inline: true},
-                {name: "League", value: "[Discord](https://discord.gg/leagueoflegends)\n[Subreddit](https://reddit.com/leagueoflegends)", inline: true},
-                {name: "\u200b", value: "\u200b", inline: true},
-                {name: "Valorant", value: "[Discord](https://discord.gg/valorant)\n[Subreddit](https://reddit.com/valorant)", inline: true},
-                {name: "LoR", value: "[Discord](https://discord.gg/LegendsOfRuneterra)\n[Subreddit](https://reddit.com/r/LegendsofRuneterra)", inline: true},
-                {name: "\u200b", value: "\u200b", inline: true}
-            ]);
-            return interaction.reply({content: "There is no game or account support here.", embeds: [embed]});
-        }
         const infoData = this.fetchInfo(noteName)
-        if (infoData) return interaction.reply({content: this.prepareNote(infoData)})
+        if (infoData) return interaction.reply({content: this.prepareNote(infoData), ephemeral})
         interaction.reply({content: "Something went wrong", ephemeral: true});
     }
     
