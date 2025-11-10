@@ -203,6 +203,26 @@ export default class RiotAPILibraries {
         return libraryDescriptions;
     }
 
+    private getLanguageColor(language: string): number {
+        const languageColors: { [key: string]: number } = {
+            "javascript": 0XF1E05A,
+            "typescript": 0X2B7489,
+            "python": 0X3572A5,
+            "c-sharp": 0X178600,
+            "c++": 0XF34B7D,
+            "c": 0X555555,
+            "java": 0XB07219,
+            "php": 0X777BB4,
+            "ruby": 0x701516,
+            "go": 0x00ADD8,
+            "rust": 0XDEA584,
+            "swift": 0XF05139,
+        };
+
+        const normalizedLanguage = language.toLowerCase();
+        return languageColors[normalizedLanguage] || 0x242429;
+    }
+
     private async getListForLanguage(message: Discord.Message, language: string, tags: string[] = ["v4"]): Promise<void> {
 
         // Check if alias
@@ -224,7 +244,8 @@ export default class RiotAPILibraries {
             return;
         }
 
-        const embed = new Discord.EmbedBuilder({ title: `List of libraries for ${language}:` });
+        const embed = new Discord.EmbedBuilder({ title: `List of libraries for ${language}:` })
+            .setColor(this.getLanguageColor(language));
         for (const desc of libraryDescriptions) {
             if (!desc.library) {
                 // https://github.com/Microsoft/TypeScript/issues/18562
