@@ -141,7 +141,7 @@ export default class Info {
 
         try {
             const response = this.prepareNote(infoData);
-            await message.channel.send(response);
+            await message.reply(response);
         }
         catch (e) {
             if (e instanceof Discord.DiscordAPIError) {
