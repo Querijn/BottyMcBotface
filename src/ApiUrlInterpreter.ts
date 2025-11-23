@@ -177,7 +177,7 @@ export default class ApiUrlInterpreter {
         if (!path) {
             mistakes.push(`- This URL does not appear to be using a valid endpoint`);
 
-            if (urlMatch.path.startsWith("/lol/summoner/v4/summoners/by-name/")) {
+            if (urlMatch.path.startsWith("/lol/summoner/v4/summoners/by-name/") || urlMatch.path.startsWith("/tft/summoner/v1/summoners/by-name/")) {
                 const nameNote = this.notes.fetchInfo("summoner-name");
                 mistakes.push(nameNote!.message);
             }
