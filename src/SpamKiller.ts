@@ -575,7 +575,7 @@ export default class SpamKiller {
                 .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Antu_dialog-warning.svg/240px-Antu_dialog-warning.svg.png")
                 .setDescription(`<@${ message.author.id } > Your message has been removed by an automated filter. If you believe this was an error, please contact a Guru or Admin.`)
                 .addFields({ name: "\xa0", value: extraInfo || "" })
-                .setFooter({ text: "v:" + response.mtime + " | Message scored " + response.spam_confidence.toPrecision(5) + `| Message ID: ${ message.id }`})
+                .setFooter({ text: "v:" + response.mtime + " | Message scored " + response.spam_confidence.toPrecision(5) + ` | Message ID: ${ message.id }`})
             ]
         }
     }
