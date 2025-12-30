@@ -334,6 +334,18 @@ export default class SpamKiller {
             return true;
         }
 
+        // Attempt to stop Mr Beast spam images
+        const cdnLinkCount = message.content.match(/https:\/\/cdn\.discordapp\.com\/\S+/gi)?.length || 0;
+        if (cdnLinkCount >= 3) {
+            const embed = new Discord.EmbedBuilder()
+                .setTitle("Message Removed")
+                .setColor(0xffcc00)
+                .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Antu_dialog-warning.svg/240px-Antu_dialog-warning.svg.png")
+                .setDescription("Your message matches a known spam pattern and was disallowed.");
+            this.addViolatingMessage(message, {content: `Hey, ${message.author} Your message matches a known spam pattern and was disallowed.`, embeds: [embed] }, false);
+            return true;
+        }
+
         const embed = new Discord.EmbedBuilder()
             .setTitle("Robot Check")
             .setColor(0xffcc00)
