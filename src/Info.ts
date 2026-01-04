@@ -529,8 +529,11 @@ export default class Info {
         if (infoData) return interaction.reply({content: this.prepareNote(infoData), ephemeral})
         interaction.reply({content: "Something went wrong", ephemeral: true});
     }
-    
+
     private addRecent(infoData: InfoData) {
+        if (!this.recents) {
+            this.recents = [];
+        }
         this.recents.push(infoData.command);
     }
 }
