@@ -99,6 +99,7 @@ export default class SpamKiller {
         this.checkForLinks(message) || 
         this.checkForGunbuddy(message) || 
         this.checkForPlayerSupport(message) || 
+        await this.checkExternalClassifier(message) ||
         this.checkForCryptoWords(message) || 
         this.checkForDupes(message) || 
         this.checkForFlood(message) ||
@@ -108,8 +109,6 @@ export default class SpamKiller {
         const memberMessageHistory = this.messageHistory.get(message.member?.id) || [];
         memberMessageHistory.push(message);
         this.messageHistory.set(message.member.id, memberMessageHistory);
-        
-        await this.checkExternalClassifier(message);
     }
     checkInviteLinkSpam(message: Discord.Message) {
         if (!message.guild) return false;
