@@ -471,9 +471,12 @@ export default class SpamKiller {
             this.violators.splice(deletedId, 1);
     }
     async onInteraction(interaction: Discord.Interaction) {
-        if (!interaction.guild) return;
-        if (!interaction.isButton()) return;
-        if (!interaction.customId.startsWith("spamkiller_")) return;
+        if (!interaction.isButton() || !interaction.customId.startsWith("spamkiller_")) return; // Not our button to respond to
+        if (!interaction.guild
+            || (!interaction.member || !(interaction.member.roles instanceof Discord.GuildMemberRoleManager)) 
+            || (!interaction.member.roles.cache.hasAny(...this.sharedSettings.commands.adminRoles))) {
+                return await interaction.reply({ content: "Permission denied", ephemeral: true });
+        }
 
         let repost = false;
         const origMessageId = interaction.customId.substring(interaction.customId.lastIndexOf("_")+1);
@@ -484,7 +487,7 @@ export default class SpamKiller {
         if (!externalAntiSpamServiceEnabled || !externalAntiSpamServiceURL)
             return interaction.reply("The Anti-Spam service is currently disabled");
         if (!violationEntry) {
-            return interaction.reply("Couldn't find violating message with id " + origMessageId);
+            return interaction.update({ components: []}).then(() => interaction.followUp("Couldn't find violating message with id " + origMessageId));
         }
         if (interaction.customId.startsWith("spamkiller_tempexempt_")) {
             const user = this.guild.members.cache.get(violationEntry.authorId)
@@ -571,8 +574,8 @@ export default class SpamKiller {
                 new Discord.EmbedBuilder()
                 .setTitle("Message Removed")
                 .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Antu_dialog-warning.svg/240px-Antu_dialog-warning.svg.png")
-                .setDescription(`<@${ message.author.id } > Your message has been removed by an automated filter. If you believe this was an error, please contact a Guru or Admin.`)
-                .addFields({ name: "\xa0", value: extraInfo || "" })
+                .setDescription(`<@${message.author.id}> Your message has been removed by an automated filter. If you believe this was an error, please contact a Guru or Admin.`)
+                .addFields({ name: "\xa0", value: extraInfo || "\xa0" })
                 .setFooter({ text: "v:" + response.mtime + " | Message scored " + response.spam_confidence.toPrecision(5) + ` | Message ID: ${ message.id }`})
             ]
         }
