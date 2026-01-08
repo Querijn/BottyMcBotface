@@ -548,7 +548,7 @@ export default class SpamKiller {
     }
     private createClassifierRemovalEmbed(message: Discord.Message): Discord.MessageCreateOptions {
         return {
-            content: `SpamKiller: Spam classifier removal threshold exceeded, removing message\nContent: ${message.cleanContent}`,
+            content: `SpamKiller: <#${message.channel.id}> Spam classifier removal threshold exceeded, removing message\nContent: ${message.cleanContent}`,
             components: [
                 new Discord.ActionRowBuilder<Discord.ButtonBuilder>()
                 .addComponents(
