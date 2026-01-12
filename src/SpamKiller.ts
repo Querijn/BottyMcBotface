@@ -343,7 +343,7 @@ export default class SpamKiller {
     }
 
     async checkExternalClassifier(message: Discord.Message) {
-        if (!message.guild) return;
+        if (!message.guild) return false;
         // Exempt gurus
         if (message.member?.roles.cache.hasAny(...this.sharedSettings.commands.adminRoles)) return false;
         // Check temporary exemptions
@@ -354,7 +354,7 @@ export default class SpamKiller {
 
         try {
             const response = await this.queryExternalAntiSpam(message);
-            if (response === false) return;
+            if (response === false) return false;
 
             if (response.spam_confidence > .80) {
                 let extraInfo;
@@ -363,6 +363,7 @@ export default class SpamKiller {
                 if (logMessageInfo && logMessageInfo.id) extraInfo = `[Guru Info](https://discord.com/channels/${message.guild.id}/${logMessageInfo.channelId}/${logMessageInfo.id})`
                 const removalMessage = await message.channel.send(this.createClassifierRemovalUserMessage(message, response, extraInfo))
                 this.violators.push({ response: removalMessage, messageContent: message.content, authorId: message.author.id, authorUsername: message.author.username, origMessageId: message.id, violations: 1 });
+                return true;
             }
             else if (response.spam_confidence && typeof response.spam_confidence === "number" && response.spam_confidence > .60) {
                 console.log(`SpamKiller: Message in <#${message.channelId}> is potentially spam https://discord.com/channels/${message.guild.id}/${message.channelId}/${message.id} Confidence: ${response.spam_confidence}\nContent: ${message.cleanContent}`);
@@ -370,6 +371,7 @@ export default class SpamKiller {
                     this.guruLogChannel.send(`SpamKiller: Message in <#${message.channelId}> is potentially spam https://discord.com/channels/${message.guild.id}/${message.channelId}/${message.id} Confidence: ${response.spam_confidence}\nContent: ${message.cleanContent}`).catch(() => {});
                 }
             }
+            return false;
         }
         catch (e) {
             if (e instanceof ClassifierHTTPError) {
@@ -379,6 +381,7 @@ export default class SpamKiller {
                 console.debug(e,e.stack);
             }
         }
+        return false;
     }
     async addViolatingMessage(message: Discord.Message, warningMessage: string | Discord.MessageCreateOptions, allowThrough: boolean = true, clearMessagesOnKick: boolean = false) {
 
