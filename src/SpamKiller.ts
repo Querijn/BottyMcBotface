@@ -363,6 +363,7 @@ export default class SpamKiller {
                 if (logMessageInfo && logMessageInfo.id) extraInfo = `[Guru Info](https://discord.com/channels/${message.guild.id}/${logMessageInfo.channelId}/${logMessageInfo.id})`
                 const removalMessage = await message.channel.send(this.createClassifierRemovalUserMessage(message, response, extraInfo))
                 this.violators.push({ response: removalMessage, messageContent: message.content, authorId: message.author.id, authorUsername: message.author.username, origMessageId: message.id, violations: 1 });
+                console.log(`SpamKiller: ${message.author} posted: '${message.content}', deleting the message..`);
                 return true;
             }
             else if (response.spam_confidence && typeof response.spam_confidence === "number" && response.spam_confidence > .60) {
