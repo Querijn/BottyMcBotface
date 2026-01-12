@@ -359,11 +359,19 @@ export default class SpamKiller {
             if (response.spam_confidence > .80) {
                 let extraInfo;
                 await message.delete();
-                const logMessageInfo = await (this.guruLogChannel as Discord.TextChannel)?.send(this.createClassifierRemovalEmbed(message));
+                const logMessageInfo = await (this.guruLogChannel as Discord.TextChannel)?.send(this.createClassifierRemovalEmbed(message, response));
                 if (logMessageInfo && logMessageInfo.id) extraInfo = `[Guru Info](https://discord.com/channels/${message.guild.id}/${logMessageInfo.channelId}/${logMessageInfo.id})`
                 const removalMessage = await message.channel.send(this.createClassifierRemovalUserMessage(message, response, extraInfo))
                 this.violators.push({ response: removalMessage, messageContent: message.content, authorId: message.author.id, authorUsername: message.author.username, origMessageId: message.id, violations: 1 });
                 console.log(`SpamKiller: ${message.author} posted: '${message.content}', deleting the message..`);
+
+                if (message.channel instanceof Discord.ThreadChannel && message.thread) {
+                    const startMessage = await message.thread.fetchStarterMessage();
+                    if (startMessage?.id === message.id) {
+                        removalMessage.reply("Thread will be removed in 30 seconds").catch(console.error);
+                        setTimeout(() => message.thread?.delete().catch(console.error), 30 * 1000);
+                    }
+                }
                 return true;
             }
             else if (response.spam_confidence && typeof response.spam_confidence === "number" && response.spam_confidence > .60) {
@@ -553,9 +561,9 @@ export default class SpamKiller {
             .filter(mhEntry => mhEntry.createdTimestamp > messageAfterTimestamp) // Filter for time
             .filter(mhEntry => mhEntry.guild && (mhEntry.guild.id == member.guild.id)); // Filter for guild
     }
-    private createClassifierRemovalEmbed(message: Discord.Message): Discord.MessageCreateOptions {
+    private createClassifierRemovalEmbed(message: Discord.Message, classifierResponse: ClassifierResponse): Discord.MessageCreateOptions {
         return {
-            content: `SpamKiller: <#${message.channel.id}> Spam classifier removal threshold exceeded, removing message\nContent: ${message.cleanContent}`,
+            content: `SpamKiller: Message in <#${message.channel.id}> (author: <@${message.author.id}>): Spam classifier removal threshold exceeded (score: ${classifierResponse.spam_confidence.toFixed(5)}), removing message\nContent: ${message.cleanContent}`,
             components: [
                 new Discord.ActionRowBuilder<Discord.ButtonBuilder>()
                 .addComponents(
