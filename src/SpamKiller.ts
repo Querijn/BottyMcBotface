@@ -96,6 +96,7 @@ export default class SpamKiller {
 
         // Functions return true if they delete the message. This makes sure that a message only gets deleted once
         this.checkInviteLinkSpam(message) ||
+        this.checkForAttachments(message) ||
         this.checkForLinks(message) || 
         this.checkForGunbuddy(message) || 
         this.checkForPlayerSupport(message) || 
@@ -287,7 +288,16 @@ export default class SpamKiller {
 
         return false;
     }
-
+    checkForAttachments(message: Discord.Message) {
+        if (message.attachments.size >= 1) {
+            const embed = new Discord.EmbedBuilder()
+                .setTitle("Robot Check")
+                .setColor(0xffcc00)
+                .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Antu_dialog-warning.svg/240px-Antu_dialog-warning.svg.png")
+                .setDescription("We require users to verify that they are human before they are allowed to post an attachment. If you are a human, react with :+1: to this message to gain link privileges. If you are a bot, please go spam somewhere else. 👍");
+            this.addViolatingMessage(message, {content: `Hey, ${message.author} If you are a human, react with :+1: to this message`, embeds: [embed] });
+        }
+    }
     checkForLinks(message: Discord.Message) {
         const httpOffset = message.content.indexOf("http://");
         const httpsOffset = message.content.indexOf("https://");
@@ -472,7 +482,12 @@ export default class SpamKiller {
                 return;
         }
         console.log(`SpamKiller: ${user.username} (${user.id}) reacted with ${messageReaction.emoji.name}, reposting the message`);
-        await deletedEntry.response?.channel.send(`<@${deletedEntry.authorId}> (${deletedEntry.authorUsername}) just said: \n${deletedEntry.messageContent}`);
+        if (deletedEntry.messageContent.length == 0) {
+            await deletedEntry.response?.channel.send(`<@${deletedEntry.authorId}>, you may repost your message`);
+        }
+        else {
+            await deletedEntry.response?.channel.send(`<@${deletedEntry.authorId}> (${deletedEntry.authorUsername}) just said: \n${deletedEntry.messageContent}`);
+        }
         await deletedEntry.response?.delete();
 
         const member = await this.guild.members.fetch(deletedEntry.authorId);
