@@ -470,6 +470,10 @@ export default class SpamKiller {
         if (!deletedEntry)
             return;
 
+        // Limit to thumbs up
+        if (messageReaction.emoji.name != "👍") {
+            return;
+        }
         // Has to be our user, or an admin
         if (deletedEntry.authorId !== user.id) {
 
