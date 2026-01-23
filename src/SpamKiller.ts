@@ -38,7 +38,7 @@ export default class SpamKiller {
     private sharedSettings: SharedSettings;
     private tldList: string[];
 
-    private caughtSpammingLinks: Set<string> = new Set();
+    private classifierFlaggedUsers: Map<string, Discord.Message> = new Map();
     private guruLogChannel: Discord.GuildBasedChannel | undefined;
     private tempUserExemptions = new Map<string, number>();
 
@@ -85,6 +85,14 @@ export default class SpamKiller {
             console.error("Failed to load TLD list")
         }
         this.guruLogChannel = this.bot.guilds.cache.find(gc => gc.id == this.sharedSettings.server.guildId)?.channels.cache.find(cc => cc.name == this.sharedSettings.server.guruLogChannel && cc.type == Discord.ChannelType.GuildText);
+        setInterval(() => {
+            const date = new Date().getTime();
+            for (const [userId, message] of this.classifierFlaggedUsers) {
+                if (date-message.createdTimestamp > 5 * 60 * 1000) {
+                    this.classifierFlaggedUsers.delete(userId);
+                }
+            }
+        }, 60 * 5 * 1000);
     }
 
     async onMessage(message: Discord.Message) {
@@ -368,6 +376,13 @@ export default class SpamKiller {
 
             if (response.spam_confidence > .80) {
                 let extraInfo;
+                let channelDelete;
+                if (message.channel instanceof Discord.ThreadChannel) {
+                    const threadMessageList = await message.channel.messages.fetch({ limit: 1, after: "0" });
+                    if (threadMessageList.first()?.id === message.id) {
+                        channelDelete = true;
+                    }
+                }
                 await message.delete();
                 const logMessageInfo = await (this.guruLogChannel as Discord.TextChannel)?.send(this.createClassifierRemovalEmbed(message, response));
                 if (logMessageInfo && logMessageInfo.id) extraInfo = `[Guru Info](https://discord.com/channels/${message.guild.id}/${logMessageInfo.channelId}/${logMessageInfo.id})`
@@ -375,12 +390,9 @@ export default class SpamKiller {
                 this.violators.push({ response: removalMessage, messageContent: message.content, authorId: message.author.id, authorUsername: message.author.username, origMessageId: message.id, violations: 1 });
                 console.log(`SpamKiller: ${message.author} posted: '${message.content}', deleting the message..`);
 
-                if (message.channel instanceof Discord.ThreadChannel && message.thread) {
-                    const startMessage = await message.thread.fetchStarterMessage();
-                    if (startMessage?.id === message.id) {
+                if (channelDelete) {
                         removalMessage.reply("Thread will be removed in 30 seconds").catch(console.error);
-                        setTimeout(() => message.thread?.delete().catch(console.error), 30 * 1000);
-                    }
+                        setTimeout(() => message.channel.delete().catch(console.error).then(() => logMessageInfo?.reply("Thread removed")), 30 * 1000);
                 }
                 return true;
             }
@@ -389,6 +401,7 @@ export default class SpamKiller {
                 if (this.guruLogChannel instanceof Discord.TextChannel) {
                     this.guruLogChannel.send(`SpamKiller: Message in <#${message.channelId}> is potentially spam https://discord.com/channels/${message.guild.id}/${message.channelId}/${message.id} Confidence: ${response.spam_confidence}\nContent: ${message.cleanContent}`).catch(() => {});
                 }
+                this.classifierFlaggedUsers.set(message.author.id + "_" + message.channel.id, message);
             }
             return false;
         }
@@ -564,11 +577,15 @@ export default class SpamKiller {
         const externalAntiSpamServiceURL = this.sharedSettings.spam.externalAntiSpamServiceURL;
 
         if (!externalAntiSpamServiceEnabled || !externalAntiSpamServiceURL) return false;
-
-        let result = await fetch(externalAntiSpamServiceURL, { 
+        const flaggedUserMessage = this.classifierFlaggedUsers.get(message.author.id + "_" + message.channel.id);
+        let messageContent = message.content;
+        if (flaggedUserMessage && new Date().getTime()-flaggedUserMessage.createdTimestamp < 5 * 60 * 1000) {
+            messageContent = flaggedUserMessage.content + "\n" + message.content;
+        }
+        let result = await fetch(externalAntiSpamServiceURL, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({text: message.content})
+            body: JSON.stringify({text: messageContent})
         });
         if (result.ok) {
             return await result.json() as ClassifierResponse;
