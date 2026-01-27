@@ -522,7 +522,7 @@ export default class Info {
             const startsWithNotes = this.infos.filter(info => info.command.startsWith(autocompleteText));
             const matchingNotes = this.infos.filter(info => !info.command.startsWith(autocompleteText) && info.command.indexOf(autocompleteText) !== -1);
             const responses = [...startsWithNotes, ...matchingNotes].map(info => { return {name: info.command, value: info.command} });
-            return interaction.respond(responses.slice(0, 24))
+            return interaction.respond(responses.slice(0, 24)).catch((e) => console.error("Autocomplete interaction response failed", e.stack));
         }
         if (!this.validateNoteName(noteName)) return interaction.reply({content: "This note name is not valid", ephemeral: true});
         const infoData = this.fetchInfo(noteName)
