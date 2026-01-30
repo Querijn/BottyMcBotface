@@ -1,5 +1,4 @@
 import Discord = require("discord.js");
-import fetch from "node-fetch";
 import cheerio = require("cheerio");
 
 import { fileBackedObject } from "./FileBackedObject";
@@ -52,7 +51,8 @@ export default class VersionChecker {
                 return;
             }
             else {
-                channel = await guild!.channels.create({name: this.sharedSettings.forum.channel, type: Discord.ChannelType.GuildText });
+                await guild!.channels.create({name: this.sharedSettings.forum.channel, type: Discord.ChannelType.GuildText });
+                channel = guild.channels.cache.find(c => c.name === this.sharedSettings.forum.channel);
             }
         }
 

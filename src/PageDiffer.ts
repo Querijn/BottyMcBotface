@@ -5,7 +5,6 @@ import { clearTimeout, setTimeout } from "timers";
 import Discord = require("discord.js");
 import crc32 = require("crc-32");
 import fs = require("fs");
-import fetch, { FetchError } from "node-fetch";
 import h2p = require("html2plaintext");
 
 interface PageDifferData {
@@ -23,7 +22,7 @@ export default class PageDiffer {
     private channel: Discord.TextChannel;
     private sharedSettings: SharedSettings;
     private data: PageDifferData;
-    private timeOut: NodeJS.Timer | null;
+    private timeOut: NodeJS.Timeout | null;
 
     constructor(bot: Discord.Client, sharedSettings: SharedSettings, pageDiffFile: string) {
         console.log("Requested PageDiffer extension..");
@@ -43,13 +42,14 @@ export default class PageDiffer {
         }
 
         let channel = guild.channels.cache.find(c => c.name === this.sharedSettings.pageDiffer.channel);
-        if (!channel || !(channel instanceof Discord.TextChannel)) {
+        if ((!channel || !(channel instanceof Discord.TextChannel))) {
             if (this.sharedSettings.botty.isProduction) {
                 console.error(`PageDiffer: Unable to find channel: ${this.sharedSettings.pageDiffer.channel}`);
                 return;
             }
-            else {
-                channel = await guild!.channels.create({name: this.sharedSettings.pageDiffer.channel, type: Discord.ChannelType.GuildText});
+            else if (channel && channel.isSendable()) {
+                await guild!.channels.create({name: this.sharedSettings.pageDiffer.channel, type: Discord.ChannelType.GuildText});
+                channel = guild.channels.cache.find(c => c.name === this.sharedSettings.pageDiffer.channel);
             }
         }
 
@@ -89,7 +89,7 @@ export default class PageDiffer {
                 let pageLocation = page.ident;
                 switch (page.type) {
                     case PageType.Article: {
-                        const article = (await resp.json()).article;
+                        const article = (await resp.json() as { article: { body: string, html_url: string } }).article;
                         pageLocation = article.html_url;
                         body = article.body;
                         break;

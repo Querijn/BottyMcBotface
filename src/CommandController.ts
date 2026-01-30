@@ -3,7 +3,6 @@ import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
 import url = require("url");
 import fs = require("fs-extra");
-import fetch from "node-fetch";
 
 type SingleCommand = (message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) => void;
 
@@ -92,6 +91,7 @@ export default class CommandController {
     }
 
     public onToggle(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        if (!message.channel.isSendable()) return;
         if (args.length !== 1) return;
 
         const filtered = this.commands.filter(handler => handler.command.aliases.some(alias => handler.prefix + alias === args[0]));
@@ -155,14 +155,14 @@ export default class CommandController {
     }
 
     public onHelp(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-
+        if (!message.channel.isSendable()) return;
         if (args[0] !== "here") {
             message.channel.send(`An introduction to Botty can be found here: <${this.sharedSettings.botty.webServer.relativeLiveLocation}>\nYou can find all commands to use here: <${url.resolve(this.sharedSettings.botty.webServer.relativeLiveLocation, "commands")}>`);
             return;
         }
 
         const data = this.getHelp(isAdmin);
-        data.forEach(embed => message.channel.send({embeds: [embed] }));
+        data.forEach(embed => message.channel.isSendable() && message.channel.send({embeds: [embed] }));
     }
 
     public registerCommand(newCommand: Command, commandHandler: SingleCommand) {
@@ -217,6 +217,7 @@ export default class CommandController {
     }
 
     private checkCooldown(holder: CommandHolder, message: Discord.Message, isAdmin: boolean): boolean {
+        if (!message.channel.isSendable()) return false;
         if (!holder.cooldown) return true;
         if (isAdmin) return true;
 

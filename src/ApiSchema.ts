@@ -1,5 +1,4 @@
 import Discord = require("discord.js");
-import fetch from "node-fetch";
 import XRegExp = require("xregexp");
 
 import { levenshteinDistance } from "./LevenshteinDistance";
@@ -122,7 +121,7 @@ export class APISchema {
     public platforms: string[];
 
     private sharedSettings: SharedSettings;
-    private timeOut: NodeJS.Timer | null;
+    private timeOut: NodeJS.Timeout | null;
 
     constructor(sharedSettings: SharedSettings) {
         this.sharedSettings = sharedSettings;
@@ -142,6 +141,7 @@ export class APISchema {
     }
 
     public async onUpdateSchemaRequest(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        if (!message.channel.isSendable()) return;
         const replyMessagePromise = message.channel.send("Updating schema..");
 
         console.log(`${message.author.username} requested a schema update.`);

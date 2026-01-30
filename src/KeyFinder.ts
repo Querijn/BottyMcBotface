@@ -4,7 +4,6 @@ import { SharedSettings } from "./SharedSettings";
 import { clearTimeout, setTimeout } from "timers";
 
 import Discord = require("discord.js");
-import fetch from "node-fetch";
 
 export default class KeyFinder {
     private sharedSettings: SharedSettings;
@@ -12,7 +11,7 @@ export default class KeyFinder {
     private bot: Discord.Client;
     private channel?: Discord.TextChannel = undefined;
 
-    private timeOut: NodeJS.Timer | null = null;
+    private timeOut: NodeJS.Timeout | null = null;
 
     constructor(bot: Discord.Client, sharedSettings: SharedSettings, keyFile: string) {
         console.log("Requested KeyFinder extension..");
@@ -89,7 +88,7 @@ export default class KeyFinder {
 
         const rateLimit = resp.headers.get("x-app-rate-limit");
         if (resp.status === 401) {
-            const body = await resp.json();
+            const body = await resp.json() as { status?: { message?: string } };
 
             if (body.status?.message == "Unknown apikey") {
                 return null;

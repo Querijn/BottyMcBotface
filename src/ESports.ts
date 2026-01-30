@@ -1,8 +1,6 @@
-import fetch from "node-fetch";
 import Discord = require("discord.js");
 import { SharedSettings } from "./SharedSettings";
 import { clearTimeout, setTimeout } from "timers";
-import * as CheerioAPI from "cheerio";
 import * as momentjs from "moment";
 import InteractionManager from "./InteractionManager";
 
@@ -67,8 +65,8 @@ export default class ESportsAPI {
     private esportsChannel: Discord.GuildBasedChannel | null = null;
 
     private schedule: Map<string, Map<string, ESportsLeagueSchedule[]>> = new Map();
-    private postInfoTimeOut: NodeJS.Timer | null;
-    private loadDataTimeOut: NodeJS.Timer | null;
+    private postInfoTimeOut: NodeJS.Timeout | null;
+    private loadDataTimeOut: NodeJS.Timeout | null;
 
     constructor(bot: Discord.Client, settings: SharedSettings, interactionManager?: InteractionManager) {
         this.bot = bot;
@@ -84,7 +82,9 @@ export default class ESportsAPI {
                     console.error("Esports API ran into an error: We don't have an esports channel but we're on production!");
                 }
                 else {
-                    this.esportsChannel = await guild!.channels.create({name: channel, type: Discord.ChannelType.GuildText });
+                    await guild!.channels.create({name: channel, type: Discord.ChannelType.GuildText });
+                    const newChannel = guild!.channels.cache.find((c) => c.name === channel && c.type === Discord.ChannelType.GuildText);
+                    if (newChannel) this.esportsChannel = newChannel;
                 }
             }
             try {
@@ -106,7 +106,7 @@ export default class ESportsAPI {
     }
 
     public async onCheckNext(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-
+        if (!message.channel.isSendable()) return;
         if (message.guild && this.esportsChannel && message.channel.id !== this.esportsChannel.id) {
             message.channel.send(`To avoid spoilers, this command is restricted to ${this.esportsChannel.name}.`);
             return;
@@ -131,7 +131,7 @@ export default class ESportsAPI {
         this.sendPrintout(message.channel as Discord.TextChannel, schedule, date, false);
     }
 
-    public onInteraction(interaction: Discord.CommandInteraction) {
+    public onInteraction(interaction: Discord.ChatInputCommandInteraction) {
         let ephemeral = true;
         let date: string | false;
         let dateOption = interaction.options.get("date")?.value as string || "";

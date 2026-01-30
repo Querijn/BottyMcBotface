@@ -1,6 +1,5 @@
 import { fileBackedObject } from "./FileBackedObject";
 import { SharedSettings } from "./SharedSettings";
-import fetch from "node-fetch";
 import Discord = require("discord.js");
 import { parseXmlString } from "./TechBlog/xml_parser";
 

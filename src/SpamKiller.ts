@@ -3,7 +3,6 @@ import prettyMs = require("pretty-ms");
 import { SharedSettings } from "./SharedSettings";
 import url = require("url");
 import { levenshteinDistance } from "./LevenshteinDistance";
-import fetch from "node-fetch";
 
 class Violator {
     public response: Discord.Message | null;
@@ -78,7 +77,7 @@ export default class SpamKiller {
             let tldListReq = await fetch("https://data.iana.org/TLD/tlds-alpha-by-domain.txt");
             let tldListResp = await tldListReq.text();
 
-            this.tldList = tldListResp.split(/\r?\n/).map(entry => "." + entry);
+            this.tldList = tldListResp.split(/\r?\n/).map((entry: string) => "." + entry);
             this.tldList.shift() // Remove comment from first line of list
         }
         catch {
@@ -333,7 +332,7 @@ export default class SpamKiller {
             // Not using addViolatingMessage because affecting people with ok roles is intentional
             const reportChannel = this.bot.guilds.cache.find(gc => gc.id == this.sharedSettings.server.guildId)?.channels.cache.find(cc => cc.name == this.sharedSettings.server.guruLogChannel && cc.type == Discord.ChannelType.GuildText);
             if (reportChannel) (reportChannel as Discord.TextChannel).send(`SpamKiller: ${message.author.username} (${message.author.id}) posted blocked url ${urlString}`);
-            if (message.content.indexOf("(HOW)") !== -1) { message.member?.kickable ? message.member?.kick("Crypto spam").then(() => { message.channel.send("🛫") }) : ""}
+            if (message.content.indexOf("(HOW)") !== -1) { message.member?.kickable ? message.member?.kick("Crypto spam").then(() => { message.channel.isSendable() && message.channel.send("🛫") }) : ""}
             message.delete();
             return true;
         }
@@ -361,6 +360,7 @@ export default class SpamKiller {
     }
 
     async checkExternalClassifier(message: Discord.Message) {
+        if (!message.channel.isSendable()) return false;
         if (!message.guild) return false;
         // Exempt gurus
         if (message.member?.roles.cache.hasAny(...this.sharedSettings.commands.adminRoles)) return false;
@@ -465,6 +465,7 @@ export default class SpamKiller {
             return;
         }
         if (allowThrough) {}
+        if (!message.channel.isSendable()) return false;
         let response = await message.channel.send(warningMessage);
 
         if (Array.isArray(response))
@@ -498,6 +499,7 @@ export default class SpamKiller {
             if (!this.sharedSettings.commands.adminRoles.some(x => member.roles.cache.has(x)))
                 return;
         }
+        if (!deletedEntry.response?.channel.isSendable()) return false;
         console.log(`SpamKiller: ${user.username} (${user.id}) reacted with ${messageReaction.emoji.name}, reposting the message`);
         if (deletedEntry.messageContent.length == 0) {
             await deletedEntry.response?.channel.send(`<@${deletedEntry.authorId}>, you may repost your message`);
@@ -557,6 +559,7 @@ export default class SpamKiller {
                 repost = true;
         }
         if (repost) {
+            if (!violationEntry.response?.channel.isSendable()) return false;
             await violationEntry.response?.channel.send(`<@${violationEntry.authorId}> (${violationEntry.authorUsername}) just said: \n${violationEntry.messageContent}`);
             await violationEntry.response?.delete();
         }

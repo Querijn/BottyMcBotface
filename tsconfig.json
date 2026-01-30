@@ -5,7 +5,8 @@
     "alwaysStrict": true,
     "outDir": "dist",
     "module": "commonjs",
-    "target": "es2017",
+    "target": "es2022",
+    "lib": ["es2022", "DOM"],
     "sourceMap": true
   },
   "include": ["src/**/*"],

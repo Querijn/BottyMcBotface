@@ -184,6 +184,7 @@ export default class Info {
         try {
             //this.recents.push(infoData?.command!);
             if (this.recents.length > 24) { this.recents.splice(0, this.recents.length-24); }
+            if (!message.channel.isSendable()) return;
             await message.channel.send(response);
         }
         catch (e) {
@@ -197,7 +198,7 @@ export default class Info {
     }
 
     public async onNote(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
-
+        if (!message.channel.isSendable()) return;
         // the note we are trying to fetch (or the sub-command)
         const action = args[0];
 
@@ -242,6 +243,7 @@ export default class Info {
     }
 
     private handleNoteReplace(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
+        if (!message.channel.isSendable()) return;
         // we need more than 2 arguments to replace a note.
         //   cmd    1     2     3++
         // (!note replace name data...)
@@ -267,6 +269,7 @@ export default class Info {
     }
 
     private handleNoteRename(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        if (!message.channel.isSendable()) return;
         // we need 3 arguments to rename a note.
         //   cmd    1     2      3
         // (!note rename name newname)
@@ -306,6 +309,7 @@ export default class Info {
     }
 
     private handleNoteRemove(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        if (!message.channel.isSendable()) return;
         // we need 2 arguments to remove a note.
         //   cmd    1     2
         // (!note remove name)
@@ -326,6 +330,7 @@ export default class Info {
     }
 
     private async handleNoteAdd(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
+        if (!message.channel.isSendable()) return;
         // we need atleast 3 arguments to add a note.
         //  cmd   1   2    3
         // (!note add name message)
@@ -353,6 +358,7 @@ export default class Info {
                     return; // Not a valid category.
 
                 try {
+                    if (!message.channel.isSendable()) return;
                     await message.channel.send(this.addInfo(name, text, emoji));
                 }
                 catch (e) {
@@ -394,7 +400,7 @@ export default class Info {
     }
 
     private async handleNoteList(message: Discord.Message, isLocal: boolean) {
-
+        if (!message.channel.isSendable()) return;
         const maxLength = 80;
 
         if (!isLocal) {
@@ -511,7 +517,8 @@ export default class Info {
         }
     }
 
-    public onInteraction(interaction: Discord.CommandInteraction | Discord.AutocompleteInteraction, isAdmin: boolean) {
+    public onInteraction(interaction: Discord.ChatInputCommandInteraction | Discord.AutocompleteInteraction, isAdmin: boolean) {
+        if (interaction.channel && !interaction.channel.isSendable()) return;
         if (interaction.commandName !== "note") throw new Error("Unknown command");
 
         const noteName = interaction.options.get("name")?.value?.toString().toLocaleLowerCase() || "";

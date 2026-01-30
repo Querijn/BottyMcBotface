@@ -36,6 +36,7 @@ export default class ApiStatus {
     }
 
     public async onStatus(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        if (!message.channel.isSendable()) return;
         const apiStatus = await this.getApiStatus();
 
         const fields: {

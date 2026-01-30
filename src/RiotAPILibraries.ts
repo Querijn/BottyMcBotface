@@ -1,7 +1,6 @@
 import { SharedSettings } from "./SharedSettings";
 
 import Discord = require("discord.js");
-import fetch from "node-fetch";
 
 import { clearTimeout, setTimeout } from "timers";
 
@@ -57,7 +56,7 @@ export default class RiotAPILibraries {
 
     private fetchSettings: object;
     private languageList: string[] = [];
-    private timeOut: NodeJS.Timer | null;
+    private timeOut: NodeJS.Timeout | null;
 
     constructor(settings: SharedSettings) {
         const personalSettings = settings.botty;
@@ -74,6 +73,7 @@ export default class RiotAPILibraries {
     }
 
     public onLibs(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        if (!message.channel.isSendable()) return;
         let topics: string[] = ["v4"]; // Default tag applies to all channels that don't have specific tags and when no tags are specified in the command
         if ("name" in message.channel) {
             for (const [topic, tags] of Object.entries(this.settings.riotApiLibraries.channelTopics)) {
@@ -104,7 +104,7 @@ export default class RiotAPILibraries {
     private async describeAPILibrary(json: GithubAPIStruct, tags: string[] = ["v4"]): Promise<LibraryDescription> {
 
         const libraryResponse = await fetch(json.download_url);
-        const libraryInfo: APILibraryStruct = await libraryResponse.json();
+        const libraryInfo: APILibraryStruct = await libraryResponse.json() as APILibraryStruct;
 
         const hasAllTags = tags.every(tag => libraryInfo.tags?.includes(tag));
         if (!hasAllTags) {
@@ -123,7 +123,7 @@ export default class RiotAPILibraries {
         }
 
         const repoResponse = await repoResponsePromise;
-        const repoInfo: GithubAPILibraryStruct = await repoResponse.json();
+        const repoInfo: GithubAPILibraryStruct = await repoResponse.json() as GithubAPILibraryStruct;
 
         if(!libraryInfo.description){
             libraryInfo.description = repoInfo.description;
@@ -173,6 +173,7 @@ export default class RiotAPILibraries {
     }
 
     private async getList(message: Discord.Message) {
+        if (!message.channel.isSendable()) return;
         const reply = this.settings.riotApiLibraries.languageList.replace("{languages}", "`" + this.languageList.join(", ") + "`");
         message.channel.send(reply);
     }
@@ -224,6 +225,7 @@ export default class RiotAPILibraries {
     }
 
     private async getListForLanguage(message: Discord.Message, language: string, tags: string[] = ["v4"]): Promise<void> {
+        if (!message.channel.isSendable()) return;
 
         // Check if alias
         for (const [key, values] of Object.entries(this.settings.riotApiLibraries.aliases)) {

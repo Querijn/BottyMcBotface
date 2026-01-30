@@ -1,5 +1,4 @@
 import Discord = require("discord.js");
-import fetch from "node-fetch";
 import { fileBackedObject } from "./FileBackedObject";
 import { PersonalSettings, SharedSettings } from "./SharedSettings";
 import { levenshteinDistance } from "./LevenshteinDistance";
@@ -22,7 +21,7 @@ export default class Endpoint {
     private baseUrl: string;
     private maxDistance: number;
     private aliases: { [key: string]: string[] };
-    private timeOut: NodeJS.Timer | null;
+    private timeOut: NodeJS.Timeout | null;
     private timeOutDuration: number;
 
     public constructor(sharedSettings: SharedSettings, endpointFile: string) {
@@ -36,6 +35,7 @@ export default class Endpoint {
     }
 
     public onEndpoint(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        if (!message.channel.isSendable()) return;
         if (this.endpoints.endpoints === undefined) {
             message.channel.send("Sorry, endpoints are not yet initialized!");
             return;
@@ -66,6 +66,7 @@ export default class Endpoint {
     }
 
     public onList(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
+        if (!message.channel.isSendable()) return;
         if (this.endpoints.endpoints === undefined) {
             message.channel.send("Sorry, endpoints are not yet initialized!");
             return;
@@ -144,7 +145,7 @@ export default class Endpoint {
                 return;
             }
 
-            const schema = await response.json();
+            const schema = await response.json() as {paths: []};
             const paths = schema.paths;
 
             const endpointSet = new Set<EndpointName>();

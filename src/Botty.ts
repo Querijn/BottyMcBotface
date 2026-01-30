@@ -48,7 +48,7 @@ export default class Botty {
     }
 
     public async onRestart(message: Discord.Message, isAdmin: boolean, command: string, args: string[]) {
-
+        if (!message.channel.isSendable()) return;
         if (!isAdmin) return;
         const restartCommand = (this.personalSettings.restartCommand) ?  this.personalSettings.restartCommand : "pm2 restart " + this.personalSettings.appName;
         await message.channel.send("Restarting...");
@@ -70,8 +70,8 @@ export default class Botty {
         this.client.on("guildBanAdd", (guildBan: Discord.GuildBan) => console.log(`${guildBan.user.username}#${guildBan.user.discriminator} (${guildBan.user.id}) has been banned from ${guildBan.guild.name}.`));
         this.client.on("guildBanRemove", (guildBan: Discord.GuildBan) => console.log(`${guildBan.user.username}#${guildBan.user.discriminator} (${guildBan.user.id}) has been unbanned from ${guildBan.guild.name}.`));
 
-        this.client.on("messageDelete", (message: Discord.Message) => {
-
+        this.client.on("messageDelete", (message: Discord.OmitPartialGroupDMChannel<Discord.Message>) => {
+            if (!message.channel.isSendable()) return;
             if (message.author.bot) return; // Ignore bot in general
             if (message.channel.type === Discord.ChannelType.DM) return; // Don't output DMs
 
@@ -92,8 +92,8 @@ export default class Botty {
             }
         });
 
-        this.client.on("messageUpdate", (oldMessage: Discord.Message, newMessage: Discord.Message) => {
-
+        this.client.on("messageUpdate", (oldMessage: Discord.OmitPartialGroupDMChannel<Discord.Message>, newMessage: Discord.OmitPartialGroupDMChannel<Discord.Message>) => {
+            if (!oldMessage.channel.isSendable() || !newMessage.channel.isSendable()) return;
             if (levenshteinDistance(oldMessage.content, newMessage.content) === 0) return; // To prevent page turning and embed loading to appear in changelog
             if (oldMessage.author.bot) return; // Ignore bot in general
             if (oldMessage.channel.type === Discord.ChannelType.DM) return; // Don't output DMs

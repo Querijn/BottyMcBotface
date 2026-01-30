@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import Discord = require("discord.js");
 import { levenshteinDistance, levenshteinDistanceArray } from "./LevenshteinDistance";
 import { SharedSettings } from "./SharedSettings";
@@ -179,6 +178,7 @@ export default class GameData {
     }
 
     public onLookup(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
+        if (!message.channel.isSendable()) return false;
         const supportedTypes = ["item", "perk", "rune", "champion", "champ", "summonerspell", "summ", "spell"];
 
         if (args.length === 0) {

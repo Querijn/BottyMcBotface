@@ -3,7 +3,7 @@ import { SharedSettings } from "./SharedSettings";
 import { clearTimeout, setTimeout } from "timers";
 
 import Discord = require("discord.js");
-import prettyMs = require("pretty-ms");
+import prettyMs from "pretty-ms";
 import joinArguments from "./JoinArguments";
 import Info from "./Info";
 
@@ -58,7 +58,7 @@ export default class Admin {
     private sharedSettings: SharedSettings;
     private data: AdminData;
     private muteRole: Discord.Role;
-    private muteTimers: { [id: string]: NodeJS.Timer } = {};
+    private muteTimers: { [id: string]: NodeJS.Timeout } = {};
     private notes: Info;
 
     constructor(bot: Discord.Client, sharedSettings: SharedSettings, dataFile: string, notes: Info) {

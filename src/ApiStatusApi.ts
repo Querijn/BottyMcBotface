@@ -1,5 +1,3 @@
-import fetch from "node-fetch";
-
 type RegionState = "up" | "troubled" | "down";
 
 export interface RegionStatus {
@@ -41,7 +39,7 @@ export default class ApiStatusApi {
         });
 
         if (resp.status !== 200) throw new Error(`[ApiStatus] Received status code ${resp.status}`);
-        this.cached = await resp.json();
+        this.cached = await resp.json() as APIStatus;
         this.lastUpdate = Date.now();
         return this.cached;
     }

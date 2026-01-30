@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import Discord = require("discord.js");
 import { SharedSettings } from "./SharedSettings";
 import joinArguments from "./JoinArguments";
@@ -315,7 +314,7 @@ export default class Pickem {
     }
 
     public async onPickem(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
-
+        if (!message.channel.isSendable()) return;
         if (!(message.channel instanceof Discord.DMChannel) && this.esportsChannel && message.channel.id !== this.esportsChannel.id) {
             message.channel.send(`To avoid spoilers, this command is restricted to #${this.esportsChannel.name}.`);
             return;
@@ -341,6 +340,7 @@ export default class Pickem {
             this.doPrint(message.channel as Discord.TextChannel, group, bracket);
             return;
         }
+        if (!message.channel.isSendable()) return false;
         message.channel.send("No pickem with that summoner name found..");
     }
 

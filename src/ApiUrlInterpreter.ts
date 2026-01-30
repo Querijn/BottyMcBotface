@@ -1,11 +1,9 @@
 import Discord = require("discord.js");
 import fs = require("fs");
-import fetch from "node-fetch";
-import prettyMs = require("pretty-ms");
+import prettyMs from "pretty-ms";
 import XRegExp = require("xregexp");
 
 import { ENODATA } from "constants";
-import { Response } from "node-fetch";
 import { platform } from "os";
 import { clearTimeout, setTimeout } from "timers";
 
@@ -87,6 +85,7 @@ export default class ApiUrlInterpreter {
     }
 
     private async testRiotApiUrl(url: string, message: Discord.Message) {
+        if (!message.channel.isSendable()) return;
         // The type must be `any` because the regex contains named groups
         const urlMatch: any = XRegExp.exec(url, ApiUrlInterpreter.API_CALL_REGEX);
 
@@ -227,6 +226,7 @@ export default class ApiUrlInterpreter {
     }
 
     private async handleResponse(resp: Response, message: Discord.Message, url: string, servicedMethodName: string) {
+        if (!message.channel.isSendable()) return;
         if (resp === null) {
             console.warn(`Not handling ratelimits due to missing response.`);
             return;
