@@ -69,7 +69,7 @@ export default class Admin {
         this.sharedSettings = sharedSettings;
         this.data = fileBackedObject<AdminData>(dataFile);
 
-        this.bot.on("ready", this.onBot.bind(this));
+        this.bot.on("clientReady", this.onBot.bind(this));
     }
 
     public get channel() { return this.adminChannel; }

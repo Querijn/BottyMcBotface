@@ -37,7 +37,7 @@ export default class UserIntroduction {
         this.data = fileBackedObject<UserIntroductionData>(dataFile);
         this.commandController = commandController;
 
-        this.bot.on("ready", this.onBot.bind(this));
+        this.bot.on("clientReady", this.onBot.bind(this));
     }
 
     sendWelcome(user: Discord.GuildMember | Discord.PartialGuildMember) {

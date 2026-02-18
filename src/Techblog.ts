@@ -21,7 +21,7 @@ export default class Techblog {
 
         this.bot = bot;
 
-        this.bot.on("ready", async () => {
+        this.bot.on("clientReady", async () => {
             if (!this.data.Last) this.data.Last = Date.now();
 
             const guild = this.bot.guilds.cache.get(this.sharedSettings.server.guildId);

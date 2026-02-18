@@ -72,7 +72,7 @@ export default class ESportsAPI {
         this.bot = bot;
         this.settings = settings;
 
-        bot.on("ready", async () => {
+        bot.on("clientReady", async () => {
 
             const channel = this.settings.esports.printChannel;
             const guild = this.bot.guilds.cache.get(this.settings.server.guildId);

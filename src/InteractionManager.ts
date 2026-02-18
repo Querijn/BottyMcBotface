@@ -31,7 +31,7 @@ export default class InteractionManager {
         this.sharedSettings = settings;
         //this.clientId = this.sharedSettings.botty.discord.clientId;
 
-        //botty.client.on("ready", this.initialize.bind(this));
+        //botty.client.on("clientReady", this.initialize.bind(this));
         this.initializePromise = this.initialize().catch(console.error);
         botty.client.on("interactionCreate", this.onInteraction.bind(this));
     }

@@ -65,7 +65,7 @@ export default class ApiUrlInterpreter {
         };
 
         this.bot = bot;
-        this.bot.on("ready", this.onBot.bind(this));
+        this.bot.on("clientReady", this.onBot.bind(this));
         this.bot.on("messageCreate", this.onMessage.bind(this));
     }
 

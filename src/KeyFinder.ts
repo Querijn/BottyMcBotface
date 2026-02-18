@@ -24,7 +24,7 @@ export default class KeyFinder {
 
         this.bot = bot;
 
-        this.bot.on("ready", async () => {
+        this.bot.on("clientReady", async () => {
 
             const guild = this.bot.guilds.cache.get(this.sharedSettings.server.guildId);
             if (guild == null) {

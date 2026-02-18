@@ -38,7 +38,7 @@ export default class Botty {
             .on("error", console.error)
             .on("warn", console.warn)
             // .on("debug", console.log)
-            .on("ready", this.onConnect.bind(this));
+            .on("clientReady", this.onConnect.bind(this));
 
         this.initListeners();
     }

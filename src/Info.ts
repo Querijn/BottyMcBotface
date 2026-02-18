@@ -64,7 +64,7 @@ export default class Info {
 
         botty.client.on("messageReactionAdd", this.onReaction.bind(this));
         botty.client.on("messageCreate", this.onMessage.bind(this));
-        botty.client.on("ready", () => {
+        botty.client.on("clientReady", () => {
 
             this.userId = botty.client.user!.id;
             if (this.userId == null)

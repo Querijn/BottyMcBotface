@@ -25,7 +25,7 @@ export default class AutoReact {
         this.ignoreUsers = fileBackedObject(ignoreFile);
         console.log("Successfully loaded ignore reaction file.");
 
-        this.bot.on("ready", this.onConnect.bind(this));
+        this.bot.on("clientReady", this.onConnect.bind(this));
         this.bot.on("messageCreate", this.onMessage.bind(this));
 
         this.registerInteractionCommands();

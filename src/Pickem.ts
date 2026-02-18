@@ -117,7 +117,7 @@ export default class Pickem {
         this.bot = bot;
         this.settings = settings;
 
-        bot.on("ready", async () => {
+        bot.on("clientReady", async () => {
             setTimeout(async () => {
                 const channel = this.settings.esports.printChannel;
 

@@ -34,7 +34,7 @@ export default class VersionChecker {
         console.log("Successfully loaded VersionChecker data file.");
 
         this.bot = bot;
-        this.bot.on("ready", this.onBot.bind(this));
+        this.bot.on("clientReady", this.onBot.bind(this));
     }
 
     private async onBot() {

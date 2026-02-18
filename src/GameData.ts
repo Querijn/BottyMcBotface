@@ -119,7 +119,7 @@ export default class GameData {
         this.bot = bot;
         this.sharedSettings = settings;
 
-        bot.on("ready", () => {
+        bot.on("clientReady", () => {
             this.reloadData();
             setInterval(this.reloadData.bind(this), this.sharedSettings.lookup.refreshTimeout);
         });

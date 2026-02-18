@@ -31,7 +31,7 @@ export default class PageDiffer {
         this.sharedSettings = sharedSettings;
         this.data = fileBackedObject(pageDiffFile);
 
-        this.bot.on("ready", this.onBot.bind(this));
+        this.bot.on("clientReady", this.onBot.bind(this));
     }
 
     public async onBot() {

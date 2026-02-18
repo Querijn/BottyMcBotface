@@ -26,7 +26,7 @@ export default class Logger {
 
         this.sharedSettings = sharedSettings;
 
-        this.bot.on("ready", this.onBot.bind(this));
+        this.bot.on("clientReady", this.onBot.bind(this));
     }
 
     public async onBot() {
