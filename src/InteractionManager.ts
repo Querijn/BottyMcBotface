@@ -84,15 +84,15 @@ export default class InteractionManager {
 
     public onRefresh(interaction: Discord.CommandInteraction, admin = false) {
         if (interaction.commandName !== "refresh_commands") { return; }
-        if (!admin) interaction.reply({content: "You don't have permission to use this command", ephemeral: true});
+        if (!admin) interaction.reply({content: "You don't have permission to use this command", flags: Discord.MessageFlags.Ephemeral});
 
         this.rest.put(Discord.Routes.applicationCommands(this.clientId), {body: []}).then(() => {
             this.handlers.clear();
             const localCommands = this.commands
             this.commands = [];
             localCommands.forEach(this.addSlashCommand.bind(this));
-            interaction.reply({content: "Done", ephemeral: true});
-        }).catch(e => interaction.reply({content: "Failed to refresh commands: " + e, ephemeral: true}));
+            interaction.reply({content: "Done", flags: Discord.MessageFlags.Ephemeral});
+        }).catch(e => interaction.reply({content: "Failed to refresh commands: " + e, flags: Discord.MessageFlags.Ephemeral}));
     }
 
     public onInteraction(interaction: Discord.BaseInteraction) {
@@ -111,7 +111,7 @@ export default class InteractionManager {
                     possibleInteraction?.handler(interaction, admin);
                 }
                 catch (e) {
-                    if (!interaction.replied) interaction.reply({content: "The command returned an error", ephemeral: true});
+                    if (!interaction.replied) interaction.reply({content: "The command returned an error", flags: Discord.MessageFlags.Ephemeral});
                     console.error(e);
                 }
                 return;
@@ -120,7 +120,7 @@ export default class InteractionManager {
                 handler.handler(interaction, admin as any);
             }
             catch (e) {
-                interaction.reply({content: "The command returned an error", ephemeral: true});
+                interaction.reply({content: "The command returned an error", flags: Discord.MessageFlags.Ephemeral});
                 console.error(e);
             }
         }

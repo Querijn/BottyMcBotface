@@ -531,10 +531,10 @@ export default class Info {
             const responses = [...startsWithNotes, ...matchingNotes].map(info => { return {name: info.command, value: info.command} });
             return interaction.respond(responses.slice(0, 24)).catch((e) => console.error("Autocomplete interaction response failed", e.stack));
         }
-        if (!this.validateNoteName(noteName)) return interaction.reply({content: "This note name is not valid", ephemeral: true});
+        if (!this.validateNoteName(noteName)) return interaction.reply({content: "This note name is not valid", flags: Discord.MessageFlags.Ephemeral});
         const infoData = this.fetchInfo(noteName)
         if (infoData) return interaction.reply({content: this.prepareNote(infoData), ephemeral})
-        interaction.reply({content: "Something went wrong", ephemeral: true});
+        interaction.reply({content: "Something went wrong", flags: Discord.MessageFlags.Ephemeral});
     }
 
     private addRecent(infoData: InfoData) {

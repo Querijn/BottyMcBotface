@@ -79,9 +79,9 @@ export default class AutoReact {
     public onInteraction(interaction: Discord.CommandInteraction, isAdmin?: false) {
         switch (interaction.commandName) {
             case "refresh_thinking":
-                if (!isAdmin) return interaction.reply({content: "You don't have permission to use this command", ephemeral: true})
+                if (!isAdmin) return interaction.reply({content: "You don't have permission to use this command", flags: Discord.MessageFlags.Ephemeral})
                 this.refreshThinkingEmojis();
-                interaction.reply({content: "Refreshed thinking emojis", ephemeral: true});
+                interaction.reply({content: "Refreshed thinking emojis", flags: Discord.MessageFlags.Ephemeral});
                 break;
             case "toggle_thinking":
                 this.onToggleThinkingRequest(interaction, interaction.user.id)
@@ -132,38 +132,32 @@ export default class AutoReact {
     private onToggleReactRequest(message: Discord.Message | Discord.CommandInteraction, authorId: string) {
 
         const reactIndex = this.ignoreUsers.indexOf(authorId);
-        const resp = (message instanceof Discord.CommandInteraction) ? {content: "", ephemeral: true} : {content: ""};
 
         // Add
         if (reactIndex === -1) {
             this.ignoreUsers.push(authorId);
-            resp.content = "I will no longer react to your messages";
-            message.reply(resp);
+            message.reply("I will no longer react to your messages");
             return;
         }
 
         // Remove
         this.ignoreUsers.splice(reactIndex, 1);
-        resp.content = "I will now react to your messages"
-        message.reply(resp);
+        message.reply("I will now react to your messages");
     }
 
     private onToggleThinkingRequest(message: Discord.Message | Discord.CommandInteraction, authorId: string) {
 
         const thinkIndex = this.thinkingUsers.indexOf(authorId);
-        const resp = (message instanceof Discord.CommandInteraction) ? {content: "", ephemeral: true} : {content: ""};
         // Add
         if (thinkIndex === -1) {
             this.thinkingUsers.push(authorId);
-            resp.content = "I will now only reply with default thinking emojis.";
-            message.reply(resp);
+            message.reply("I will now only reply with default thinking emojis.");
             return;
         }
 
         // Remove
         this.thinkingUsers.splice(thinkIndex, 1);
-        resp.content = "I will no longer only reply with default thinking emojis."
-        message.reply(resp);
+        message.reply("I will no longer only reply with default thinking emojis.");
     }
 
     private onGreeting(message: Discord.Message) {

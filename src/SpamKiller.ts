@@ -521,7 +521,7 @@ export default class SpamKiller {
         if (!interaction.guild
             || (!interaction.member || !(interaction.member.roles instanceof Discord.GuildMemberRoleManager)) 
             || (!interaction.member.roles.cache.hasAny(...this.sharedSettings.commands.adminRoles))) {
-                return await interaction.reply({ content: "Permission denied", ephemeral: true });
+                return await interaction.reply({ content: "Permission denied", flags: Discord.MessageFlags.Ephemeral });
         }
 
         let repost = false;
