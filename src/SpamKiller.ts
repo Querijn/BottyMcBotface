@@ -421,9 +421,15 @@ export default class SpamKiller {
         if (!guild && !message.guild)
             throw new Error(`Unable to find the guild where this message was found: '${message.content}' (${message.author.username})`);
 
-        const member = message.member ? message.member : await guild.members.fetch(message.author.id);
-        if (!member)
-            throw new Error(`Unable to find member that wrote the message '${message.content}' (${message.author.username})`);
+        let member = message.member;
+        if (!member) {
+            try {
+                member = await guild.members.fetch(message.author.id);
+            }
+            catch {
+                return console.warn(`Unable to find member that wrote the message '${message.content}' (${message.author.username})`);
+            }
+        }
 
         if (member.roles.cache.filter(r => !this.sharedSettings.spam.ignoredRoles.includes(r.id)).size > 1) { // Only act on people without roles
             console.log(`SpamKiller: ${message.author.username}#${message.author.discriminator}'s message triggered our spam detector, but they've got ${member.roles.cache.size} roles. (https://discordapp.com/channels/${message.guild?.id}/${message.channel.id}/${message.id})`);
