@@ -27,6 +27,7 @@ export class Path {
     public regex: RegExp;
     public pathParameters: Map<string, Parameter> = new Map();
     public queryParameters: Map<string, Parameter> = new Map();
+    public platformsAvailable: Set<string>;
     /** Indicates if Botty may make calls to the API method. This will be `false` if Botty doesn't have access to the API or if there are other concerns. */
     public canUse: boolean;
 
@@ -41,6 +42,9 @@ export class Path {
             for (const parameter of methodSchema.parameters) {
                 this.addParameter(parameter.in, parameter);
             }
+        }
+        if (methodSchema['x-platforms-available']) {
+            this.platformsAvailable = new Set(methodSchema['x-platforms-available']);
         }
     }
 

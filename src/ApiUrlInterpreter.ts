@@ -118,7 +118,11 @@ export default class ApiUrlInterpreter {
                 continue;
             }
             path = testPath;
-
+            // Check if path is available on platform
+            if (testPath.platformsAvailable && !testPath.platformsAvailable.has(platformId)) {
+                mistakes.push(`- This endpoint is not available on this platform. Valid platforms are: ` + Array.from(testPath.platformsAvailable).join(","));
+                fatalError = true;
+            }
             // Check if path parameters are valid
             for (const param of testPath.pathParameters.values()) {
                 const paramValue: string = pathMatch[param.name];
