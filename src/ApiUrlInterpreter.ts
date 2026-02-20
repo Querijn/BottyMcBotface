@@ -95,13 +95,13 @@ export default class ApiUrlInterpreter {
 
         // Check if the URL is using HTTPS
         // `urlMatch.https` will be empty (falsy) if HTTP is being used
-        if (!urlMatch.https) {
+        if (!urlMatch.groups.https) {
             mistakes.push(`- This URL is using HTTP. All API calls must be made over HTTPS.`);
             fatalError = true;
         }
 
         // Check if the platform is valid
-        const platformId: string = urlMatch.platform;
+        const platformId: string = urlMatch.groups.platform;
         if (!this.apiSchema.platforms.includes(platformId.toLowerCase())) {
             // Get closest platform if incorrect
             const closestPlatform = this.apiSchema.getClosestPlatform(platformId);
@@ -113,7 +113,7 @@ export default class ApiUrlInterpreter {
         let path: Path | null = null;
         for (const testPath of this.apiSchema.paths) {
             // The type must be `any` because the regex contains named groups
-            const pathMatch: any = XRegExp.exec(urlMatch.path, testPath.regex);
+            const pathMatch: any = XRegExp.exec(urlMatch.groups.path, testPath.regex);
             if (!pathMatch || pathMatch.length === 0) {
                 continue;
             }
@@ -132,8 +132,8 @@ export default class ApiUrlInterpreter {
             }
 
             const queryParams: Map<string, string | string[]> = new Map();
-            if (urlMatch.query) {
-                for (const pair of urlMatch.query.split("&")) {
+            if (urlMatch.groups.query) {
+                for (const pair of urlMatch.groups.query.split("&")) {
                     const [key, value] = pair.split("=");
                     // If a key is specified multiple times, it means the value is a set
                     if (queryParams.has(key)) {
@@ -176,7 +176,7 @@ export default class ApiUrlInterpreter {
         if (!path) {
             mistakes.push(`- This URL does not appear to be using a valid endpoint`);
 
-            if (urlMatch.path.startsWith("/lol/summoner/v4/summoners/by-name/") || urlMatch.path.startsWith("/tft/summoner/v1/summoners/by-name/")) {
+            if (urlMatch.groups.path.startsWith("/lol/summoner/v4/summoners/by-name/") || urlMatch.groups.path.startsWith("/tft/summoner/v1/summoners/by-name/")) {
                 const nameNote = this.notes.fetchInfo("summoner-name");
                 mistakes.push(nameNote!.message);
             }
