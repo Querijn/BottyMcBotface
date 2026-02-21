@@ -64,8 +64,8 @@ export default class Botty {
     }
 
     private initListeners() {
-        this.client.on("guildMemberAdd", member => console.log(`${member.displayName}#${member.user?.discriminator} (${member.id}) joined the server.`));
-        this.client.on("guildMemberRemove", member => console.log(`${member.displayName}#${member.user?.discriminator} (${member.id}) left (or was removed) from the server.`));
+        this.client.on("guildMemberAdd", member => console.log(`${member.displayName}#${member.user?.discriminator} (${member.id}) joined ${member.guild.name}.`));
+        this.client.on("guildMemberRemove", member => console.log(`${member.displayName}#${member.user?.discriminator} (${member.id}) left (or was removed) from ${member.guild.name}.`));
 
         this.client.on("guildBanAdd", (guildBan: Discord.GuildBan) => console.log(`${guildBan.user.username}#${guildBan.user.discriminator} (${guildBan.user.id}) has been banned from ${guildBan.guild.name}.`));
         this.client.on("guildBanRemove", (guildBan: Discord.GuildBan) => console.log(`${guildBan.user.username}#${guildBan.user.discriminator} (${guildBan.user.id}) has been unbanned from ${guildBan.guild.name}.`));
