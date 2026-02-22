@@ -102,7 +102,7 @@ export default class SpamKiller {
             return;
 
         // Functions return true if they delete the message. This makes sure that a message only gets deleted once
-        this.checkInviteLinkSpam(message) ||
+        await this.checkInviteLinkSpam(message) ||
         this.checkForAttachments(message) ||
         this.checkForLinks(message) || 
         this.checkForGunbuddy(message) || 
@@ -118,17 +118,17 @@ export default class SpamKiller {
         memberMessageHistory.push(message);
         this.messageHistory.set(message.member.id, memberMessageHistory);
     }
-    checkInviteLinkSpam(message: Discord.Message) {
+    async checkInviteLinkSpam(message: Discord.Message) {
         if (!message.guild) return false;
         const inviteRegex = /(?:https?:\/\/)?(?:www\.)?(?:discord(?:app)?\.com\/invite|discord\.gg)\/([a-z0-9-]+)/i;
         const bad = ['nsfw', 'onlyfans', 'nudes', '18+', '+18', 'egirls', '🍑'];
         if (inviteRegex.test(message.content)) {
             const inviteLinks = message.content.match(inviteRegex) || [];
             for (const link of inviteLinks) {
-                this.bot.fetchInvite(link).then(inviteInfo => {
-                    if (!inviteInfo.guild) return;
-                    const guildNameLower = inviteInfo.guild.name.toLowerCase().split(" ");
-                    const hasBad = bad.some(word => guildNameLower.includes(word));
+                try {
+                    const inviteInfo = await this.bot.fetchInvite(link);
+                    if (!inviteInfo.guild) return false;
+                    const hasBad = bad.some(word => inviteInfo.guild!.name.toLowerCase().split(" ").includes(word));
                     if (!hasBad) return false;
                     message.delete().catch(console.error);
                     if (message.member?.kickable) {
@@ -141,7 +141,11 @@ export default class SpamKiller {
                     else {
                         console.log(`SpamKiller: <@${message.author.id}> appears to be spamming NSFW links but isn't kickable`);
                     }
-                }).catch(() => {});
+                    return true; // Return true even if kick failed so violation is recorded
+                }
+                catch {
+                    console.warn("SpamKiller: Failed to resolve invite link " + link);
+                }
             }
         }
         return false;
