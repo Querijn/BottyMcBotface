@@ -26,14 +26,6 @@ export default class SpamKiller {
     private guild: Discord.Guild;
     private role: Discord.Role;
 
-    private messageHistory = new Map<string, Discord.Message[]>();
-    private floodCheckTimer: NodeJS.Timeout;
-    private floodMessageThreshold: number;
-    private floodMessageTime: number;
-    private dupeMessageThreshold: number;
-    private dupeMessageTime: number; 
-    private maxMessageHistoryAge: number;
-
     private violators: Violator[] = [];
     private sharedSettings: SharedSettings;
     private tldList: string[];
@@ -45,13 +37,6 @@ export default class SpamKiller {
     constructor(bot: Discord.Client, sharedSettings: SharedSettings) {
         this.sharedSettings = sharedSettings;
         this.bot = bot;
-
-        // Time is specified in seconds
-        this.dupeMessageThreshold = this.sharedSettings.spam.duplicateMessageThreshold || 4;
-        this.dupeMessageTime = (this.sharedSettings.spam.duplicateMessageTime || 30) * 1000; 
-        this.floodMessageThreshold = this.sharedSettings.spam.floodMessageThreshold || 3;
-        this.floodMessageTime = (this.sharedSettings.spam.floodMessageTime || 4) * 1000;
-        this.maxMessageHistoryAge = Math.max(this.dupeMessageTime, this.floodMessageTime) * 2;
 
         bot.on("messageReactionAdd", this.onReaction.bind(this));
         bot.on("messageCreate", this.onMessage.bind(this));
@@ -73,7 +58,6 @@ export default class SpamKiller {
             return;
         }
         this.role = role;
-        this.floodCheckTimer = setTimeout(this.messageHistoryCleanup.bind(this));
         try { 
             let tldListReq = await fetch("https://data.iana.org/TLD/tlds-alpha-by-domain.txt");
             let tldListResp = await tldListReq.text();
@@ -110,14 +94,9 @@ export default class SpamKiller {
         this.checkForPlayerSupport(message) || 
         await this.checkExternalClassifier(message) ||
         this.checkForCryptoWords(message) || 
-        this.checkForDupes(message) || 
-        this.checkForFlood(message) ||
         this.checkForMisleadingLinks(message);
 
         if (!message.member) return; // This shouldn't happen but...
-        const memberMessageHistory = this.messageHistory.get(message.member?.id) || [];
-        memberMessageHistory.push(message);
-        this.messageHistory.set(message.member.id, memberMessageHistory);
     }
     async checkInviteLinkSpam(message: Discord.Message) {
         if (!message.guild) return false;
@@ -163,30 +142,6 @@ export default class SpamKiller {
         let report = misleading.map(entry => `\`\`\`${entry[0]}\`\`\` != ${entry[1]}`).join("\n")
         if (reportChannel && reportChannel instanceof Discord.TextChannel) reportChannel.send(`SpamKiller: Message with potentially misleading links posted by <@${message.author.id}> in <#${message.channel.id}> (https://discordapp.com/channels/${message.guild?.id}/${message.channel.id}/${message.id})\n` + report);
         return true;
-    }
-    checkForFlood(message: Discord.Message) {
-        const time = new Date().getTime() - (this.floodMessageTime);
-        const messageHistory = this.fetchMessageCache(message.member!, time);
-
-        if (messageHistory.length >= this.floodMessageThreshold) {
-            this.addViolatingMessage(message, `Hey <@${message.author.id}>, stop spamming!`, false, true);
-            return true;
-        }
-
-        return false;
-    }
-
-    checkForDupes(message: Discord.Message) {
-        const time = new Date().getTime() - (this.dupeMessageTime);
-        const messageHistory = this.fetchMessageCache(message.member!, time);
-
-        const dupeMessages = messageHistory.filter(messageHistoryEntry => message.content == messageHistoryEntry.content);
-        if (dupeMessages.length >= this.dupeMessageThreshold) {
-            this.addViolatingMessage(message, `Hey <@${message.author.id}>, Stop spamming!`, false, true);
-            return true;
-        }
-
-        return false;
     }
 
     /** Checks if a user sends a messsage containing words related to crypto and triggers the bot check in that case */
@@ -385,7 +340,7 @@ export default class SpamKiller {
         }
         return false;
     }
-    async addViolatingMessage(message: Discord.Message, warningMessage: string | Discord.MessageCreateOptions, allowThrough: boolean = true, clearMessagesOnKick: boolean = false) {
+    async addViolatingMessage(message: Discord.Message, warningMessage: string | Discord.MessageCreateOptions, allowThrough: boolean = true) {
 
         const guild = <Discord.Guild>message.guild; // Got to explicitly cast away null because Typescript doesn't detect this
         if (!guild && !message.guild)
@@ -429,13 +384,6 @@ export default class SpamKiller {
                 catch {}
 
                 await member.kick().catch(console.error);
-                if (clearMessagesOnKick) {
-                    const userMessageHistory = this.messageHistory.get(member.id) || [];
-                    const memberGuildMessageHistory = userMessageHistory.filter(mhEntry => mhEntry.guildId == member.guild.id);
-                    const remainingEntries = userMessageHistory.filter(mhEntry => mhEntry.guildId != member.guild.id);
-                    memberGuildMessageHistory.filter(mhEntry => mhEntry.id !== message.id).forEach(mhEntry => mhEntry.delete().catch(() => {}));
-                    this.messageHistory.set(member.id, remainingEntries);
-                }
                 violator.response = null;
             }
             return;
@@ -540,16 +488,6 @@ export default class SpamKiller {
             await violationEntry.response?.delete();
         }
     }
-    private messageHistoryCleanup() {
-        const timeLimit = new Date().getTime() + (2 * 60 * 1000);
-        for (const entry in this.messageHistory.keys()) {
-            const userMessageList = this.messageHistory.get(entry) || []; 
-            if (userMessageList.length === 0) this.messageHistory.delete(entry);
-            else this.messageHistory.set(entry, userMessageList.filter(entry => entry.createdAt.getTime() > timeLimit))
-        }
-        if (this.floodCheckTimer) clearTimeout(this.floodCheckTimer);
-        this.floodCheckTimer = setTimeout(this.messageHistoryCleanup.bind(this), this.maxMessageHistoryAge);
-    }
     private async queryExternalAntiSpam(message: Discord.Message) {
         if (!message.guild) return false;
         const externalAntiSpamServiceEnabled = this.sharedSettings.spam.externalAntiSpamServiceEnabled;
@@ -570,11 +508,6 @@ export default class SpamKiller {
             return await result.json() as ClassifierResponse;
         }
         throw new ClassifierHTTPError(`Classifer fetch failed with error code ${result.status} - ${result.statusText}`);
-    }
-    private fetchMessageCache(member: Discord.GuildMember, messageAfterTimestamp: number) {
-        return (this.messageHistory.get(member.id) || [])
-            .filter(mhEntry => mhEntry.createdTimestamp > messageAfterTimestamp) // Filter for time
-            .filter(mhEntry => mhEntry.guild && (mhEntry.guild.id == member.guild.id)); // Filter for guild
     }
     private createClassifierRemovalEmbed(message: Discord.Message, classifierResponse: ClassifierResponse): Discord.MessageCreateOptions {
         return {
