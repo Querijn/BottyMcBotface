@@ -134,10 +134,7 @@ export default class SpamKiller {
                     message.delete().catch(console.error);
                     if (message.member?.kickable) {
                         message.member.kick("Spamming NSFW invite links");
-                        console.log(`SpamKiller: Removing <@${message.author.id}> from the server for spamming NSFW invite links`);
-                        if (this.guruLogChannel instanceof Discord.TextChannel) {
-                            this.guruLogChannel.send(`SpamKiller: Removing <@${message.author.id}> from the server for spamming NSFW invite links`);
-                        }
+                        this.sendToGuruLogChannelAndConsole(`SpamKiller: Removing <@${message.author.id}> from the server for spamming NSFW invite links`);
                     }
                     else {
                         console.log(`SpamKiller: <@${message.author.id}> appears to be spamming NSFW links but isn't kickable`);
@@ -314,8 +311,7 @@ export default class SpamKiller {
 
             console.log(`SpamKiller: ${message.author} posted: '${message.content}' which contains a blocked url, deleting the message..`);
             // Not using addViolatingMessage because affecting people with ok roles is intentional
-            const reportChannel = this.bot.guilds.cache.find(gc => gc.id == this.sharedSettings.server.guildId)?.channels.cache.find(cc => cc.name == this.sharedSettings.server.guruLogChannel && cc.type == Discord.ChannelType.GuildText);
-            if (reportChannel) (reportChannel as Discord.TextChannel).send(`SpamKiller: ${message.author.username} (${message.author.id}) posted blocked url ${urlString}`);
+            this.sendToGuruLogChannelAndConsole(`SpamKiller: ${message.author.username} (${message.author.id}) posted blocked url ${urlString}`);
             if (message.content.indexOf("(HOW)") !== -1) { message.member?.kickable ? message.member?.kick("Crypto spam").then(() => { message.channel.isSendable() && message.channel.send("🛫") }) : ""}
             message.delete();
             return true;
@@ -361,7 +357,7 @@ export default class SpamKiller {
                     }
                 }
                 await message.delete();
-                const logMessageInfo = await (this.guruLogChannel as Discord.TextChannel)?.send(this.createClassifierRemovalEmbed(message, response));
+                const logMessageInfo = await this.sendToGuruLogChannel(this.createClassifierRemovalEmbed(message, response));
                 if (logMessageInfo && logMessageInfo.id) extraInfo = `[Guru Info](https://discord.com/channels/${message.guild.id}/${logMessageInfo.channelId}/${logMessageInfo.id})`
                 const removalMessage = await message.channel.send(this.createClassifierRemovalUserMessage(message, response, extraInfo))
                 this.violators.push({ response: removalMessage, messageContent: message.content, authorId: message.author.id, authorUsername: message.author.username, origMessageId: message.id, violations: 1 });
@@ -374,10 +370,7 @@ export default class SpamKiller {
                 return true;
             }
             else if (response.spam_confidence && typeof response.spam_confidence === "number" && response.spam_confidence > .60) {
-                console.log(`SpamKiller: Message in <#${message.channelId}> is potentially spam https://discord.com/channels/${message.guild.id}/${message.channelId}/${message.id} Confidence: ${response.spam_confidence}\nContent: ${message.cleanContent}`);
-                if (this.guruLogChannel instanceof Discord.TextChannel) {
-                    this.guruLogChannel.send(`SpamKiller: Message in <#${message.channelId}> is potentially spam https://discord.com/channels/${message.guild.id}/${message.channelId}/${message.id} Confidence: ${response.spam_confidence}\nContent: ${message.cleanContent}`).catch(() => {});
-                }
+                this.sendToGuruLogChannelAndConsole(`SpamKiller: Message in <#${message.channelId}> is potentially spam https://discord.com/channels/${message.guild.id}/${message.channelId}/${message.id} Confidence: ${response.spam_confidence}\nContent: ${message.cleanContent}`).catch(() => {});
                 this.classifierFlaggedUsers.set(message.author.id + "_" + message.channel.id, message);
             }
             return false;
@@ -611,5 +604,15 @@ export default class SpamKiller {
                 .setFooter({ text: "v:" + response.mtime + " | Message scored " + response.spam_confidence.toPrecision(5) + ` | Message ID: ${ message.id }`})
             ]
         }
+    }
+    private async sendToGuruLogChannel(...args: Parameters<Discord.PartialTextBasedChannelFields['send']>) {
+        if (this.guruLogChannel instanceof Discord.TextChannel) {
+            return await this.guruLogChannel.send(...args);
+        }
+        return null;
+    }
+    private async sendToGuruLogChannelAndConsole(message: string) {
+        console.log(message);
+        return await this.sendToGuruLogChannel(message);
     }
 }
