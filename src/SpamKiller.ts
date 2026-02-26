@@ -128,8 +128,6 @@ export default class SpamKiller {
         return false;
     }
     checkForMisleadingLinks(message: Discord.Message) {
-        const reportChannel = this.bot.guilds.cache.find(gc => gc.id == this.sharedSettings.server.guildId)?.channels.cache.find(cc => cc.name == this.sharedSettings.server.guruLogChannel && cc.type == Discord.ChannelType.GuildText);
-        //let links = message.content.match(/(\[(https?:\/\/.*?)\]\((https:\/\/.*?)\)/g);
         let links = message.content.match(/(\[.*?\])(\(<?https:\/\/.*?\)\>?)/g);
 
         let misleading: string[][] = [];
@@ -453,9 +451,7 @@ export default class SpamKiller {
         const origMessageId = interaction.customId.substring(interaction.customId.lastIndexOf("_")+1);
         const violationEntry = this.violators.find(v => v.origMessageId == origMessageId);
 
-        const externalAntiSpamServiceEnabled = this.sharedSettings.spam.externalAntiSpamServiceEnabled;
-        const externalAntiSpamServiceURL = this.sharedSettings.spam.externalAntiSpamServiceURL;
-        if (!externalAntiSpamServiceEnabled || !externalAntiSpamServiceURL)
+        if (!this.isExternalAntiSpamEnabled())
             return interaction.reply("The Anti-Spam service is currently disabled");
         if (!violationEntry) {
             return interaction.update({ components: []}).then(() => interaction.followUp("Couldn't find violating message with id " + origMessageId));
@@ -473,7 +469,7 @@ export default class SpamKiller {
             const method = (interaction.customId.startsWith("spamkiller_notspam_")) ? "DELETE" : "PATCH";
 
             await interaction.reply("Update requested to classifier");
-            let result = await fetch(externalAntiSpamServiceURL, { 
+            let result = await fetch(this.sharedSettings.spam.externalAntiSpamServiceURL, { 
                 method: method,
                 headers: {"Content-Type": "application/json"},
                 body: JSON.stringify({text: violationEntry.messageContent})
@@ -491,16 +487,13 @@ export default class SpamKiller {
     }
     private async queryExternalAntiSpam(message: Discord.Message) {
         if (!message.guild) return false;
-        const externalAntiSpamServiceEnabled = this.sharedSettings.spam.externalAntiSpamServiceEnabled;
-        const externalAntiSpamServiceURL = this.sharedSettings.spam.externalAntiSpamServiceURL;
-
-        if (!externalAntiSpamServiceEnabled || !externalAntiSpamServiceURL) return false;
+        if (!this.isExternalAntiSpamEnabled()) return false;
         const flaggedUserMessage = this.classifierFlaggedUsers.get(message.author.id + "_" + message.channel.id);
         let messageContent = message.content;
         if (flaggedUserMessage && new Date().getTime()-flaggedUserMessage.createdTimestamp < 5 * 60 * 1000) {
             messageContent = flaggedUserMessage.content + "\n" + message.content;
         }
-        let result = await fetch(externalAntiSpamServiceURL, {
+        let result = await fetch(this.sharedSettings.spam.externalAntiSpamServiceURL, {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({text: messageContent})
@@ -509,6 +502,13 @@ export default class SpamKiller {
             return await result.json() as ClassifierResponse;
         }
         throw new ClassifierHTTPError(`Classifer fetch failed with error code ${result.status} - ${result.statusText}`);
+    }
+    private isExternalAntiSpamEnabled() {
+        const externalAntiSpamServiceEnabled = this.sharedSettings.spam.externalAntiSpamServiceEnabled;
+        const externalAntiSpamServiceURL = this.sharedSettings.spam.externalAntiSpamServiceURL;
+
+        if (!externalAntiSpamServiceEnabled || !externalAntiSpamServiceURL) return false;
+        return true;
     }
     private createClassifierRemovalEmbed(message: Discord.Message, classifierResponse: ClassifierResponse): Discord.MessageCreateOptions {
         return {
