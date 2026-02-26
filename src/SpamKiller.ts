@@ -140,7 +140,8 @@ export default class SpamKiller {
         if (misleading.length == 0) return false;
         console.log("SpamKiller: misleading links found in message id " + message.id);
         let report = misleading.map(entry => `\`\`\`${entry[0]}\`\`\` != ${entry[1]}`).join("\n")
-        if (reportChannel && reportChannel instanceof Discord.TextChannel) reportChannel.send(`SpamKiller: Message with potentially misleading links posted by <@${message.author.id}> in <#${message.channel.id}> (https://discordapp.com/channels/${message.guild?.id}/${message.channel.id}/${message.id})\n` + report);
+        this.sendToGuruLogChannelAndConsole(`SpamKiller: Message with potentially misleading links posted by <@${message.author.id}> ` +
+            `in <#${message.channel.id}> (https://discordapp.com/channels/${message.guild?.id}/${message.channel.id}/${message.id})\n` + report);
         return true;
     }
 
