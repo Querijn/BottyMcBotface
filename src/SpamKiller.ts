@@ -381,15 +381,15 @@ export default class SpamKiller {
 
                 try {
                     await member.send("Hey there! You've been kicked from the Riot Games Third Party Developer Discord because you triggered our spam filter. There's a good chance your account has been compromised, please change your password.");
+                    await member.kick();
                 }
-                catch {}
-
-                await member.kick().catch(console.error);
+                catch (e) {
+                    console.warn(e, e.stack);
+                }
                 violator.response = null;
             }
             return;
         }
-        if (allowThrough) {}
         if (!message.channel.isSendable()) return false;
         let response = await message.channel.send(warningMessage);
 
