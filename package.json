@@ -17,7 +17,7 @@
     "cheerio": "^1.0.0-rc.10",
     "crc-32": "^1.2.2",
     "discord.js": "^14.25.1",
-    "fast-xml-parser": "^5.3.6",
+    "fast-xml-parser": "^5.3.8",
     "feed-reader": "^6.1.4-rc1",
     "fs-extra": "^11.3.3",
     "html2plaintext": "^2.1.4",
