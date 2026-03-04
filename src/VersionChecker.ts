@@ -123,13 +123,13 @@ export default class VersionChecker {
             // Find which blade has the articles
             for (const blade of json.props.pageProps.page.blades) {
                 if (blade.type == "articleCardGrid") {
-                    patchNotes = blade.items.filter((bladeItem: BladeItem) => bladeItem.title.match(/^(League of Legends )?Patch ((20)?\d{2}\.S[1-3]\.\d{1,2}|\d{2}\.\d{1,2}) Notes$/i));
+                    patchNotes = blade.items.filter((bladeItem: BladeItem) => bladeItem.title.match(/^League of Legends Patch ((20)?\d{2}\.S[1-3]\.\d{1,2}|\d{2}\.\d{1,2}) Notes$/i));
                     break;
                 }
             }
             if (patchNotes && patchNotes.length > 0) {
                 latestNotesItem = patchNotes.reduce((latest, current) => new Date(current.publishedAt) > new Date(latest.publishedAt) ? current : latest);
-                lastPostedPatchNotesItem = patchNotes.find(bladeItem => bladeItem.title == `Patch ${lastPostedPatchNotes} Notes`);
+                lastPostedPatchNotesItem = patchNotes.find(bladeItem => bladeItem.title == `League of Legends Patch ${lastPostedPatchNotes} Notes`);
                 if (lastPostedPatchNotesItem) {
                     lastPostedPatchNotesDate = new Date(lastPostedPatchNotesItem.publishedAt);
                 }
