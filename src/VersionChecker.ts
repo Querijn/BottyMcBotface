@@ -135,12 +135,20 @@ export default class VersionChecker {
                 }
                 // Maybe the patch note version is too old to still be on page?
                 if (isNaN(lastPostedPatchNotesDate.getTime())) {
+                    const version = latestNotesItem.title.match(/((20)?\d{2}\.S[1-3]\.\d{1,2}|\d{2}\.\d{1,2})/);
+                    if (!version) {
+                        return console.error("Couldn't match find a game news article that matches the patch notes regex.", "Newest item: " + lastPostedPatchNotesItem?.title)
+                    }
                     console.error(`Couldn't find publish date for Patch ${lastPostedPatchNotes}. Latest found title is ${latestNotesItem}, updating latestGameVersion but not making post`);
-                    this.data.latestGameVersion = latestNotesItem.title.split(" ")[1];
+                    this.data.latestGameVersion = version[1];
                     return;
                 }
                 if (new Date(latestNotesItem.publishedAt) > lastPostedPatchNotesDate) {
-                    this.data.latestGameVersion = latestNotesItem.title.split(" ")[1];
+                    const version = latestNotesItem.title.match(/((20)?\d{2}\.S[1-3]\.\d{1,2}|\d{2}\.\d{1,2})/);
+                    if (!version) {
+                        return console.error("Found a game news article but I couldn't determine the version", JSON.stringify(latestNotesItem).substring(0, 200));
+                    }
+                    this.data.latestGameVersion = version[1];
                     const embed = new Discord.EmbedBuilder()
                     .setColor(0xf442e5)
                     .setTitle("New League of Legends version!")
