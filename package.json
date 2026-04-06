@@ -18,7 +18,6 @@
     "crc-32": "^1.2.2",
     "discord.js": "^14.26.2",
     "fast-xml-parser": "^5.5.7",
-    "feed-reader": "^6.1.4-rc1",
     "fs-extra": "^11.3.3",
     "html2plaintext": "^2.1.4",
     "moment": "^2.30.1",
