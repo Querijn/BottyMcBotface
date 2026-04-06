@@ -112,7 +112,7 @@ export default class SpamKiller {
                     if (!hasBad) return false;
                     message.delete().catch(console.error);
                     if (message.member?.kickable) {
-                        message.member.kick("Spamming NSFW invite links");
+                        await message.member.kick("Spamming NSFW invite links");
                         this.sendToGuruLogChannelAndConsole(`SpamKiller: Removing <@${message.author.id}> from the server for spamming NSFW invite links`);
                     }
                     else {
@@ -120,8 +120,8 @@ export default class SpamKiller {
                     }
                     return true; // Return true even if kick failed so violation is recorded
                 }
-                catch {
-                    console.warn("SpamKiller: Failed to resolve invite link " + link);
+                catch (e) {
+                    console.warn(e, e.stack);
                 }
             }
         }
@@ -378,7 +378,12 @@ export default class SpamKiller {
                     violator.response.delete().catch(console.error);
 
                 try {
-                    await member.send("Hey there! You've been kicked from the Riot Games Third Party Developer Discord because you triggered our spam filter. There's a good chance your account has been compromised, please change your password.");
+                    try {
+                        await member.send("Hey there! You've been kicked from the Riot Games Third Party Developer Discord because you triggered our spam filter. There's a good chance your account has been compromised, please change your password.");
+                    }
+                    catch {
+                        console.log("SpamKiller: Failed to DM account compromise warning to " + `<@${message.author.id}>`);
+                    }
                     await member.kick();
                 }
                 catch (e) {
