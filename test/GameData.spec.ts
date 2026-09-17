@@ -1,7 +1,6 @@
-import Discord = require("discord.js");
+import * as Discord from "discord.js";
 
-import { should } from "chai";
-should();
+import { expect } from "chai";
 import * as TypeMoq from "typemoq";
 
 import GameData from "../src/GameData";
@@ -9,22 +8,22 @@ import { SharedSettings } from "../src/SharedSettings";
 
 describe("GameData", () => {
     describe("#sortSearch(...)", () => {
-        const mockClient = TypeMoq.Mock.ofType(Discord.Client);
+        const mockClient = TypeMoq.Mock.ofType<Discord.Client>(undefined, TypeMoq.MockBehavior.Loose);
         mockClient.callBase = true;
         mockClient.setup(c => c.on(TypeMoq.It.isAny(), TypeMoq.It.isAny()));
 
         const mockSettings = TypeMoq.Mock.ofType<SharedSettings>();
 
-        const data = new GameData(mockClient.object, mockSettings.object);
+        const data = new GameData(mockClient.object as any, mockSettings.object);
 
         const sortSearchTestHelper: typeof data.sortSearch = (
             search, smaller, larger,
         ) => {
             const res = data.sortSearch(search, smaller, larger);
-            res.should.be.lessThan(0);
+            expect(res).to.be.lessThan(0);
 
             const res2 = data.sortSearch(search, larger, smaller);
-            res2.should.be.greaterThan(0);
+            expect(res2).to.be.greaterThan(0);
 
             return 0;
         };
@@ -42,7 +41,7 @@ describe("GameData", () => {
                 },
             );
 
-            res.should.equal(0);
+            expect(res).to.be.equal(0);
         });
 
         it("should return an object with a score of 0", () => {
