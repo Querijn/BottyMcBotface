@@ -3,6 +3,7 @@ import { levenshteinDistance, levenshteinDistanceArray } from "./LevenshteinDist
 import { SharedSettings } from "./SharedSettings";
 import striptags = require("striptags");
 import joinArguments from "./JoinArguments";
+import InteractionManager from "./InteractionManager";
 
 interface ChampionDataContainer {
     id: number;
@@ -107,6 +108,7 @@ interface SummonerSpellData {
 type EmbeddableDatum = ChampionData | PerkData | ItemData | SummonerSpellData;
 
 export default class GameData {
+    private supportedTypes = ["item", "perk", "rune", "champion", "champ", "summonerspell", "summ", "spell"];
     private champData: ChampionDataContainer[];
     private perkData: PerkDataContainer[];
     private itemData: ItemDataContainer[];
@@ -115,13 +117,14 @@ export default class GameData {
     private bot: Discord.Client;
     private sharedSettings: SharedSettings;
 
-    public constructor(bot: Discord.Client, settings: SharedSettings) {
+    public constructor(bot: Discord.Client, settings: SharedSettings, interactionManager: InteractionManager) {
         this.bot = bot;
         this.sharedSettings = settings;
 
         bot.on("clientReady", () => {
             this.reloadData();
             setInterval(this.reloadData.bind(this), this.sharedSettings.lookup.refreshTimeout);
+            this.chatCommands().forEach(command => interactionManager.addSlashCommand(command.toJSON(), true, false, this.onInteraction.bind(this)));
         });
     }
 
@@ -177,6 +180,29 @@ export default class GameData {
         return Object.values(await fetch(this.sharedSettings.lookup.summonerSpellUrl).then(x => x.json())) as SummonerSpellDataContainer[];
     }
 
+    public onInteraction(interaction: Discord.ChatInputCommandInteraction) {
+        //if (interaction.isAutocomplete()) return this.onInteractionAutoComplete(interaction);
+        if (interaction.commandName.toLowerCase() == "lookup" || this.supportedTypes.includes(interaction.commandName.toLowerCase())) {
+            let type;
+            if (interaction.commandName.toLowerCase() == "lookup") {
+                type = interaction.options.get("type", true).value ?? "";
+                
+            }
+            else {
+                type = interaction.commandName.toLowerCase();
+            }
+            const value = interaction.options.get("value", true).value ?? "";
+            const args = [type, value];
+
+            if (!this.supportedTypes.includes(type.toString())) {
+                interaction.reply(`I'm sorry. I'm unable to parse the category \`${args[0]}\` at this moment. If you think it should be added, please contact a guru.`);
+                return;
+            }
+            interaction.reply(this.lookup(args.map(a => a?.toString()), " "));
+        }
+
+    }
+
     public onLookup(message: Discord.Message, isAdmin: boolean, command: string, args: string[], separators: string[]) {
         if (!message.channel.isSendable()) return false;
         const supportedTypes = ["item", "perk", "rune", "champion", "champ", "summonerspell", "summ", "spell"];
@@ -200,7 +226,9 @@ export default class GameData {
             message.channel.send(`I'm sorry. I'm unable to parse the category \`${args[0]}\` at this moment. If you think it should be added, please contact a guru.`);
             return;
         }
-
+        message.channel.send(this.lookup(args, separators));
+    }
+    public lookup(args: string[], separators: any) {
         const searchTerm = joinArguments(args, separators, 1).toLowerCase();
         let result: string | EmbeddableDatum = "";
         switch (args[0]) {
@@ -227,9 +255,9 @@ export default class GameData {
         }
 
         if (typeof result === "string") {
-            message.channel.send(result);
+            return result;
         } else {
-            message.channel.send({embeds: [this.buildEmbed(result)]});
+            return {embeds: [this.buildEmbed(result)]};
         }
     }
 
@@ -534,5 +562,40 @@ export default class GameData {
                 ...x,
                 type: "SummonerSpellData",
             }))[0] as SummonerSpellData;
+    }
+    private chatCommands() {
+        const commands = [];
+
+        // Main lookup command
+        commands.push(new Discord.SlashCommandBuilder()
+            .setName("lookup")
+            .setDescription("Lookup League of Legends data")
+            .addStringOption(new Discord.SlashCommandStringOption()
+            .setName("type")
+            .setDescription("type")
+            .addChoices(...this.supportedTypes.map(type => ({
+                    name: type,
+                    value: type
+                })
+            ))
+            .setRequired(true))
+            .addStringOption(new Discord.SlashCommandStringOption()
+                .setName("value")
+                .setDescription("Name / ID")
+                .setRequired(true)
+            ))
+        // All the "aliases", champ, item, etc
+        for (const command of this.supportedTypes) {
+            const c = new Discord.SlashCommandBuilder()
+            .setName(command)
+            .setDescription("Lookup League of Legends " + command)
+            .addStringOption(new Discord.SlashCommandStringOption()
+                .setName("value")
+                .setDescription("Name / ID")
+                .setRequired(true)
+            )
+            commands.push(c);
+        }
+        return commands;
     }
 }

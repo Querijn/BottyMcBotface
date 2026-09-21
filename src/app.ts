@@ -45,7 +45,7 @@ const esports = new ESportsAPI(bot.client, sharedSettings, interactionManager);
 const endpoint = new Endpoint(sharedSettings, "data/endpoints.json");
 const pageDiffer = new PageDiffer(bot.client, sharedSettings, "data/page_differ.json");
 const spamKiller = new SpamKiller(bot.client, sharedSettings);
-const gameData = new GameData(bot.client, sharedSettings);
+const gameData = new GameData(bot.client, sharedSettings, interactionManager);
 
 // Commands controller commands
 controller.registerCommand(commandList.controller.toggle, controller.onToggle.bind(controller));
